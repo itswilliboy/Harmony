@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Any
 
 import discord
@@ -18,6 +19,7 @@ class Harmony(commands.Bot):
 
     def __init__(self, intents: discord.Intents, initial_extensions: list[str], *args: Any, **kwargs: Any) -> None:
         self.initial_extensions = initial_extensions
+        self.started_at = datetime.now()
         super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, *args, **kwargs)  # type: ignore
 
     async def get_prefix(self, message: discord.Message) -> str | list[str]:
