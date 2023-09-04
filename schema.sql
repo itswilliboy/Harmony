@@ -1,4 +1,13 @@
+BEGIN;
+
 CREATE TABLE IF NOT EXISTS prefixes(
     guild_id BIGINT PRIMARY KEY,
     prefix VARCHAR(5) NOT NULL
-)
+);
+
+CREATE TABLE IF NOT EXISTS statistics(
+    guild_id BIGINT PRIMARY KEY,
+    command_runs INTEGER DEFAULT 0
+);
+
+COMMIT;
