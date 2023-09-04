@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from os import getpid
 import time
+from os import getpid
 from typing import TYPE_CHECKING
 
 import discord
-from psutil import Process
 from discord.ext import commands
+from psutil import Process
 from typing_extensions import Self
 
 from utils import BaseCog, PrimaryEmbed
