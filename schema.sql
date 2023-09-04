@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS prefixes(
+    guild_id BIGINT PRIMARY KEY,
+    prefix VARCHAR(5) NOT NULL
+)

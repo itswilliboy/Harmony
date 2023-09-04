@@ -1,0 +1,140 @@
+from __future__ import annotations
+
+import time
+from typing import TYPE_CHECKING
+
+import discord
+from discord.ext import commands
+from typing_extensions import Self
+
+from utils import BaseCog, PrimaryEmbed
+
+if TYPE_CHECKING:
+    from bot import Harmony
+    from utils import Context
+
+
+class AvatarView(discord.ui.View):
+    def __init__(self, avatar: discord.Asset) -> None:
+        super().__init__(timeout=None)
+        for format in ("png", "jpeg", "webp", "gif"):
+            if format == "gif" and avatar.is_animated() is False:
+                continue
+
+            button: discord.ui.Button[Self] = discord.ui.Button(label=format.upper(), url=avatar.replace(format=format).url)
+            self.add_item(button)
+
+
+class General(BaseCog):
+    def __init__(self, bot: Harmony) -> None:
+        self.bot = bot
+
+    @commands.guild_only()
+    @commands.command(aliases=["ui", "whois", "info"])
+    async def userinfo(self, ctx: Context, member: discord.Member = commands.Author):
+        """Get information about a member in the server."""
+
+        colour = member.colour if str(member.colour) != "#000000" else discord.Colour.from_str("#2B2D31")
+        activity = member.activity and member.activity.name or "N/A"
+        created_at = discord.utils.format_dt(member.created_at, "R")
+
+        nick = member.nick or "N/A"
+        joined_at = discord.utils.format_dt(member.joined_at, "R") if member.joined_at else "N/A"
+        top_role = member.top_role.mention if member.top_role != ctx.guild.default_role else "@everyone"
+        role_count = len(member.roles)
+
+        embed = discord.Embed(title=member.name, colour=colour)
+        embed.set_author(name="User Information")
+        embed.set_thumbnail(url=member.display_avatar.with_format("png").url)
+
+        embed.add_field(name=f"User ID {'<:bot:1110964599349579926>' if member.bot else ''}", value=member.id, inline=False)
+
+        statuses = {
+            discord.Status.online: "<:online:884494020443779122> Online",
+            discord.Status.idle: "<:idle:884494020049518623> Idle",
+            discord.Status.dnd: "<:dnd:884494020397658152> Do Not Disturb",
+            discord.Status.offline: "<:offline:884494020401844325> Offline",
+        }
+
+        embed.add_field(name="Status", value=statuses[member.status], inline=False)
+        embed.add_field(name="Activity", value=activity, inline=False)
+        embed.add_field(name="Created Account", value=created_at)
+
+        embed.add_field(name="__Server Specific__", value="", inline=False)
+        embed.add_field(name="Joined Server", value=joined_at, inline=False)
+        embed.add_field(name="Nickname", value=nick, inline=False)
+
+        embed.add_field(name="Amount of Roles", value=role_count - 1, inline=True)
+        embed.add_field(name="Top Role", value=top_role, inline=True)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=["av", "pfp"])
+    async def avatar(self, ctx: Context, user: discord.User):
+        """Get someone's avatar."""
+
+        view = AvatarView(user.display_avatar)
+
+        embed = PrimaryEmbed(title=f"{user.name}'s Avatar").set_image(url=user.display_avatar.url)
+        await ctx.send(embed=embed, view=view)
+
+    @commands.command()
+    async def invite(self, ctx: Context):
+        """Invite the bot."""
+        permissions = discord.Permissions(1377622682822)
+        invite = discord.utils.oauth_url(
+            client_id=self.bot.user.id,
+            permissions=permissions,
+            scopes=("bot", "applications.commands"),
+        )
+
+        view = discord.ui.View().add_item(discord.ui.Button(label="Invite Me!", url=invite))
+        await ctx.send(
+            embed=PrimaryEmbed(
+                title="Thanks for inviting me!",
+                description=f"You can invite me using the button below or by pressing [here]({invite}).",
+            ).set_thumbnail(url=self.bot.user.display_avatar.url),
+            view=view,
+        )
+
+    @commands.command()
+    async def support(self, ctx: Context):
+        """Join our support server."""
+        invite = "https://discord.gg/P22UdJUdHk"
+
+        view = discord.ui.View().add_item(discord.ui.Button(label="Join our Support Server!", url=invite))
+        await ctx.send(
+            embed=PrimaryEmbed(
+                title="Thanks for inviting me!",
+                description=f"You can join our server using the button below or by pressing [here]({invite}).",
+            ).set_thumbnail(url=self.bot.user.display_avatar.url),
+            view=view,
+        )
+
+    @commands.command(aliases=["latency"])
+    async def ping(self, ctx: commands.Context):
+        """Displays the latencies of various services used by the bot"""
+
+        def get_color(ping: int) -> str:
+            if ping <= 500:
+                return f"```diff\n+ {ping} ms\n```"
+            else:
+                return f"```diff\n- {ping} ms\n```"
+
+        start = time.perf_counter()
+        await self.bot.pool.fetch("SELECT 1")
+        end = time.perf_counter()
+        db_latency = int((end - start) * 1000)
+
+        latency = int(self.bot.latency * 1000)
+        embed = PrimaryEmbed(title="Latency")
+        embed.add_field(name="Discord Gateway Latency", value=get_color(latency), inline=False)
+        embed.add_field(name="Bot Response Time", value="```Calculating...```", inline=False)
+        embed.add_field(name="Database Latency", value=get_color(db_latency), inline=False)
+
+        start = time.perf_counter()
+        msg = await ctx.send(embed=embed)
+        end = time.perf_counter()
+        resp_time = int((end - start) * 1000)
+        embed.set_field_at(1, name="Bot Response Time", value=get_color(resp_time))
+        await msg.edit(embed=embed)
