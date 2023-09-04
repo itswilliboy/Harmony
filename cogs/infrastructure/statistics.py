@@ -16,15 +16,15 @@ class Statistics(BaseCog, command_attrs=dict(hidden=True)):
         super().__init__(bot)
         self.bot = bot
         bot.loop.create_task(self.check_statistics())
-    
+
     async def check_statistics(self) -> None:
         bot = self.bot
         await bot.wait_until_ready()
-        
+
         for guild in bot.guilds:
             if not await bot.pool.fetch("SELECT guild_id FROM statistics WHERE guild_id = $1", guild.id):
                 await bot.pool.execute("INSERT INTO statistics (guild_id) VALUES ($1)", guild.id)
-    
+
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         await self.bot.pool.execute("INSERT INTO statistics (guild_id) VALUES ($1) ON CONFLICT DO NOTHING", guild.id)
@@ -43,5 +43,6 @@ class Statistics(BaseCog, command_attrs=dict(hidden=True)):
             UPDATE statistics
             SET command_runs = command_runs + 1
             WHERE guild_id = $1
-            """, ctx.guild.id
+            """,
+            ctx.guild.id,
         )

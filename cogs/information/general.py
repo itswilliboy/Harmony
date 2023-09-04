@@ -155,16 +155,15 @@ class General(BaseCog):
         embed.add_field(name="Started", value=discord.utils.format_dt(self.bot.started_at, "R"))
         embed.add_field(name="Servers", value=len(self.bot.guilds))
         embed.add_field(name="Users", value=f"{len(self.bot.users):,}")
-        
+
         command_runs: int = await self.bot.pool.fetchval("SELECT SUM(command_runs) FROM statistics")
-        
-        
+
         embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
 
         process = Process(getpid())
         cpu = process.cpu_percent(interval=0.4)
         ram = process.memory_info().rss
-        to_mebibytes = ram / int(1<<20)
+        to_mebibytes = ram / int(1 << 20)
         formatted = f"{int(to_mebibytes):,}"
         embed.add_field(name="Process Information", value=f"`CPU`: {cpu:2f}%\n`RAM`: {formatted.replace(',', ' ')} MiB")
 
