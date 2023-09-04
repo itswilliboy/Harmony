@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
     def __init__(self, bot: Harmony) -> None:
+        super().__init__(bot)
         self.bot = bot
 
     @staticmethod

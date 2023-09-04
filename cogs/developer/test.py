@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 class Test(BaseCog):
     def __init__(self, bot: Harmony) -> None:
+        super().__init__(bot)
         self.bot = bot
 
     @commands.command()

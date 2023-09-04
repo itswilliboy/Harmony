@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 class Help(BaseCog):
     def __init__(self, bot: Harmony) -> None:
+        super().__init__(bot)
         self.bot = bot
 
     async def cog_load(self) -> None:
