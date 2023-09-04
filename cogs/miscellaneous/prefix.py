@@ -16,18 +16,30 @@ if TYPE_CHECKING:
 
 class Prefix(BaseCog):
     def __init__(self, bot: Harmony) -> None:
+        super().__init__(bot)
         self.bot = bot
-        self.bot.loop.create_task(self.check_prefixes())
+        bot.loop.create_task(self.check_prefixes())
 
     async def check_prefixes(self) -> None:
         await self.bot.wait_until_ready()
         prefixes = await self.bot.pool.fetch("SELECT * FROM prefixes")
+        guild_ids = set([i.id for i in self.bot.guilds])
+        db_ids =  set([i["guild_id"] for i in prefixes])
 
-        guild_ids = [i.id for i in self.bot.guilds]
-        if set(guild_ids) != set([i["guild_id"] for i in prefixes]):
+        if len(guild_ids) > len(db_ids):
             for id in guild_ids:
-                await self.bot.pool.execute("INSERT INTO prefixes VALUES ($1, $2)", id, DEFAULT_PREFIX)
+                await self.bot.pool.execute(
+                    "INSERT INTO prefixes VALUES ($1, $2) ON CONFLICT DO NOTHING",
+                    id,
+                    DEFAULT_PREFIX
+                )
+            
+        else:
+            for id in db_ids:
+                if id in db_ids and id not in guild_ids:
+                    await self.bot.pool.execute("DELETE FROM prefixes WHERE guild_id = $1", id)
 
+                
     async def get_custom_prefix(self, message: discord.Message) -> str:
         prefixes = await self.bot.get_prefix(message)
         if isinstance(prefixes, list):
@@ -44,7 +56,15 @@ class Prefix(BaseCog):
                 guild_id = $2
         """
         await self.bot.pool.execute(query, prefix, guild.id)
+    
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild) -> None:
+        await self.bot.pool.execute("INSERT INTO prefixes VALUES ($1, $2)", guild.id, DEFAULT_PREFIX)
 
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild) -> None:
+        await self.bot.pool.execute("DELETE FROM prefixes WHERE guild_id = $1", guild.id)
+    
     @commands.hybrid_group()
     async def prefix(self, ctx: Context):
         """Displays the server's prefix."""
