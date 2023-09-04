@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from os import getpid
 import time
 from typing import TYPE_CHECKING
 
 import discord
+from psutil import Process
 from discord.ext import commands
 from typing_extensions import Self
 
@@ -27,6 +29,7 @@ class AvatarView(discord.ui.View):
 
 class General(BaseCog):
     def __init__(self, bot: Harmony) -> None:
+        super().__init__(bot)
         self.bot = bot
 
     @commands.guild_only()
@@ -138,3 +141,31 @@ class General(BaseCog):
         resp_time = int((end - start) * 1000)
         embed.set_field_at(1, name="Bot Response Time", value=get_color(resp_time))
         await msg.edit(embed=embed)
+
+    @commands.command(aliases=["bot", "about", "stats"])
+    async def botinfo(self, ctx: Context):
+        app_info = self.bot.application
+
+        embed = PrimaryEmbed(title="Bot Statistics")
+        embed.set_footer(text=f"Check out `{ctx.clean_prefix}ping` for more latency information.")
+        embed.set_thumbnail(url=self.bot.user.display_avatar.url)
+        if app_info:
+            embed.set_author(name=app_info.owner.display_name, icon_url=app_info.owner.display_avatar.url)
+
+        embed.add_field(name="Started", value=discord.utils.format_dt(self.bot.started_at, "R"))
+        embed.add_field(name="Servers", value=len(self.bot.guilds))
+        embed.add_field(name="Users", value=f"{len(self.bot.users):,}")
+        
+        command_runs: int = await self.bot.pool.fetchval("SELECT SUM(command_runs) FROM statistics")
+        
+        
+        embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
+
+        process = Process(getpid())
+        cpu = process.cpu_percent(interval=0.4)
+        ram = process.memory_info().rss
+        to_mebibytes = ram / int(1<<20)
+        formatted = f"{int(to_mebibytes):,}"
+        embed.add_field(name="Process Information", value=f"`CPU`: {cpu:2f}%\n`RAM`: {formatted.replace(',', ' ')} MiB")
+
+        await ctx.send(embed=embed)
