@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
-from psutil import Process
+from psutil import Process, cpu_percent
 from typing_extensions import Self
 
 from utils import BaseCog, PrimaryEmbed
@@ -142,7 +142,7 @@ class General(BaseCog):
         embed.set_field_at(1, name="Bot Response Time", value=get_color(resp_time))
         await msg.edit(embed=embed)
 
-    @commands.command(aliases=["bot", "about", "stats"])
+    @commands.command(aliases=["bot", "about"])
     async def botinfo(self, ctx: Context):
         app_info = self.bot.application
 
@@ -161,10 +161,10 @@ class General(BaseCog):
         embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
 
         process = Process(getpid())
-        cpu = process.cpu_percent(interval=0.4)
+        cpu = cpu_percent()
         ram = process.memory_info().rss
         to_mebibytes = ram / int(1 << 20)
         formatted = f"{int(to_mebibytes):,}"
-        embed.add_field(name="Process Information", value=f"`CPU`: {cpu:2f}%\n`RAM`: {formatted.replace(',', ' ')} MiB")
+        embed.add_field(name="Process Information", value=f"`CPU (Server)`: {cpu:2f}%\n`RAM (Process)`: {formatted.replace(',', ' ')} MiB")
 
         await ctx.send(embed=embed)
