@@ -1,6 +1,7 @@
 [tool.ruff]
 line-length = 125
 target-version = "py311"
+ignore = ["E731"]
 
 [tool.black]
 line-length = 125

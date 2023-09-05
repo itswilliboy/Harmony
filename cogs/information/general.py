@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
-from psutil import Process, cpu_percent
+from psutil import Process, cpu_percent, virtual_memory
 from typing_extensions import Self
 
 from utils import BaseCog, PrimaryEmbed
@@ -163,9 +163,15 @@ class General(BaseCog):
 
         process = Process(getpid())
         cpu = cpu_percent()
-        ram = process.memory_info().rss
-        to_mebibytes = ram / int(1 << 20)
-        formatted = f"{int(to_mebibytes):,}"
-        embed.add_field(name="Process Information", value=f"`CPU (Server)`: {cpu:2f}%\n`RAM (Process)`: {formatted.replace(',', ' ')} MiB")
-
+        server_ram = virtual_memory().used
+        process_ram = process.memory_info().rss
+        to_mebibytes = lambda x: x / float(1<<20)
+        formatted = lambda x: f"{int(to_mebibytes(x)):,}"
+        
+        value = f"""
+        `CPU (Server)`: {cpu:1}%
+        `RAM (Server)`: {formatted(server_ram)} MiB
+        `RAM (Process)`: {formatted(process_ram)} MiB
+        """
+        embed.add_field(name="Process Information", value=value)
         await ctx.send(embed=embed)
