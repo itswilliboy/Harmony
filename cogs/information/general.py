@@ -116,7 +116,7 @@ class General(BaseCog):
 
     @commands.command(aliases=["latency"])
     async def ping(self, ctx: commands.Context):
-        """Displays the latencies of various services used by the bot"""
+        """Displays the latencies of various services used by the bot."""
 
         def get_color(ping: int) -> str:
             if ping <= 500:
@@ -144,6 +144,7 @@ class General(BaseCog):
 
     @commands.command(aliases=["bot", "about"])
     async def botinfo(self, ctx: Context):
+        """Displays information about the bot."""
         app_info = self.bot.application
 
         embed = PrimaryEmbed(title="Bot Statistics")
