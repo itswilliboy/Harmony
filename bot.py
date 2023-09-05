@@ -7,7 +7,7 @@ from aiohttp import ClientSession
 from asyncpg import Pool, create_pool
 from discord.ext import commands
 
-from config import POSTGRES_SETTINGS
+from config import POSTGRES_SETTINGS, DEFAULT_PREFIX
 
 
 class Harmony(commands.Bot):
@@ -25,10 +25,10 @@ class Harmony(commands.Bot):
 
     async def get_prefix(self, message: discord.Message) -> str | list[str]:
         if message.guild is None:
-            return commands.when_mentioned(self, message)
+            return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
 
-        resp = await self.pool.fetchrow("SELECT prefix FROM prefixes WHERE guild_id=$1", message.guild.id)
-        return resp and commands.when_mentioned_or(resp["prefix"])(self, message) or commands.when_mentioned(self, message)
+        prefix = await self.pool.fetchval("SELECT prefix FROM prefixes WHERE guild_id=$1", message.guild.id)
+        return prefix and commands.when_mentioned_or(prefix)(self, message) or commands.when_mentioned(self, message)
 
     async def setup_hook(self) -> None:
         discord.utils.setup_logging(level=logging.INFO)
