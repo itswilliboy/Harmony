@@ -108,7 +108,7 @@ class General(BaseCog):
         view = discord.ui.View().add_item(discord.ui.Button(label="Join our Support Server!", url=invite))
         await ctx.send(
             embed=PrimaryEmbed(
-                title="Thanks for inviting me!",
+                title="Join our support server!",
                 description=f"You can join our server using the button below or by pressing [here]({invite}).",
             ).set_thumbnail(url=self.bot.user.display_avatar.url),
             view=view,
