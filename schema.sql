@@ -10,4 +10,11 @@ CREATE TABLE IF NOT EXISTS statistics(
     command_runs INTEGER DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS blacklist(
+    id SERIAL PRIMARY KEY,
+    guild_id BIGINT,
+    user_id BIGINT NOT NULL,
+    reason TEXT DEFAULT 'No reason given.'
+);
+
 COMMIT;
