@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
 from utils import BaseCog, ErrorEmbed, GenericError
-
-from ..developer import NotOwner
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -38,7 +36,7 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
         return f"{base} {ctx.command.signature}"
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: Context, error: Any):
+    async def on_command_error(self, ctx: Context, error: Exception):
         command = ctx.command
 
         if isinstance(error, commands.CommandNotFound):
@@ -49,7 +47,7 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
             to_list = [f"`{i.replace('_', ' ').title()}`" for i in missing]
             nl = "\n"
             description = f"""
-                You are missing the following permissions to use this commands:
+                You are missing the following permissions to use this command:
                 * {f' {nl}* '.join(to_list)}
             """
 
@@ -67,19 +65,26 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
             print(error.errors)
             usage = self.get_signature(ctx)
             embed = ErrorEmbed(
-                title="Bad Argument",
-                description=f"Correct usage:\n```\n{usage}\n```\n`{str(error.errors[-1])}`"
+                title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```\n`{str(error.errors[-1])}`"
             )
-        
-        elif isinstance(error, (commands.NotOwner, NotOwner)):
+
+        elif isinstance(error, commands.NotOwner):
             embed = ErrorEmbed(title="Owner Only", description="Only bot developers can use this command.")
-        
+
         elif isinstance(error, GenericError):
             embed = ErrorEmbed(description=f"{str(error)}")
 
+        elif isinstance(error, commands.NoPrivateMessage):
+            embed = ErrorEmbed(description="This command can only be used inside of a server.")
+
+        elif isinstance(error, commands.CheckFailure) and str(error) == "The global check once functions failed.":
+            return
+
         else:
             embed = ErrorEmbed(description="An unknown error occurred")
-            raise error
+            self.bot.log.error(error, exc_info=error)
 
-        embed.set_footer(text=f"If this was unexpected, please contact the developer ({ctx.clean_prefix}support).")
+        if not embed.footer:
+            if isinstance(error, GenericError) and error.footer:
+                embed.set_footer(text=f"If this was unexpected, please contact the developer ({ctx.clean_prefix}support).")
         await ctx.send(embed=embed)
