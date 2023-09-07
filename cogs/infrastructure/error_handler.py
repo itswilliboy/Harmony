@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from discord.ext import commands
 
-from utils import BaseCog, ErrorEmbed
+from utils import BaseCog, ErrorEmbed, GenericError
 
 from ..developer import NotOwner
 
@@ -63,15 +63,22 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
             )
             embed.set_footer(text="'<>' = required | '[]' = optional")
 
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, commands.BadUnionArgument):
+            print(error.errors)
             usage = self.get_signature(ctx)
-            embed = ErrorEmbed(title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```")
-
+            embed = ErrorEmbed(
+                title="Bad Argument",
+                description=f"Correct usage:\n```\n{usage}\n```\n`{str(error.errors[-1])}`"
+            )
+        
         elif isinstance(error, (commands.NotOwner, NotOwner)):
             embed = ErrorEmbed(title="Owner Only", description="Only bot developers can use this command.")
+        
+        elif isinstance(error, GenericError):
+            embed = ErrorEmbed(description=f"{str(error)}")
 
         else:
-            embed = ErrorEmbed(description="An unknown error occured")
+            embed = ErrorEmbed(description="An unknown error occurred")
             raise error
 
         embed.set_footer(text=f"If this was unexpected, please contact the developer ({ctx.clean_prefix}support).")
