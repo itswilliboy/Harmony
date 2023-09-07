@@ -6,6 +6,7 @@ from .cog import *
 from .context import *
 from .embed import *
 from .help import *
+from .exceptions import *
 
 if TYPE_CHECKING:
     PrimaryEmbed = Embed
