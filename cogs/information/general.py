@@ -37,7 +37,7 @@ class General(BaseCog):
     async def userinfo(self, ctx: Context, member: discord.Member = commands.Author):
         """Get information about a member in the server."""
 
-        colour = member.colour if str(member.colour) != "#000000" else discord.Colour.from_str("#2B2D31")
+        colour = member.colour if str(member.colour) != "#000000" else discord.Colour.dark_embed()
         activity = member.activity and member.activity.name or "N/A"
         created_at = discord.utils.format_dt(member.created_at, "R")
 
