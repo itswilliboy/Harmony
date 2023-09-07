@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import discord
+from discord.ext import commands
+
+from utils import BaseCog, SuccessEmbed, ErrorEmbed, GenericError
+
+if TYPE_CHECKING:
+    from bot import Harmony
+    from utils import Context
+
+
+class BannedMember(commands.Converter):
+    async def convert(self, ctx: Context, argument: str):
+        if argument.isdigit():
+            id = int(argument)
+
+            try:
+                return await ctx.guild.fetch_ban(discord.Object(id))
+            except discord.NotFound:
+                raise commands.BadArgument("That member is not banned.")
+
+        user = await discord.utils.find(lambda u: str(u.user) == argument, ctx.guild.bans(limit=None))
+        if user is None:
+            raise commands.BadArgument("That member is not banned.")
+        return user
+
+
+class General(BaseCog):
+    def __init__(self, bot: Harmony) -> None:
+        super().__init__(bot)
+        self.bot = bot
+
+    @commands.has_guild_permissions(ban_members=True)
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.guild_only()
+    @commands.command()
+    async def ban(self, ctx: Context, member: discord.Member | int, *, reason: str | None = None):
+        to_ban: discord.abc.Snowflake
+        if isinstance(member, int):
+            to_ban = discord.Object(member)
+
+        else:
+            assert isinstance(ctx.author, discord.Member)
+            if member.top_role >= ctx.author.top_role:
+                embed = ErrorEmbed(
+                    description=f"Your top role needs to be higher than {member.mention}'s top role to ban them."
+                )
+                return await ctx.send(embed=embed)
+            to_ban = member
+
+        reason = reason or "No reason given."
+        await ctx.guild.ban(to_ban, reason=reason)
+        embed = SuccessEmbed(
+            description=f"Sucessfully banned <@{to_ban.id}>.\nReason: `{reason}`"
+        )
+        embed.set_footer(text=f"ID: {to_ban.id}").timestamp = discord.utils.utcnow()
+
+        await ctx.send(embed=embed)
+
+    @commands.has_guild_permissions(ban_members=True)
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.command()
+    async def unban(self, ctx: Context, user: discord.BanEntry | discord.User | BannedMember, *, reason: str | None = None):
+        try:
+            to_unban: discord.abc.Snowflake
+            if isinstance(user, discord.BanEntry):
+                to_unban = user.user
+            else:
+                to_unban = user  # type: ignore
+
+            reason = reason or "No reason given."
+            await ctx.guild.unban(to_unban, reason=reason)
+            embed = SuccessEmbed(
+                description=f"Sucessfully banned <@{to_unban.id}>.\nReason: `{reason}`"
+            )
+            await ctx.send(embed=embed)
+        except discord.HTTPException:
+            GenericError("Something went wrong when trying to unban that user.")

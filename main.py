@@ -15,7 +15,8 @@ initial_extensions = [
     "cogs.infrastructure",
     "cogs.developer",
     "cogs.miscellaneous",
-    "cogs.information"
+    "cogs.information",
+    "cogs.moderation"
 ]
 # fmt: on
 
