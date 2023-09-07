@@ -7,11 +7,12 @@ from aiohttp import ClientSession
 from asyncpg import Pool, create_pool
 from discord.ext import commands
 
-from config import POSTGRES_SETTINGS, DEFAULT_PREFIX
+from config import DEFAULT_PREFIX, POSTGRES_SETTINGS
 
 
 class Harmony(commands.Bot):
     """Bot class for Harmony"""
+
     session: ClientSession
     pool: Pool
     log: logging.Logger

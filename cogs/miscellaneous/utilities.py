@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import discord
+from aiohttp import ClientConnectionError, InvalidURL
 from discord.ext import commands
-from aiohttp import InvalidURL
-from pathlib import Path
 
-from utils import ErrorEmbed, SuccessEmbed
+from utils import ErrorEmbed, GenericError, SuccessEmbed
 from utils.cog import BaseCog
 
 if TYPE_CHECKING:
@@ -38,23 +38,25 @@ class Utilities(BaseCog):
             return await ctx.send(str(created), embed=embed)
 
         else:
-            if not emoji.endswith((".png", ".jpg", ".jpeg", ".gif")):
-                embed = ErrorEmbed(description="ONLY `JPEG`, `PNG` and `GIF` file formats are supported.")
-                await ctx.send(embed=embed)
-            
             try:
                 async with self.bot.session.get(emoji) as resp:
                     if not resp.ok:
-                        embed = ErrorEmbed(
-                            description="Something went wrong when trying to download the image, please make sure it exists."
+                        raise GenericError(
+                            "Something went wrong when trying to download the image, make sure it exists.", footer=True
                         )
-                        return await ctx.send(embed=embed)
+
+                    if resp.content_type not in ("image/png", "image/jpeg", "image/webp", "image/gif"):
+                        raise GenericError("Unsupported format, must be: `PNG`, `JPEG`, `WEBP`, or `GIF`.")
 
                     image = await resp.read()
-            
+
             except InvalidURL:
-                embed = ErrorEmbed(description="The URL is invalid, make sure it's valid.")
-                return await ctx.send(embed=embed)
+                raise GenericError("The URL is invalid, make sure it's valid.")
+
+            except ClientConnectionError:
+                raise GenericError(
+                    "Something went wrong when to trying to resolve the URL, make sure it exists.", footer=True
+                )
 
             split = emoji.split("/")
             try:
@@ -62,8 +64,10 @@ class Utilities(BaseCog):
                 name_ = Path(name_).stem
 
             except IndexError:
-                embed = ErrorEmbed(description="Needs to be a valid file URL (eg. `https://cdn.discordapp.com/emojis/884506546787188826.png`)")
-                return await ctx.send(embed=embed)
+                raise GenericError(
+                    "Needs to be a valid file URL (eg. `https://cdn.discordapp.com/emojis/744346239075877518.gif`)",
+                    footer=True,
+                )
 
             try:
                 created = await ctx.guild.create_custom_emoji(name=name_, image=image, reason=reason)
@@ -72,10 +76,7 @@ class Utilities(BaseCog):
                 return await ctx.send(str(created), embed=embed)
 
             except discord.HTTPException:
-                embed = ErrorEmbed(
-                    description="""
-                    Something went wrong when trying to create the emoji.
-                    Make sure the file is less than 256 kB in size.
-                    """
+                raise GenericError(
+                    "Something went wrong when trying to create the emoji. Make sure the file is less than 256 kB in size.",
+                    footer=True,
                 )
-                await ctx.send(embed=embed)

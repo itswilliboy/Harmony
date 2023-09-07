@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 class BaseCog(commands.Cog):
     """Base class used in the creation of cogs."""
+
     def __init__(self, bot: Harmony, *args, **kwargs) -> None:
         self.bot = bot
         super().__init__(*args, **kwargs)

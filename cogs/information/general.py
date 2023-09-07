@@ -165,9 +165,9 @@ class General(BaseCog):
         cpu = cpu_percent()
         server_ram = virtual_memory().used
         process_ram = process.memory_info().rss
-        to_mebibytes = lambda x: x / float(1<<20)
+        to_mebibytes = lambda x: x / float(1 << 20)
         formatted = lambda x: f"{int(to_mebibytes(x)):,}"
-        
+
         value = f"""
         `CPU (Server)`: {cpu:1}%
         `RAM (Server)`: {formatted(server_ram)} MiB
