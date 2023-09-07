@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
+from .blacklist import Blacklist
 from .error_handler import ErrorHandler
 from .help import Help
-from .statistics import Statistics
 from .prefix import Prefix
+from .statistics import Statistics
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -17,7 +18,7 @@ class NotOwner(commands.NotOwner):
     pass
 
 
-class Infrastructure(Prefix, ErrorHandler, Help, Statistics):
+class Infrastructure(Prefix, ErrorHandler, Help, Statistics, Blacklist):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
         self.bot = bot
