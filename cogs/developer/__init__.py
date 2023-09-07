@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from discord.ext import commands
 
+from .general import General
 from .test import Test
 
 if TYPE_CHECKING:
@@ -11,11 +12,7 @@ if TYPE_CHECKING:
     from utils import Context
 
 
-class NotOwner(commands.NotOwner):
-    pass
-
-
-class Developer(Test, command_attrs=dict(hidden=True)):
+class Developer(Test, General, command_attrs=dict(hidden=True)):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
         self.bot = bot
@@ -24,7 +21,7 @@ class Developer(Test, command_attrs=dict(hidden=True)):
         predicate = await self.bot.is_owner(ctx.author)
 
         if predicate is False:
-            raise NotOwner()
+            raise commands.NotOwner()
         return predicate
 
 
