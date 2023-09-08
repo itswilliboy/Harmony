@@ -73,7 +73,7 @@ class General(BaseCog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["av", "pfp"])
-    async def avatar(self, ctx: Context, user: discord.User):
+    async def avatar(self, ctx: Context, user: discord.User = commands.Author):
         """Get someone's avatar."""
 
         view = AvatarView(user.display_avatar)
