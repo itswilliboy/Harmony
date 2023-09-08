@@ -12,8 +12,9 @@ CREATE TABLE IF NOT EXISTS statistics(
 
 CREATE TABLE IF NOT EXISTS blacklist(
     id SERIAL PRIMARY KEY,
-    guild_id BIGINT,
+    guild_ids BIGINT[],
     user_id BIGINT NOT NULL,
+    global boolean NOT NULL,
     reason TEXT DEFAULT 'No reason given.'
 );
 

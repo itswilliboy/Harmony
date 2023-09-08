@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING
 import discord
 from asyncpg import Record
 from discord.ext import commands
+from typing_extensions import Self
 
-from utils import BaseCog, GenericError, SuccessEmbed
+from utils import BaseCog, GenericError, SuccessEmbed, PrimaryEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -19,22 +20,23 @@ class BlacklistItem:
     def __init__(self, cog: Blacklist, record: Record) -> None:
         self.cog = cog
 
-        self._guild_id = record.get("guild_id", None)
-        self._user_id = record["user_id"]
-        self._reason = record["reason"]
+        self._global: bool = record["global"]
+        self._guild_ids: list[int] | None = record.get("guild_ids")
+        self._user_id: int = record["user_id"]
+        self._reason: str = record["reason"]
 
     def __repr__(self) -> str:
-        return f"<BlacklistItem guild_id={self.guild_id}, user_id={self.user_id}, global={self.is_global}>"
+        return f"<BlacklistItem, user_id={self.user_id}, global={self.is_global}>"
 
     @property
     def is_global(self) -> bool:
         """Returns `True` if the blacklist is global."""
-        return self._guild_id is None
+        return self._global
 
     @property
-    def guild_id(self) -> int | None:
+    def guild_ids(self) -> list[int | None]:
         """Returns the guild ID the user is blacklisted in, if any."""
-        return self._guild_id
+        return [i for i in self._guild_ids] if self._guild_ids else []
 
     @property
     def user_id(self) -> int:
@@ -45,6 +47,44 @@ class BlacklistItem:
     def reason(self) -> str:
         """Returns the reason for the blacklist, if any."""
         return self._reason
+
+    async def add_guild(self, guild: discord.abc.Snowflake) -> Self:
+        if guild.id in self.guild_ids:
+            raise ValueError("User is already blacklisted in that guild.")
+
+        updated = await self.cog.bot.pool.fetchrow(
+            """
+            UPDATE blacklist
+            SET guild_ids = ARRAY_APPEND(guild_ids, $1)
+            WHERE user_id = $2
+            RETURNING *
+            """,
+            guild.id,
+            self.user_id
+        )
+        self.__init__(self.cog, updated)  # type: ignore
+        return self
+
+    async def remove_guild(self, guild: discord.abc.Snowflake) -> Self:
+        if self.is_global:
+            raise ValueError("Can't remove guilds from a global blacklist item.")
+
+        elif guild.id not in self.guild_ids:
+            raise ValueError("User is not blacklisted in that guild.")
+
+        await self.cog.bot.pool.execute(
+            """
+            UPDATE blacklist
+            SET guild_ids = ARRAY_REMOVE(guild_ids, $1)
+            WHERE user_id = $2
+            RETURNING *
+            """,
+            guild.id,
+            self.user_id
+        )
+        assert self._guild_ids
+        self._guild_ids.remove(guild.id)
+        return self
 
 
 class Flags(commands.FlagConverter, prefix="--", delimiter=" "):
@@ -79,16 +119,34 @@ class Blacklist(BaseCog, command_attrs=dict(hidden=True)):
             if item.is_global:
                 return False
             else:
-                if ctx.guild.id == item.guild_id:
+                if ctx.guild.id in item.guild_ids:
                     return False
         return True
 
     async def add_blacklist(
-        self, user: discord.User, guild: discord.Guild | None, *, reason: str | None = None
+        self, 
+        user: discord.User,
+        *,
+        guild: discord.Guild | None = None,
+        reason: str | None = None
     ) -> BlacklistItem:
-        query = "INSERT INTO blacklist (user_id, guild_id, reason) VALUES ($1, $2, $3) RETURNING *"
+        if guild:
+            query = """
+            INSERT INTO blacklist (user_id, guild_ids, reason, global) 
+            VALUES ($1, $2, $3, $4) 
+            RETURNING *
+            """
+        
+            record = await self.bot.pool.fetchrow(query, user.id, [guild.id], reason, False)
+        
+        else:
+            query = """
+                INSERT INTO blacklist (user_id, reason, global) 
+                VALUES ($1, $2, $3) 
+                RETURNING *
+                """
 
-        record = await self.bot.pool.fetchrow(query, user.id, guild and guild.id, reason)
+            record = await self.bot.pool.fetchrow(query, user.id, reason, True)
 
         assert record
         item = BlacklistItem(self, record)
@@ -96,15 +154,10 @@ class Blacklist(BaseCog, command_attrs=dict(hidden=True)):
 
         return item
 
-    async def remove_blacklist(self, user: discord.User, guild: discord.Guild | None) -> None:
+    async def remove_blacklist(self, user: discord.User) -> None:
         query = "DELETE FROM blacklist WHERE user_id = $1"
-        if guild is not None:
-            query = "DELETE FROM blacklist WHERE user_id = $1 AND guild_id = $2"
-            await self.bot.pool.execute(query, user.id, guild.id)
-            return
-
         await self.bot.pool.execute(query, user.id)
-        del self.blacklist[user.id]
+        self.blacklist.pop(user.id)
 
     @commands.group(name="blacklist")
     async def blacklist_(self, ctx: Context) -> None:
@@ -116,15 +169,17 @@ class Blacklist(BaseCog, command_attrs=dict(hidden=True)):
         guild: discord.Guild | None = flags and flags.guild
         reason: str | None = flags and flags.reason
 
-        if item := self.blacklist.get(user.id, None):
-            if guild and not item.is_global:
-                if item.guild_id == guild.id:
-                    raise GenericError("That user is already blacklisted in this guild.")
+        if item := self.blacklist.get(user.id):
+            if item.is_global:
+                raise GenericError("User is globally blacklisted")
 
-            elif not guild and item.is_global:
-                raise GenericError("That user is already globally blacklisted.")
+            if not guild:
+                raise commands.MissingRequiredArgument(ctx.command.params["flags"])
 
-        await self.add_blacklist(user, guild, reason=reason)
+            await item.add_guild(guild)
+
+        else:
+            item = await self.add_blacklist(user, guild=guild, reason=reason)
 
         reason = flags and f"`{flags.reason}`"
         embed = SuccessEmbed(description=f"Successfully blacklisted {user.mention}\nReason: {reason}.")
@@ -136,14 +191,35 @@ class Blacklist(BaseCog, command_attrs=dict(hidden=True)):
 
         item = self.blacklist.get(user.id, None)
         if item is None:
-            raise GenericError("That user isn't blacklisted.")
+            raise GenericError("User isn't blacklisted.")
 
         elif guild and item.is_global:
-            raise GenericError("This user isn't blacklisted in this server.")
+            raise GenericError("This user isn't blacklisted in that server.")
 
-        elif not guild and not item.is_global:
-            raise GenericError("This user isn't blacklisted globally.")
+        if guild is not None:
+            await item.remove_guild(guild)
 
-        await self.remove_blacklist(user, guild)
+        else:
+            await self.remove_blacklist(user)
+
         embed = SuccessEmbed(description=f"Successfully removed the blacklist for {user.mention}.")
+        await ctx.send(embed=embed)
+        
+    @blacklist_.command()
+    async def status(self, ctx: Context, user: discord.User):
+        item = self.blacklist.get(user.id)
+        if item is None:
+            raise GenericError("User isn't blacklisted.")
+        
+        nl = "\n"
+        guilds = [self.bot.get_guild(i) for i in item.guild_ids] # type: ignore
+        guild_names = [i.name for i in guilds]  # type: ignore
+        embed = PrimaryEmbed(
+            title="Blacklisted",
+            description=f"""
+            Globally: `{item.is_global}`
+            {f'Servers{nl}* {f" {nl}* ".join(guild_names)}' if not item.is_global else ''}
+            """
+        ).set_thumbnail(url=user.display_avatar.url).set_footer(text=f"{str(user)} | {user.id}")
+        
         await ctx.send(embed=embed)
