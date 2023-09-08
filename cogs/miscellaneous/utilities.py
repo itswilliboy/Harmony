@@ -20,8 +20,8 @@ class Utilities(BaseCog):
         super().__init__(bot)
         self.bot = bot
 
-    @commands.has_guild_permissions(manage_emojis=True)
-    @commands.bot_has_guild_permissions(manage_emojis=True)
+    @commands.has_guild_permissions(manage_expressions=True)
+    @commands.bot_has_guild_permissions(manage_expressions=True)
     @commands.command(aliases=["steal", "stealemoji"])
     async def addemoji(self, ctx: Context, emoji: discord.PartialEmoji | str, name: str | None = None):
         """Add an emoji via an image URL or steal one from another server :^)"""
