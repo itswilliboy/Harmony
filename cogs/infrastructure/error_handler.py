@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import discord
 from discord.ext import commands
 
 from utils import BaseCog, ErrorEmbed, GenericError
@@ -38,6 +39,9 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: Context, error: Exception):
         command = ctx.command
+        
+        if isinstance(error, commands.CommandInvokeError):
+            error = error.original
 
         if isinstance(error, commands.CommandNotFound):
             return await ctx.message.add_reaction("\u2753")
@@ -53,6 +57,24 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
 
             embed = ErrorEmbed(title="Missing Permissions", description=description)
 
+        elif isinstance(error, commands.BotMissingPermissions):
+            missing = error.missing_permissions
+            to_list = [f"`{i.replace('_', ' ').title()}`" for i in missing]
+            nl = "\n"
+            description = f"""
+                I am missing the following permissions:
+                * {f' {nl}* '.join(to_list)}
+            """
+
+            embed = ErrorEmbed(title="Bot Missing Permissions", description=description)
+        
+        elif isinstance(error, discord.Forbidden):
+            embed = ErrorEmbed(
+                title="Forbidden",
+                description=("I'm missing permissions to perform this action, \
+                              please make sure I have the correct permissions.")
+            )
+
         elif isinstance(error, commands.MissingRequiredArgument):
             underlined = self.underline(f"{ctx.clean_prefix}{command.name} {command.signature}", f"<{error.param.name}>")
             embed = ErrorEmbed(
@@ -62,7 +84,6 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
             embed.set_footer(text="'<>' = required | '[]' = optional")
 
         elif isinstance(error, commands.BadUnionArgument):
-            print(error.errors)
             usage = self.get_signature(ctx)
             embed = ErrorEmbed(
                 title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```\n`{str(error.errors[-1])}`"
@@ -87,4 +108,5 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
         if not embed.footer:
             if isinstance(error, GenericError) and error.footer:
                 embed.set_footer(text=f"If this was unexpected, please contact the developer ({ctx.clean_prefix}support).")
+                
         await ctx.send(embed=embed)
