@@ -76,7 +76,7 @@ class General(BaseCog):
 
             reason = reason or "No reason given."
             await ctx.guild.unban(to_unban, reason=reason)
-            embed = SuccessEmbed(description=f"Sucessfully banned <@{to_unban.id}>.\nReason: `{reason}`")
+            embed = SuccessEmbed(description=f"Sucessfully unbanned <@{to_unban.id}>.\nReason: `{reason}`")
             await ctx.send(embed=embed)
         except discord.HTTPException:
             GenericError("Something went wrong when trying to unban that user.")
