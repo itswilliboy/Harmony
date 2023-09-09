@@ -7,7 +7,7 @@ from asyncpg import Record
 from discord.ext import commands
 from typing_extensions import Self
 
-from utils import BaseCog, GenericError, SuccessEmbed, PrimaryEmbed
+from utils import BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
