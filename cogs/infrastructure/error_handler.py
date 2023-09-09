@@ -39,7 +39,7 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: Context, error: Exception):
         command = ctx.command
-        
+
         if isinstance(error, commands.CommandInvokeError):
             error = error.original
 
@@ -67,12 +67,14 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
             """
 
             embed = ErrorEmbed(title="Bot Missing Permissions", description=description)
-        
+
         elif isinstance(error, discord.Forbidden):
             embed = ErrorEmbed(
                 title="Forbidden",
-                description=("I'm missing permissions to perform this action, \
-                              please make sure I have the correct permissions.")
+                description=(
+                    "I'm missing permissions to perform this action, \
+                              please make sure I have the correct permissions."
+                ),
             )
 
         elif isinstance(error, commands.MissingRequiredArgument):
@@ -108,5 +110,5 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
         if not embed.footer:
             if isinstance(error, GenericError) and error.footer:
                 embed.set_footer(text=f"If this was unexpected, please contact the developer ({ctx.clean_prefix}support).")
-                
+
         await ctx.send(embed=embed)
