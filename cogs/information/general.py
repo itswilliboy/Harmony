@@ -59,7 +59,7 @@ class General(BaseCog):
             discord.Status.offline: "<:offline:884494020401844325> Offline",
         }
 
-        embed.add_field(name="Status", value=statuses[member.status], inline=False)
+        embed.add_field(name="Status", value=statuses.get(member.status, "N/A"), inline=False)
         embed.add_field(name="Activity", value=activity, inline=False)
         embed.add_field(name="Created Account", value=created_at)
 
