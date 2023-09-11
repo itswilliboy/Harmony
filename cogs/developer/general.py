@@ -17,6 +17,6 @@ class General(BaseCog):
         super().__init__(bot)
         self.bot = bot
 
-    @commands.command()
+    @commands.command(aliases=["e"])
     async def eval(self, ctx: Context, *, code: CodeblockConverter):  # type: ignore
         await ctx.invoke(self.bot.get_command("jishaku python"), argument=code)  # type: ignore
