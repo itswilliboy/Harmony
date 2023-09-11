@@ -1,8 +1,9 @@
 # VSCode settings
 .vscode
 
-# Config file
+# Config and test file
 config.py
+cogs/developer/test.py
 
 # Virtual environment and cache
 .venv
