@@ -4,6 +4,7 @@
 # Config file
 config.py
 
-# Virtual environment and __pycache__
+# Virtual environment and cache
 .venv
 **/__pycache__
+.ruff_cache
