@@ -208,8 +208,8 @@ class Blacklist(BaseCog, command_attrs=dict(hidden=True)):
             raise GenericError("User isn't blacklisted.")
 
         nl = "\n"
-        guilds = [self.bot.get_guild(i) for i in item.guild_ids]  # type: ignore
-        guild_names = [i.name for i in guilds]  # type: ignore
+        guilds = [self.bot.get_guild(i) for i in item.guild_ids if i]
+        guild_names = [i.name for i in guilds if i]
         embed = (
             PrimaryEmbed(
                 title="Blacklisted",
