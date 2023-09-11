@@ -147,7 +147,7 @@ class General(BaseCog):
         """Displays information about the bot."""
         app_info = self.bot.application
 
-        embed = PrimaryEmbed(title="Bot Statistics")
+        embed = PrimaryEmbed(title="Bot Information")
         embed.set_footer(text=f"Check out `{ctx.clean_prefix}ping` for more latency information.")
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         if app_info:
