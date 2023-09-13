@@ -96,11 +96,13 @@ class Utilities(BaseCog):
     
     @commands.command()
     async def raw(self, ctx: Context, *, argument: str | None = None):
-        """Displays the raw content of a message (no markdown, etc.)."""
+        """Displays the raw content of a message (no markdown, etc.). Can be used by replying to a message."""
         if argument is None:
             converted = await ArgumentOrReference().convert(ctx, argument=argument)  # type: ignore
         else:
             converted = argument
-        assert converted
+        
+        if converted is None:
+            raise commands.MissingRequiredArgument(ctx.command.params["argument"])
         escaped = converted.replace("```", "``\u200b`")
         await ctx.send(f"```\n{escaped}\n```")
