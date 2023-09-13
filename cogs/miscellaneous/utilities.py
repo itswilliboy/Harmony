@@ -15,6 +15,19 @@ if TYPE_CHECKING:
     from utils.context import Context
 
 
+class ArgumentOrReference(commands.Converter):
+    async def convert(self, ctx: Context, argument) -> str | None:
+        if argument and isinstance(argument, str):
+            return argument
+        
+        if ref := ctx.message.reference:
+            if not ref.resolved or isinstance(ref.resolved, discord.DeletedReferencedMessage):
+                print(ref.resolved)
+                raise commands.MissingRequiredArgument(ctx.command.params["content"])
+
+            return ref.resolved.content
+        
+
 class Utilities(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
@@ -80,3 +93,14 @@ class Utilities(BaseCog):
                     "Something went wrong when trying to create the emoji. Make sure the file is less than 256 kB in size.",
                     footer=True,
                 )
+    
+    @commands.command()
+    async def raw(self, ctx: Context, *, argument: str | None = None):
+        """Displays the raw content of a message (no markdown, etc.)."""
+        if argument is None:
+            converted = await ArgumentOrReference().convert(ctx, argument=argument)  # type: ignore
+        else:
+            converted = argument
+        assert converted
+        escaped = converted.replace("```", "``\u200b`")
+        await ctx.send(f"```\n{escaped}\n```")
