@@ -1,21 +1,37 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+import discord
 from discord.ext import commands
+from aiohttp import ClientSession
 
-from utils import PrimaryEmbed
-from utils.cog import BaseCog
+from utils import PrimaryEmbed, GenericError, BaseCog
 
 if TYPE_CHECKING:
     from bot import Harmony
     from utils.context import Context
 
 
+class MemeView(discord.ui.View):
+    ...
+
+
 class Fun(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
         self.bot = bot
+    
+    @staticmethod
+    async def fetch_meme(session: ClientSession) -> dict[str, Any] | None:
+        is_nsfw: bool = True
+        while is_nsfw:
+            async with session.get("https://meme-api.com/gimme") as resp:
+                json: dict[str, Any] = await resp.json()
+                is_nsfw = json["nsfw"]
+
+                return json
+                
 
     async def cog_check(self, ctx: Context):
         await ctx.typing()
@@ -45,4 +61,17 @@ class Fun(BaseCog):
 
         url = f"https://cataas.com/{json['url']}"
         embed = PrimaryEmbed().set_image(url=url)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def meme(self, ctx: Context):
+        """Displays a random meme."""
+        meme = await self.fetch_meme(self.bot.session)
+
+        if meme is None:
+            raise GenericError("Couldn't fetch a meme right now, please try again later.")
+
+        embed = PrimaryEmbed(title=meme["title"]) \
+        .set_image(url=meme["url"]) \
+        .set_footer(text=f"\N{THUMBS UP SIGN} {meme['ups']}")
         await ctx.send(embed=embed)
