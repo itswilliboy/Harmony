@@ -19,7 +19,6 @@ class BlacklistItem:
 
     def __init__(self, cog: Blacklist, record: Record) -> None:
         self.cog = cog
-
         self._global: bool = record["global"]
         self._guild_ids: list[int] | None = record.get("guild_ids")
         self._user_id: int = record["user_id"]
@@ -92,11 +91,10 @@ class Flags(commands.FlagConverter, prefix="--", delimiter=" "):
     reason: str | None = None
 
 
-class Blacklist(BaseCog, command_attrs=dict(hidden=True)):
+class Blacklist(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
         self.bot = bot
-
         self.blacklist: dict[int, BlacklistItem] = {}
         bot.loop.create_task(self.fill_cache())
         bot.add_check(self.blacklist_check, call_once=True)
@@ -155,7 +153,7 @@ class Blacklist(BaseCog, command_attrs=dict(hidden=True)):
         await self.bot.pool.execute(query, user.id)
         self.blacklist.pop(user.id)
 
-    @commands.group(name="blacklist")
+    @commands.group(name="blacklist", hidden=True)
     async def blacklist_(self, ctx: Context) -> None:
         if not ctx.invoked_subcommand:
             raise GenericError("Invoke a valid subcommand.")
@@ -175,7 +173,7 @@ class Blacklist(BaseCog, command_attrs=dict(hidden=True)):
             await item.add_guild(guild)
 
         else:
-            item = await self.add_blacklist(user, guild=guild, reason=reason)
+            await self.add_blacklist(user, guild=guild, reason=reason)
 
         reason = flags and f"`{flags.reason}`"
         embed = SuccessEmbed(description=f"Successfully blacklisted {user.mention}\nReason: {reason}.")
