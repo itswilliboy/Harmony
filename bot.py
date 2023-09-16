@@ -28,7 +28,7 @@ class Harmony(commands.Bot):
         if message.guild is None:
             return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
 
-        prefix = await self.pool.fetchval("SELECT prefix FROM prefixes WHERE guild_id=$1", message.guild.id)
+        prefix = await self.pool.fetchval("SELECT prefix FROM prefixes WHERE guild_id = $1", message.guild.id)
         return prefix and commands.when_mentioned_or(prefix)(self, message) or commands.when_mentioned(self, message)
 
     async def setup_hook(self) -> None:
