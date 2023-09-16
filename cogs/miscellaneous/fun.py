@@ -21,7 +21,7 @@ class Fun(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
         self.bot = bot
-    
+
     @staticmethod
     async def fetch_meme(session: ClientSession) -> dict[str, Any] | None:
         is_nsfw: bool = True
@@ -31,7 +31,6 @@ class Fun(BaseCog):
                 is_nsfw = json["nsfw"]
 
                 return json
-                
 
     async def cog_check(self, ctx: Context):
         await ctx.typing()
@@ -71,7 +70,7 @@ class Fun(BaseCog):
         if meme is None:
             raise GenericError("Couldn't fetch a meme right now, please try again later.")
 
-        embed = PrimaryEmbed(title=meme["title"]) \
-        .set_image(url=meme["url"]) \
-        .set_footer(text=f"\N{THUMBS UP SIGN} {meme['ups']}")
+        embed = (
+            PrimaryEmbed(title=meme["title"]).set_image(url=meme["url"]).set_footer(text=f"\N{THUMBS UP SIGN} {meme['ups']}")
+        )
         await ctx.send(embed=embed)

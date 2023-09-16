@@ -19,14 +19,14 @@ class ArgumentOrReference(commands.Converter):
     async def convert(self, ctx: Context, argument) -> str | None:
         if argument and isinstance(argument, str):
             return argument
-        
+
         if ref := ctx.message.reference:
             if not ref.resolved or isinstance(ref.resolved, discord.DeletedReferencedMessage):
                 print(ref.resolved)
                 raise commands.MissingRequiredArgument(ctx.command.params["content"])
 
             return ref.resolved.content
-        
+
 
 class Utilities(BaseCog):
     def __init__(self, bot: Harmony) -> None:
@@ -93,7 +93,7 @@ class Utilities(BaseCog):
                     "Something went wrong when trying to create the emoji. Make sure the file is less than 256 kB in size.",
                     footer=True,
                 )
-    
+
     @commands.command(usage="<argument>")
     async def raw(self, ctx: Context, *, argument: str | None = None):
         """Displays the raw content of a message (no markdown, etc.). Can be used by replying to a message."""
@@ -101,7 +101,7 @@ class Utilities(BaseCog):
             converted = await ArgumentOrReference().convert(ctx, argument=argument)  # type: ignore
         else:
             converted = argument
-        
+
         if converted is None:
             raise commands.MissingRequiredArgument(ctx.command.params["argument"])
         escaped = converted.replace("```", "``\u200b`")
