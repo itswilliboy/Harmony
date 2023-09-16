@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .utilities import Utilities
 from .fun import Fun
+from .utilities import Utilities
 
 if TYPE_CHECKING:
     from bot import Harmony

@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import discord
-from discord.ext import commands
 from aiohttp import ClientSession
+from discord.ext import commands
 
-from utils import PrimaryEmbed, GenericError, BaseCog
+from utils import BaseCog, GenericError, PrimaryEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
