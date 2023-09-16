@@ -94,7 +94,7 @@ class Utilities(BaseCog):
                     footer=True,
                 )
     
-    @commands.command()
+    @commands.command(usage="<argument>")
     async def raw(self, ctx: Context, *, argument: str | None = None):
         """Displays the raw content of a message (no markdown, etc.). Can be used by replying to a message."""
         if argument is None:
