@@ -104,5 +104,6 @@ class Utilities(BaseCog):
 
         if converted is None:
             raise commands.MissingRequiredArgument(ctx.command.params["argument"])
+
         escaped = converted.replace("```", "``\u200b`")
         await ctx.send(f"```\n{escaped}\n```")

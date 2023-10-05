@@ -19,6 +19,7 @@ class BannedMember(commands.Converter):
 
             try:
                 return await ctx.guild.fetch_ban(discord.Object(id))
+
             except discord.NotFound:
                 raise commands.BadArgument("That member is not banned.")
 
@@ -47,6 +48,7 @@ class General(BaseCog):
 
             if member == ctx.guild.owner:
                 raise GenericError("I can't ban the server owner.")
+
             elif member.top_role >= ctx.author.top_role:
                 raise GenericError(f"Your top role needs to be higher than {member.mention}'s top role to ban them.")
 
@@ -78,5 +80,6 @@ class General(BaseCog):
             await ctx.guild.unban(to_unban, reason=reason)
             embed = SuccessEmbed(description=f"Sucessfully unbanned <@{to_unban.id}>.\nReason: `{reason}`")
             await ctx.send(embed=embed)
+
         except discord.HTTPException:
             GenericError("Something went wrong when trying to unban that user.")

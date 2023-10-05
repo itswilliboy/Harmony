@@ -48,6 +48,7 @@ class Harmony(commands.Bot):
             try:
                 await self.load_extension(ext)
                 self.log.info("Loading extension: %s", ext)
+
             except Exception as exc:
                 self.log.error("Failed to load extension: %s", exc, exc_info=exc)
 
