@@ -83,3 +83,12 @@ class General(BaseCog):
 
         except discord.HTTPException:
             GenericError("Something went wrong when trying to unban that user.")
+
+    @commands.has_guild_permissions(manage_messages=True)
+    @commands.bot_has_guild_permissions(manage_messages=True)
+    @commands.guild_only()
+    @commands.command(aliases=["purge"])
+    async def clear(self, ctx: Context, amount: commands.Range[int, 1, 250]):
+        assert not isinstance(ctx.channel, (discord.DMChannel, discord.PartialMessageable, discord.GroupChannel))
+        await ctx.channel.purge(limit=amount, before=ctx.message)
+        await ctx.message.add_reaction("\N{OK HAND SIGN}")
