@@ -40,8 +40,10 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
     async def on_command_error(self, ctx: Context, error: Exception):
         command = ctx.command
 
-        if isinstance(error, commands.CommandInvokeError):
-            error = error.original
+        try:
+            error = error.original  # type: ignore
+        except AttributeError:
+            pass
 
         if isinstance(error, commands.CommandNotFound):
             return await ctx.message.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
