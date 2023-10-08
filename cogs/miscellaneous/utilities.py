@@ -22,7 +22,6 @@ class ArgumentOrReference(commands.Converter):
 
         if ref := ctx.message.reference:
             if not ref.resolved or isinstance(ref.resolved, discord.DeletedReferencedMessage):
-                print(ref.resolved)
                 raise commands.MissingRequiredArgument(ctx.command.params["content"])
 
             return ref.resolved.content
