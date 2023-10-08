@@ -49,10 +49,10 @@ class General(BaseCog):
             if member == ctx.guild.owner:
                 raise GenericError("I can't ban the server owner.")
 
-            elif member.top_role >= ctx.author.top_role:
+            elif member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
                 raise GenericError(f"Your top role needs to be higher than {member.mention}'s top role to ban them.")
 
-            elif ctx.guild.me.top_role >= member.top_role:
+            elif ctx.guild.me.top_role <= member.top_role:
                 raise GenericError(f"My top role is not high enough to ban {member.mention}.")
 
             to_ban = member
@@ -68,7 +68,7 @@ class General(BaseCog):
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.guild_only()
     @commands.command()
-    async def unban(self, ctx: Context, user: discord.BanEntry | discord.User | BannedMember, *, reason: str | None = None):
+    async def unban(self, ctx: Context, user: discord.BanEntry | BannedMember, *, reason: str | None = None):
         try:
             to_unban: discord.abc.Snowflake
             if isinstance(user, discord.BanEntry):
