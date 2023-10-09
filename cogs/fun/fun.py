@@ -30,15 +30,12 @@ class Fun(BaseCog):
                 json: dict[str, Any] = await resp.json()
                 is_nsfw = json["nsfw"]
 
-                return json
-
-    async def cog_check(self, ctx: Context):
-        await ctx.typing()
-        return True
+            return json
 
     @commands.command()
     async def fox(self, ctx: Context):
-        """Sends a random cute picture of a fox."""
+        """Sends a random picture of a fox."""
+        await ctx.typing()
         async with self.bot.session.get("https://randomfox.ca/floof") as resp:
             json = await resp.json()
 
@@ -47,6 +44,8 @@ class Fun(BaseCog):
 
     @commands.command()
     async def dog(self, ctx: Context):
+        """Sends a random picture of a dog."""
+        await ctx.typing()
         async with self.bot.session.get("https://random.dog/woof.json") as resp:
             json = await resp.json()
 
@@ -55,6 +54,8 @@ class Fun(BaseCog):
 
     @commands.command()
     async def cat(self, ctx: Context):
+        """Sends a random picture of a cat"""
+        await ctx.typing()
         async with self.bot.session.get("https://cataas.com/cat?json=true") as resp:
             json = await resp.json()
 
@@ -64,7 +65,8 @@ class Fun(BaseCog):
 
     @commands.command()
     async def meme(self, ctx: Context):
-        """Displays a random meme."""
+        """Sends a meme."""
+        await ctx.typing()
         meme = await self.fetch_meme(self.bot.session)
 
         if meme is None:
