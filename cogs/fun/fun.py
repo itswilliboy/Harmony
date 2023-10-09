@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class MemeView(discord.ui.View):
-    ...
+    pass  # Implement later
 
 
 class Fun(BaseCog):
