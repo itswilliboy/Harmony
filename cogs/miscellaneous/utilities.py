@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from urllib.parse import urljoin, urlparse
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -70,9 +71,9 @@ class Utilities(BaseCog):
                     "Something went wrong when to trying to resolve the URL, make sure it exists.", footer=True
                 )
 
-            split = emoji.split("/")
+            parsed = urljoin(emoji, urlparse(emoji).path)
             try:
-                name_ = name or split[-1]
+                name_ = name or parsed.split("/")[-1]
                 name_ = Path(name_).stem
 
             except IndexError:
