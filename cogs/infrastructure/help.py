@@ -1,11 +1,8 @@
 from __future__ import annotations
-from math import e
+
+from typing import TYPE_CHECKING, List, Mapping, Optional, Tuple
 
 from discord.ext import commands
-
-from typing import TYPE_CHECKING, Any, List, Mapping, Optional, Tuple
-
-from discord.ext.commands.cog import Cog
 from discord.ext.commands.core import Command
 
 from utils import BaseCog, PrimaryEmbed, get_command_signature

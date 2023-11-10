@@ -1,10 +1,9 @@
-from typing import overload, Union, Tuple
+from typing import Tuple, Union, overload
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import Context as DiscordContext
 from discord.ext.commands.core import Command
-
 
 from bot import Harmony
 
