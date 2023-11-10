@@ -31,7 +31,7 @@ class HelpCommand(commands.HelpCommand):
             if cog is None or cog.qualified_name in "Jishaku" or cog.is_hidden():
                 continue
 
-            categories.append((cog.qualified_name, ", ".join([f"`{cmd.name}`" for cmd in cmds])))
+            categories.append((cog.qualified_name, ", ".join([f"`{cmd.name}`" for cmd in cmds if not cmd.hidden])))
 
         for category in categories:
             embed.add_field(name=category[0], value=category[1], inline=False)
