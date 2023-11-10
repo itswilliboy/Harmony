@@ -40,7 +40,7 @@ class Prefix(BaseCog):
     async def get_custom_prefix(self, message: discord.Message) -> str:
         prefixes = await self.bot.get_prefix(message)
         if isinstance(prefixes, list):
-            del prefixes[0]
+            del prefixes[0]  # Delete mention prefixes
             del prefixes[0]
 
         return prefixes[0]

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import BaseCog, ErrorEmbed, GenericError
+from utils import BaseCog, ErrorEmbed, GenericError, get_command_signature
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -28,13 +28,6 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
                 underline += " " * position + "^" * len(word)
 
         return f"{text}\n{underline}"
-
-    @staticmethod
-    def get_signature(ctx: Context) -> str:
-        base = f"{ctx.clean_prefix}{ctx.command.name}"
-        if usage := ctx.command.usage:
-            return f"{base} {usage}"
-        return f"{base} {ctx.command.signature}"
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: Context, error: Exception):
@@ -88,7 +81,7 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
             embed.set_footer(text="'<>' = required | '[]' = optional")
 
         elif isinstance(error, commands.BadUnionArgument):
-            usage = self.get_signature(ctx)
+            usage = get_command_signature(ctx)
             embed = ErrorEmbed(
                 title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```\n`{str(error.errors[-1])}`"
             )
