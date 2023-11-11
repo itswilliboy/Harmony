@@ -1,11 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Mapping, Optional, Tuple
+from typing import TYPE_CHECKING, Mapping
 
+from discord import Embed
 from discord.ext import commands
-from discord.ext.commands.core import Command, Group
+from discord.ext.commands import Cog, Command, Group
 
-from utils import BaseCog, PrimaryEmbed, get_command_signature, ErrorEmbed
+from utils import (
+    BaseCog,
+    ErrorEmbed,
+    Paginator,
+    PrimaryEmbed,
+    chunk,
+    get_command_signature,
+)
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -18,14 +26,14 @@ class HelpCommand(commands.HelpCommand):
 
         self.context: Context
 
-    async def send_bot_help(self, mapping: Mapping[Optional[BaseCog], List[Command]]) -> None:
+    async def send_bot_help(self, mapping: Mapping[BaseCog | None, list[Command]]) -> None:
         embed = PrimaryEmbed(title="Help")
         embed.description = (
             f"Use `{self.context.clean_prefix}help [command]` for more information on a command.\n"
-            f"You can also use `{self.context.clean_prefix}help [category]` for more information on a category."
+            f"You can also use `{self.context.clean_prefix}help [category]` for more infomation on a category."
         )
 
-        categories: List[Tuple[str, str]] = []
+        categories: list[tuple[str, str]] = []
 
         for cog, cmds in mapping.items():
             if cog is None or cog.qualified_name in "Jishaku" or cog.is_hidden():
@@ -62,8 +70,25 @@ class HelpCommand(commands.HelpCommand):
 
         await self.get_destination().send(embed=embed)
 
+    async def send_cog_help(self, cog: Cog) -> None:
+        embeds: list[Embed] = []
+
+        for chnk in chunk(cog.get_commands(), 5):
+            embed = PrimaryEmbed(title=cog.qualified_name.title())
+            for cmd in chnk:
+                embed.add_field(
+                    name=f"`{cmd.qualified_name}`",
+                    value=f"{cmd.short_doc}\n`{get_command_signature((self.context.clean_prefix, cmd))}`\n\u200b",
+                    inline=False,
+                )
+
+            embeds.append(embed)
+
+        await Paginator(embeds).start(self.get_destination())
+
     async def send_error_message(self, error: str) -> None:
         await self.get_destination().send(embed=ErrorEmbed(description=error))
+
 
 class Help(BaseCog):
     def __init__(self, bot: Harmony) -> None:
@@ -72,5 +97,4 @@ class Help(BaseCog):
         bot.help_command.cog = self
 
     def cog_unload(self) -> None:
-        self.bot.help_command = commands.DefaultHelpCommand()
-
+        self.bot.help_command = commands.MinimalHelpCommand()
