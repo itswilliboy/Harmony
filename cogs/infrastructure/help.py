@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Mapping, Optional, Tuple
 
 from discord.ext import commands
-from discord.ext.commands.core import Command
+from discord.ext.commands.core import Command, Group
 
-from utils import BaseCog, PrimaryEmbed, get_command_signature
+from utils import BaseCog, PrimaryEmbed, get_command_signature, ErrorEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -24,14 +24,17 @@ class HelpCommand(commands.HelpCommand):
             f"Use `{self.context.clean_prefix}help [command]` for more information on a command.\n"
             f"You can also use `{self.context.clean_prefix}help [category]` for more information on a category."
         )
-        
+
         categories: List[Tuple[str, str]] = []
 
         for cog, cmds in mapping.items():
             if cog is None or cog.qualified_name in "Jishaku" or cog.is_hidden():
                 continue
 
-            categories.append((cog.qualified_name, ", ".join([f"`{cmd.name}`" for cmd in cmds if not cmd.hidden])))
+            cmds_ = [cmd for cmd in cmds if not cmd.hidden]
+            categories.append(
+                (cog.qualified_name, ", ".join(sorted([f"`{cmd.name}`" for cmd in cmds_], key=lambda i: i[1])))
+            )
 
         for category in categories:
             embed.add_field(name=category[0], value=category[1], inline=False)
@@ -46,6 +49,21 @@ class HelpCommand(commands.HelpCommand):
 
         await self.get_destination().send(embed=embed)
 
+    async def send_group_help(self, group: Group) -> None:
+        embed = PrimaryEmbed(title=group.name.title())
+        embed.description = group.short_doc
+
+        formatted = []
+        for cmd in group.commands:
+            formatted.append(get_command_signature((self.context.clean_prefix, cmd)))
+
+        nl = "\n"
+        embed.add_field(name="Commands", value=f"```\n{nl.join(formatted)}\n```")
+
+        await self.get_destination().send(embed=embed)
+
+    async def send_error_message(self, error: str) -> None:
+        await self.get_destination().send(embed=ErrorEmbed(description=error))
 
 class Help(BaseCog):
     def __init__(self, bot: Harmony) -> None:
