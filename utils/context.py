@@ -1,4 +1,4 @@
-from typing import Tuple, Union, overload
+from typing import overload
 
 import discord
 from discord.ext import commands
@@ -13,19 +13,19 @@ class Context(DiscordContext[Harmony]):
     command: commands.Command
 
 @overload
-def get_command_signature(arg: Tuple[str, Command]) -> str: ...
+def get_command_signature(arg: tuple[str, Command]) -> str: ...
 
 @overload
 def get_command_signature(arg: Context) -> str: ...
 
-def get_command_signature(arg: Union[Context, Tuple[str, Command]]) -> str:
-    if isinstance(arg, Context):
-        prefix, command = arg.prefix, arg.command
+def get_command_signature(arg: Context | tuple[str, Command]) -> str:
+    if isinstance(arg, (Context, commands.Context)):
+        prefix, command = arg.clean_prefix, arg.command
     else:
         prefix, command = arg
 
-    base = f"{prefix}{command.full_parent_name} {command.name}"
+    base = f"{prefix}{command.full_parent_name + ' ' if command.full_parent_name else ''}{command.name}"
     if usage := command.usage:
         return f"{base} {usage}"
 
-    return f"{base} {command.signature}"
+    return f"{base} {command.signature}".rstrip()
