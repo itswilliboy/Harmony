@@ -6,7 +6,8 @@ from .cog import *
 from .context import *
 from .embed import *
 from .exceptions import *
-from .help import *
+from .utils import *
+from .paginator import *
 
 if TYPE_CHECKING:
     PrimaryEmbed = Embed
