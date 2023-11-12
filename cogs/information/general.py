@@ -46,10 +46,11 @@ class General(BaseCog):
         top_role = member.top_role.mention if member.top_role != ctx.guild.default_role else "@everyone"
         role_count = len(member.roles)
 
-        embed = discord.Embed(title=member.name, colour=colour)
+        embed = discord.Embed(title=member.global_name or member.name, colour=colour)
         embed.set_author(name="User Information")
         embed.set_thumbnail(url=member.display_avatar.with_format("png").url)
 
+        embed.add_field(name="Username", value=str(member))
         embed.add_field(name=f"User ID {'<:bot:1110964599349579926>' if member.bot else ''}", value=member.id, inline=False)
 
         statuses = {
@@ -75,10 +76,18 @@ class General(BaseCog):
     @commands.command(aliases=["av", "pfp"])
     async def avatar(self, ctx: Context, user: discord.User = commands.Author):
         """Get someone's avatar."""
-
         view = AvatarView(user.display_avatar)
-
         embed = PrimaryEmbed(title=f"{user.name}'s Avatar").set_image(url=user.display_avatar.url)
+        await ctx.send(embed=embed, view=view)
+
+    @commands.command()
+    async def icon(self, ctx: Context):
+        """Get the server's icon."""
+        if ctx.guild.icon is None:
+            return ctx.send("This server doesn't have an icon.")
+
+        view = AvatarView(ctx.guild.icon)
+        embed = PrimaryEmbed(title=f"{ctx.guild.name}'s Icon").set_image(url=ctx.guild.icon.url)
         await ctx.send(embed=embed, view=view)
 
     @commands.command()
