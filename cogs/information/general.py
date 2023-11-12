@@ -84,7 +84,7 @@ class General(BaseCog):
     async def icon(self, ctx: Context):
         """Get the server's icon."""
         if ctx.guild.icon is None:
-            return ctx.send("This server doesn't have an icon.")
+            return await ctx.send("This server doesn't have an icon.")
 
         view = AvatarView(ctx.guild.icon)
         embed = PrimaryEmbed(title=f"{ctx.guild.name}'s Icon").set_image(url=ctx.guild.icon.url)
