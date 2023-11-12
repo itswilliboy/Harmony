@@ -36,7 +36,7 @@ class HelpCommand(commands.HelpCommand):
         categories: list[tuple[str, str]] = []
 
         for cog, cmds in mapping.items():
-            if cog is None or cog.qualified_name in "Jishaku" or cog.is_hidden():
+            if cog is None or cog.qualified_name == "Jishaku" or cog.is_hidden():
                 continue
 
             cmds_ = [cmd for cmd in cmds if not cmd.hidden]
