@@ -9,7 +9,7 @@ from discord.ext import commands
 from psutil import Process, cpu_percent, virtual_memory
 from typing_extensions import Self
 
-from utils import BaseCog, PrimaryEmbed
+from utils import BaseCog, PrimaryEmbed, GenericError
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -84,7 +84,7 @@ class General(BaseCog):
     async def icon(self, ctx: Context):
         """Get the server's icon."""
         if ctx.guild.icon is None:
-            return await ctx.send("This server doesn't have an icon.")
+            raise GenericError("This server doesn't have an icon")
 
         view = AvatarView(ctx.guild.icon)
         embed = PrimaryEmbed(title=f"{ctx.guild.name}'s Icon").set_image(url=ctx.guild.icon.url)
