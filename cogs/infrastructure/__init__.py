@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from discord.ext import commands
-
 from .blacklist import Blacklist
 from .error_handler import ErrorHandler
 from .help import Help
@@ -12,10 +10,6 @@ from .statistics import Statistics
 
 if TYPE_CHECKING:
     from bot import Harmony
-
-
-class NotOwner(commands.NotOwner):
-    pass
 
 
 class Infrastructure(Prefix, ErrorHandler, Help, Statistics, Blacklist):
