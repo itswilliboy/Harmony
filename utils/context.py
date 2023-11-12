@@ -12,11 +12,16 @@ class Context(DiscordContext[Harmony]):
     guild: discord.Guild
     command: commands.Command
 
-@overload
-def get_command_signature(arg: tuple[str, Command]) -> str: ...
 
 @overload
-def get_command_signature(arg: Context) -> str: ...
+def get_command_signature(arg: tuple[str, Command]) -> str:
+    ...
+
+
+@overload
+def get_command_signature(arg: Context) -> str:
+    ...
+
 
 def get_command_signature(arg: Context | tuple[str, Command]) -> str:
     if isinstance(arg, (Context, commands.Context)):
