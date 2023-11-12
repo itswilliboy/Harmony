@@ -55,7 +55,7 @@ class Utilities(BaseCog):
                 async with self.bot.session.get(emoji) as resp:
                     if not resp.ok:
                         raise GenericError(
-                            "Something went wrong when trying to download the image, make sure it exists.", footer=True
+                            "Something went wrong when trying to download the image, make sure it exists.", True
                         )
 
                     if resp.content_type not in ("image/png", "image/jpeg", "image/webp", "image/gif"):
@@ -68,7 +68,7 @@ class Utilities(BaseCog):
 
             except ClientConnectionError:
                 raise GenericError(
-                    "Something went wrong when to trying to resolve the URL, make sure it exists.", footer=True
+                    "Something went wrong when to trying to resolve the URL, make sure it exists.", True
                 )
 
             parsed = urljoin(emoji, urlparse(emoji).path)
@@ -79,7 +79,7 @@ class Utilities(BaseCog):
             except IndexError:
                 raise GenericError(
                     "Needs to be a valid file URL (eg. `https://cdn.discordapp.com/emojis/744346239075877518.gif`)",
-                    footer=True,
+                    True,
                 )
 
             try:
@@ -91,7 +91,7 @@ class Utilities(BaseCog):
             except discord.HTTPException:
                 raise GenericError(
                     "Something went wrong when trying to create the emoji. Make sure the file is less than 256 kB in size.",
-                    footer=True,
+                    True,
                 )
 
     @commands.command(usage="<argument>")
