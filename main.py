@@ -7,7 +7,6 @@ from bot import Harmony
 from config import TOKEN
 
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
-os.environ["JISHAKU_HIDE"] = "True"
 
 # fmt: off
 initial_extensions = [
