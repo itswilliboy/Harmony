@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from urllib.parse import urljoin, urlparse
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import urljoin, urlparse
 
 import discord
 from aiohttp import ClientConnectionError, InvalidURL
