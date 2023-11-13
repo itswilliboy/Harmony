@@ -9,7 +9,7 @@ from discord.ext import commands
 from psutil import Process, cpu_percent, virtual_memory
 from typing_extensions import Self
 
-from utils import BaseCog, PrimaryEmbed, GenericError
+from utils import BaseCog, GenericError, PrimaryEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
