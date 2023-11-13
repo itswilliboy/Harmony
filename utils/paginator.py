@@ -14,8 +14,8 @@ class PaginatorView(discord.ui.View):
 
         if p.index == 0:
             pass
+
         else:
-            p.page -= 1
             p.previous_page()
 
         await interaction.response.edit_message(embed=p.current_page)
@@ -28,7 +28,6 @@ class PaginatorView(discord.ui.View):
             pass
 
         else:
-            p.page += 1
             p.next_page()
 
         await interaction.response.edit_message(embed=p.current_page)
@@ -63,10 +62,12 @@ class Paginator:
         return self.embeds.index(self.current_page)
 
     def next_page(self) -> None:
+        self.page += 1
         index = self.index
         self.current_page = self.embeds[index + 1]
 
     def previous_page(self) -> None:
+        self.page -= 1
         index = self.index
         self.current_page = self.embeds[index - 1]
 
