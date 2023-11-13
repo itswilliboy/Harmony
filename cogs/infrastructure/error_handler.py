@@ -98,6 +98,11 @@ class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
         elif isinstance(error, commands.CheckFailure) and str(error) == "The global check once functions failed.":
             return
 
+        elif isinstance(error, commands.RangeError):
+            embed = ErrorEmbed(
+                description=f"The value (`{error.value}`) needs to between `{error.minimum}`-`{error.maximum}`"
+            )
+
         else:
             embed = ErrorEmbed(description="An unknown error occurred")
             self.bot.log.error(error, exc_info=error)
