@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 import discord
@@ -91,4 +92,5 @@ class General(BaseCog):
     async def clear(self, ctx: Context, amount: commands.Range[int, 1, 250]):
         assert not isinstance(ctx.channel, (discord.DMChannel, discord.PartialMessageable, discord.GroupChannel))
         await ctx.channel.purge(limit=amount, before=ctx.message)
-        await ctx.message.add_reaction("\N{OK HAND SIGN}")
+        with suppress(discord.NotFound):
+            await ctx.message.add_reaction("\N{OK HAND SIGN}")
