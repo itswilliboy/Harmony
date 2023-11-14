@@ -67,9 +67,7 @@ class Utilities(BaseCog):
                 raise GenericError("The URL is invalid, make sure it's valid.")
 
             except ClientConnectionError:
-                raise GenericError(
-                    "Something went wrong when to trying to resolve the URL, make sure it exists.", True
-                )
+                raise GenericError("Something went wrong when to trying to resolve the URL, make sure it exists.", True)
 
             parsed = urljoin(emoji, urlparse(emoji).path)
             try:

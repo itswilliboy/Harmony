@@ -78,6 +78,9 @@ class HelpCommand(commands.HelpCommand):
         for chnk in chunk(cog.get_commands(), 5):
             embed = PrimaryEmbed(title=cog.qualified_name.title())
             for cmd in chnk:
+                if cmd.hidden:
+                    continue
+
                 embed.add_field(
                     name=f"`{cmd.qualified_name}`",
                     value=f"{cmd.short_doc}\n`{get_command_signature((self.context.clean_prefix, cmd))}`\n\u200b",
