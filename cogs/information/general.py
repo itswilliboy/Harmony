@@ -1,8 +1,12 @@
 from __future__ import annotations
+from sys import version_info
+from textwrap import dedent
 
 import time
 from os import getpid
 from typing import TYPE_CHECKING
+import aiohttp
+import asyncpg
 
 import discord
 from discord.ext import commands
@@ -160,15 +164,11 @@ class General(BaseCog):
         embed.set_footer(text=f"Check out `{ctx.clean_prefix}ping` for more latency information.")
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         if app_info:
-            embed.set_author(name=app_info.owner.display_name, icon_url=app_info.owner.display_avatar.url)
+            embed.set_author(name=f"@{app_info.owner.name}", icon_url=app_info.owner.display_avatar.url)
 
         embed.add_field(name="Started", value=discord.utils.format_dt(self.bot.started_at, "R"))
         embed.add_field(name="Servers", value=len(self.bot.guilds))
         embed.add_field(name="Users", value=f"{len(self.bot.users):,}")
-
-        command_runs: int = await self.bot.pool.fetchval("SELECT SUM(command_runs) FROM statistics")
-
-        embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
 
         process = Process(getpid())
         cpu = cpu_percent()
@@ -178,9 +178,21 @@ class General(BaseCog):
         formatted = lambda x: f"{int(to_mebibytes(x)):,}"
 
         value = f"""
-        `CPU (Server)`: {cpu:1}%
-        `RAM (Server)`: {formatted(server_ram)} MiB
-        `RAM (Process)`: {formatted(process_ram)} MiB
+            `CPU (Server)`: {cpu:1}%
+            `RAM (Server)`: {formatted(server_ram)} MiB
+            `RAM (Process)`: {formatted(process_ram)} MiB
         """
-        embed.add_field(name="Process Information", value=value)
+        embed.add_field(name="Process Information", value=dedent(value))
+
+        command_runs: int = await self.bot.pool.fetchval("SELECT SUM(command_runs) FROM statistics")
+        embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
+        
+        version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"
+        value = f"""
+            `Python`: v{version}
+            `discord.py`: v{discord.__version__}
+            `aiohttp`: v{aiohttp.__version__}
+            `asyncpg`: v{asyncpg.__version__}
+        """
+        embed.add_field(name="Version Information", value=dedent(value), inline=False)
         await ctx.send(embed=embed)
