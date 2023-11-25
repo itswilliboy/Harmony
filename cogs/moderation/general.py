@@ -13,8 +13,9 @@ if TYPE_CHECKING:
     from utils import Context
 
 
+# The code below below is sourced with small changes from Rapptz's RoboDanny (https://github.com/Rapptz/RoboDanny)
 class BannedMember(commands.Converter):
-    async def convert(self, ctx: Context, argument: str):
+    async def convert(self, ctx: Context, argument: str) -> discord.BanEntry:
         if argument.isdigit():
             id = int(argument)
 
@@ -28,6 +29,7 @@ class BannedMember(commands.Converter):
         if user is None:
             raise commands.BadArgument("That member is not banned.")
         return user
+# End
 
 
 class General(BaseCog):
@@ -40,6 +42,7 @@ class General(BaseCog):
     @commands.guild_only()
     @commands.command()
     async def ban(self, ctx: Context, member: discord.Member | int, *, reason: str | None = None):
+        """Bans a user that is either in the server or not."""
         to_ban: discord.abc.Snowflake
         if isinstance(member, int) and ctx.guild.get_member(member) is None:
             to_ban = discord.Object(member)
@@ -70,6 +73,7 @@ class General(BaseCog):
     @commands.guild_only()
     @commands.command()
     async def unban(self, ctx: Context, user: discord.BanEntry | BannedMember, *, reason: str | None = None):
+        """Unbans a banned user."""
         try:
             to_unban: discord.abc.Snowflake
             if isinstance(user, discord.BanEntry):
@@ -90,6 +94,7 @@ class General(BaseCog):
     @commands.guild_only()
     @commands.command(aliases=["purge"])
     async def clear(self, ctx: Context, amount: commands.Range[int, 1, 250]):
+        """Clears up to 250 messages from the current channel."""
         assert not isinstance(ctx.channel, (discord.DMChannel, discord.PartialMessageable, discord.GroupChannel))
         await ctx.channel.purge(limit=amount, before=ctx.message)
         with suppress(discord.NotFound):
