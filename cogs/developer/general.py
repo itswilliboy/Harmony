@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 class General(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
 
     @commands.command(aliases=["e"])
     async def eval(self, ctx: Context, *, code: CodeblockConverter):  # type: ignore

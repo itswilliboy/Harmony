@@ -94,7 +94,6 @@ class Flags(commands.FlagConverter, prefix="--", delimiter=" "):
 class Blacklist(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
         self.blacklist: dict[int, BlacklistItem] = {}
         bot.loop.create_task(self.fill_cache())
         bot.add_check(self.blacklist_check, call_once=True)

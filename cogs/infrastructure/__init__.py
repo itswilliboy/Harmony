@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 class Infrastructure(Prefix, ErrorHandler, Help, Statistics):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
 
 
 async def setup(bot: Harmony) -> None:

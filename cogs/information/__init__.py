@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 class Information(General):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
 
 
 async def setup(bot: Harmony) -> None:

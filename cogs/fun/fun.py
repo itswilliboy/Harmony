@@ -20,7 +20,6 @@ class MemeView(discord.ui.View):
 class Fun(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
 
     @staticmethod
     async def fetch_meme(session: ClientSession) -> dict[str, Any] | None:
