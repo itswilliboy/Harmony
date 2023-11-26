@@ -33,7 +33,7 @@ class BlacklistItem:
         return self._global
 
     @property
-    def guild_ids(self) -> list[int | None]:
+    def guild_ids(self) -> list[int]:
         """Returns the guild ID the user is blacklisted in, if any."""
         return [i for i in self._guild_ids] if self._guild_ids else []
 
@@ -98,13 +98,6 @@ class Blacklist(BaseCog):
         self.blacklist: dict[int, BlacklistItem] = {}
         bot.loop.create_task(self.fill_cache())
         bot.add_check(self.blacklist_check, call_once=True)
-
-    async def cog_check(self, ctx: Context) -> bool:
-        predicate = await self.bot.is_owner(ctx.author)
-
-        if predicate is False:
-            raise commands.NotOwner()
-        return predicate
 
     async def fill_cache(self) -> None:
         records = await self.bot.pool.fetch("SELECT * FROM blacklist")
