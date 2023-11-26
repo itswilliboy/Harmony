@@ -8,12 +8,11 @@ import discord
 from aiohttp import ClientConnectionError, InvalidURL
 from discord.ext import commands
 
-from utils import ErrorEmbed, GenericError, SuccessEmbed
-from utils.cog import BaseCog
+from utils import BaseCog, ErrorEmbed, GenericError, SuccessEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
-    from utils.context import Context
+    from utils import Context
 
 
 class ArgumentOrReference(commands.Converter):
