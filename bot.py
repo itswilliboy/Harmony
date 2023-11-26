@@ -22,7 +22,7 @@ class Harmony(commands.Bot):
     def __init__(self, intents: discord.Intents, initial_extensions: list[str], *args: Any, **kwargs: Any) -> None:
         self.initial_extensions = initial_extensions
         self.started_at = datetime.now()
-        super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, status=discord.Status.offline, *args, **kwargs)  # type: ignore
+        super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, *args, **kwargs)  # type: ignore
         self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # Hacky way for lowercase cog arguments in help command
 
     async def get_prefix(self, message: discord.Message) -> str | list[str]:
