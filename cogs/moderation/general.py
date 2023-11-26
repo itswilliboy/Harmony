@@ -29,6 +29,8 @@ class BannedMember(commands.Converter):
         if user is None:
             raise commands.BadArgument("That member is not banned.")
         return user
+
+
 # End
 
 

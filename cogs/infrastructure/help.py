@@ -43,9 +43,7 @@ class HelpCommand(commands.HelpCommand):
                 continue
 
             cmds_ = await self.filter_commands(cmds, sort=True)
-            categories.append(
-                (cog.qualified_name, ", ".join([f"`{cmd.name}`" for cmd in cmds_]))
-            )
+            categories.append((cog.qualified_name, ", ".join([f"`{cmd.name}`" for cmd in cmds_])))
 
         for category in categories:
             embed.add_field(name=category[0], value=category[1], inline=False)
@@ -77,7 +75,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_cog_help(self, cog: Cog) -> None:
         embeds: list[Embed] = []
-        
+
         for chnk in chunk(cog.get_commands(), 5):
             embed = PrimaryEmbed(title=cog.qualified_name.title())
             for cmd in chnk:

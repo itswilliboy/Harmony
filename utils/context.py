@@ -31,7 +31,7 @@ class Context(DiscordContext[Harmony]):
             current_argument=context.current_argument,
             interaction=context.interaction,
         )
-    
+
     @property
     def clean_prefix(self) -> str:
         clean = super().clean_prefix

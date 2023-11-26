@@ -18,7 +18,6 @@ class PaginatorView(discord.ui.View):
         elif self.paginator.user_page == self.paginator.length:
             self.next.disabled = True
 
-
     @discord.ui.button(label="<<", style=discord.ButtonStyle.blurple, disabled=True)
     async def prev(self, interaction: discord.Interaction, _):
         page = self.paginator

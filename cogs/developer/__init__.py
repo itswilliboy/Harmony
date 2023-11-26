@@ -15,5 +15,6 @@ class Developer(Test, General, Blacklist, hidden=True, owner_only=True):
         super().__init__(bot)
         self.bot = bot
 
+
 async def setup(bot: Harmony) -> None:
     await bot.add_cog(Developer(bot))

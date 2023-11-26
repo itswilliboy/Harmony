@@ -16,5 +16,6 @@ class Infrastructure(Prefix, ErrorHandler, Help, Statistics):
         super().__init__(bot)
         self.bot = bot
 
+
 async def setup(bot: Harmony) -> None:
     await bot.add_cog(Infrastructure(bot))

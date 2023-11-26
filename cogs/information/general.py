@@ -1,13 +1,13 @@
 from __future__ import annotations
-from sys import version_info
-from textwrap import dedent
 
 import time
 from os import getpid
+from sys import version_info
+from textwrap import dedent
 from typing import TYPE_CHECKING
+
 import aiohttp
 import asyncpg
-
 import discord
 from discord.ext import commands
 from psutil import Process, cpu_percent, virtual_memory
@@ -185,7 +185,7 @@ class General(BaseCog):
 
         command_runs: int = await self.bot.pool.fetchval("SELECT SUM(command_runs) FROM statistics")
         embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
-        
+
         version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"
         value = f"""
             `Python`: v{version}
