@@ -35,7 +35,6 @@ class BannedMember(commands.Converter):
 class General(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
 
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)

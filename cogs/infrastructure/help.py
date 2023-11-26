@@ -8,6 +8,7 @@ from discord.ext.commands import Cog, Command, Group
 
 from utils import (
     BaseCog,
+    Context,
     ErrorEmbed,
     Paginator,
     PrimaryEmbed,
@@ -17,14 +18,16 @@ from utils import (
 
 if TYPE_CHECKING:
     from bot import Harmony
-    from utils import Context
 
 
 class HelpCommand(commands.HelpCommand):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(verify_checks=False, *args, **kwargs)
+        self.verify_checks = False
 
-        self.context: Context
+    @property
+    def ctx(self) -> Context:
+        return Context.from_context(self.context)
 
     async def send_bot_help(self, mapping: Mapping[BaseCog | None, list[Command]]) -> None:
         embed = PrimaryEmbed(title="Help")
@@ -39,9 +42,9 @@ class HelpCommand(commands.HelpCommand):
             if cog is None or cog.qualified_name == "Jishaku" or cog.is_hidden():
                 continue
 
-            cmds_ = [cmd for cmd in cmds if not cmd.hidden]
+            cmds_ = await self.filter_commands(cmds, sort=True)
             categories.append(
-                (cog.qualified_name, ", ".join(sorted([f"`{cmd.name}`" for cmd in cmds_], key=lambda i: i[1])))
+                (cog.qualified_name, ", ".join([f"`{cmd.name}`" for cmd in cmds_]))
             )
 
         for category in categories:
@@ -65,7 +68,7 @@ class HelpCommand(commands.HelpCommand):
 
         formatted = []
         for cmd in group.commands:
-            formatted.append(get_command_signature((self.context.clean_prefix, cmd)))
+            formatted.append(get_command_signature((self.ctx.clean_prefix, cmd)))
 
         nl = "\n"
         embed.add_field(name="Commands", value=f"```\n{nl.join(formatted)}\n```")
@@ -74,7 +77,7 @@ class HelpCommand(commands.HelpCommand):
 
     async def send_cog_help(self, cog: Cog) -> None:
         embeds: list[Embed] = []
-
+        
         for chnk in chunk(cog.get_commands(), 5):
             embed = PrimaryEmbed(title=cog.qualified_name.title())
             for cmd in chnk:
@@ -103,3 +106,4 @@ class Help(BaseCog):
 
     def cog_unload(self) -> None:
         self.bot.help_command = commands.MinimalHelpCommand()
+        self.bot.help_command.cog = None

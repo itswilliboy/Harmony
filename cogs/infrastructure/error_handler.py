@@ -12,10 +12,9 @@ if TYPE_CHECKING:
     from utils import Context
 
 
-class ErrorHandler(BaseCog, command_attrs=dict(hidden=True)):
+class ErrorHandler(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
 
     @staticmethod
     def underline(text: str, target: str) -> str:

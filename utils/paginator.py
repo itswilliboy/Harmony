@@ -8,7 +8,18 @@ class PaginatorView(discord.ui.View):
         super().__init__(timeout=300)
         self.paginator = paginator
 
-    @discord.ui.button(label="<<", style=discord.ButtonStyle.blurple)
+    def update(self):
+        self.prev.disabled = False
+        self.next.disabled = False
+
+        if self.paginator.index == 0:
+            self.prev.disabled = True
+
+        elif self.paginator.user_page == self.paginator.length:
+            self.next.disabled = True
+
+
+    @discord.ui.button(label="<<", style=discord.ButtonStyle.blurple, disabled=True)
     async def prev(self, interaction: discord.Interaction, _):
         page = self.paginator
 
@@ -18,7 +29,8 @@ class PaginatorView(discord.ui.View):
         else:
             page.previous_page()
 
-        await interaction.response.edit_message(embed=page.current_page)
+        self.update()
+        await interaction.response.edit_message(embed=page.current_page, view=self)
 
     @discord.ui.button(label=">>", style=discord.ButtonStyle.blurple)
     async def next(self, interaction: discord.Interaction, _):
@@ -30,7 +42,8 @@ class PaginatorView(discord.ui.View):
         else:
             page.next_page()
 
-        await interaction.response.edit_message(embed=page.current_page)
+        self.update()
+        await interaction.response.edit_message(embed=page.current_page, view=self)
 
 
 class Paginator:
@@ -44,7 +57,7 @@ class Paginator:
     @property
     def current_page(self) -> discord.Embed:
         embed = self._current_page
-        if len(self.embeds) < 1:
+        if len(self.embeds) == 1:
             return embed
         return embed.set_footer(text=f"Page: {self.user_page}/{self.length}")
 
@@ -74,6 +87,6 @@ class Paginator:
         index = self.index
         self.current_page = self.embeds[index - 1]
 
-    async def start(self, channel: discord.abc.MessageableChannel) -> None:
+    async def start(self, messageable: discord.abc.Messageable) -> None:
         view = self.view if len(self.embeds) > 1 else discord.utils.MISSING
-        await channel.send(embed=self.current_page, view=view)
+        await messageable.send(embed=self.current_page, view=view)

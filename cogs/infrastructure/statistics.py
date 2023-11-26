@@ -11,10 +11,9 @@ if TYPE_CHECKING:
     from bot import Harmony
 
 
-class Statistics(BaseCog, command_attrs=dict(hidden=True)):
+class Statistics(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
         bot.loop.create_task(self.check_statistics())
 
     async def check_statistics(self) -> None:

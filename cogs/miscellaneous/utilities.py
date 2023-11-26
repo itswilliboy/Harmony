@@ -28,10 +28,9 @@ class ArgumentOrReference(commands.Converter):
             return ref.resolved.content
 
 
-class Utilities(BaseCog):
+class Utilities(BaseCog, hidden=True):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
 
     @commands.has_guild_permissions(manage_expressions=True)
     @commands.bot_has_guild_permissions(manage_expressions=True)

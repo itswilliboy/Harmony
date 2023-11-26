@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 class Prefix(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
         bot.loop.create_task(self.check_prefixes())
 
     async def check_prefixes(self) -> None:

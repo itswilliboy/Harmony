@@ -34,7 +34,6 @@ class AvatarView(discord.ui.View):
 class General(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.bot = bot
 
     @commands.guild_only()
     @commands.command(aliases=["ui", "whois", "info"])
