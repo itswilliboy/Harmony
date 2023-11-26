@@ -12,5 +12,6 @@ class Moderation(General):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
 
+
 async def setup(bot: Harmony) -> None:
     await bot.add_cog(Moderation(bot))
