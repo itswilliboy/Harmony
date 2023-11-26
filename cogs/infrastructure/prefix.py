@@ -6,12 +6,11 @@ import discord
 from discord.ext import commands
 
 from config import DEFAULT_PREFIX
-from utils import ErrorEmbed, PrimaryEmbed, SuccessEmbed
-from utils.cog import BaseCog
+from utils import ErrorEmbed, PrimaryEmbed, SuccessEmbed, BaseCog
 
 if TYPE_CHECKING:
     from bot import Harmony
-    from utils.context import Context
+    from utils import Context
 
 
 class Prefix(BaseCog):
