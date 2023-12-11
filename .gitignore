@@ -5,6 +5,9 @@
 config.py
 cogs/developer/test.py
 
+# IPC
+cogs/infrastructure/ipc.py
+
 # Virtual environment and cache
 .venv
 **/__pycache__
