@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS prefixes(
     prefix VARCHAR(5) NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS prefixes_guild_id_idx ON prefixes (guild_id);
+CREATE INDEX IF NOT EXISTS prefixes_prefix_idx ON prefixes (prefix);
+
 CREATE TABLE IF NOT EXISTS statistics(
     guild_id BIGINT PRIMARY KEY,
     command_runs INTEGER DEFAULT 0
