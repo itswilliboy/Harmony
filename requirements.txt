@@ -1,6 +1,9 @@
 discord.py
 asyncpg
 asyncpg-stubs
-typing-extensions
 jishaku
 psutil
+
+langcodes[data]
+cutlet
+unidic-lite
