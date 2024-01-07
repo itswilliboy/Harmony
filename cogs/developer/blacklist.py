@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import discord
 from asyncpg import Record
 from discord.ext import commands
-from typing_extensions import Self
 
 from utils import BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
 
@@ -34,20 +33,21 @@ class BlacklistItem:
 
     @property
     def guild_ids(self) -> list[int]:
-        """Returns the guild ID the user is blacklisted in, if any."""
+        """Returns the ID of any guilds the user if blacklisted in."""
         return [i for i in self._guild_ids] if self._guild_ids else []
 
     @property
     def user_id(self) -> int:
-        """Returns the user ID of the blacklisted user."""
+        """Returns the ID of the blacklisted user."""
         return self._user_id
 
     @property
     def reason(self) -> str:
-        """Returns the reason for the blacklist, if any."""
+        """Returns the reason for the blacklist."""
         return self._reason
 
     async def add_guild(self, guild: discord.abc.Snowflake) -> Self:
+        """Adds a guild to the item."""
         if guild.id in self.guild_ids:
             raise ValueError("User is already blacklisted in that guild.")
 
@@ -65,6 +65,7 @@ class BlacklistItem:
         return self
 
     async def remove_guild(self, guild: discord.abc.Snowflake) -> Self:
+        """Removes a guild from the item."""
         if self.is_global:
             raise ValueError("Can't remove guilds from a global blacklist item.")
 
@@ -104,6 +105,7 @@ class Blacklist(BaseCog):
             self.blacklist[record["user_id"]] = BlacklistItem(self, record)
 
     def blacklist_check(self, ctx: Context) -> bool:
+        print(len(self.blacklist))
         if ctx.author.id in self.blacklist.keys():
             item = self.blacklist[ctx.author.id]
             if item.is_global:
@@ -116,6 +118,7 @@ class Blacklist(BaseCog):
     async def add_blacklist(
         self, user: discord.User, *, guild: discord.Guild | None = None, reason: str | None = None
     ) -> BlacklistItem:
+        """Create a blacklist for a user, optionally in a specific guild."""
         if guild:
             query = """
             INSERT INTO blacklist (user_id, guild_ids, reason, global) 
@@ -141,9 +144,10 @@ class Blacklist(BaseCog):
         return item
 
     async def remove_blacklist(self, user: discord.User) -> None:
+        """Remove the blacklist of a user from everywhere."""
         query = "DELETE FROM blacklist WHERE user_id = $1"
         await self.bot.pool.execute(query, user.id)
-        self.blacklist.pop(user.id)
+        del self.blacklist[user.id]
 
     @commands.group(name="blacklist", hidden=True)
     async def blacklist_(self, ctx: Context) -> None:
@@ -205,7 +209,7 @@ class Blacklist(BaseCog):
                 title="Blacklisted",
                 description=f"""
             Globally: `{item.is_global}`
-            {f'Servers{nl}* {f" {nl}* ".join(guild_names)}' if not item.is_global else ''}
+            {f'Servers:{nl}* {f" {nl}* ".join(guild_names)}' if not item.is_global else ''}
             """,
             )
             .set_thumbnail(url=user.display_avatar.url)
