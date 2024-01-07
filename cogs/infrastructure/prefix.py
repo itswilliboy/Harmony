@@ -60,7 +60,7 @@ class Prefix(BaseCog):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.bot.pool.execute("DELETE FROM prefixes WHERE guild_id = $1", guild.id)
 
-    @commands.hybrid_group()
+    @commands.group()
     async def prefix(self, ctx: Context):
         """Displays the server's prefix."""
         embed = PrimaryEmbed(description=f"The current prefix is: `{await self.get_custom_prefix(ctx.message)}`")
