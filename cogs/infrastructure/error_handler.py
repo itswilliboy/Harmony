@@ -77,13 +77,14 @@ class ErrorHandler(BaseCog):
                 title="Missing a Required Argument",
                 description=f"`{error.param.name}` is a required argument that is missing.\n```\n{underlined}\n```",
             )
-            embed.set_footer(text="'<>' = required | '[]' = optional")
+            embed.set_footer(text="< > = required | [ ] = optional")
 
         elif isinstance(error, commands.BadUnionArgument):
             usage = get_command_signature(ctx)
             embed = ErrorEmbed(
                 title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```\n`{str(error.errors[-1])}`"
             )
+            embed.set_footer(text="< > = required | [ ] = optional")
 
         elif isinstance(error, commands.NotOwner):
             embed = ErrorEmbed(title="Owner Only", description="Only bot developers can use this command.")
@@ -101,6 +102,9 @@ class ErrorHandler(BaseCog):
             embed = ErrorEmbed(
                 description=f"The value (`{error.value}`) needs to between `{error.minimum}`-`{error.maximum}`"
             )
+
+        elif isinstance(error, commands.DisabledCommand):
+            embed = ErrorEmbed(description="This command is currently disabled.")
 
         else:
             embed = ErrorEmbed(description="An unknown error occurred")
