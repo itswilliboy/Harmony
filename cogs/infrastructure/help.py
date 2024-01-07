@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Mapping
+from typing import TYPE_CHECKING, Mapping, NamedTuple
 
 from discord import Embed
 from discord.ext import commands
@@ -8,7 +8,6 @@ from discord.ext.commands import Cog, Command, Group
 
 from utils import (
     BaseCog,
-    Context,
     ErrorEmbed,
     Paginator,
     PrimaryEmbed,
@@ -20,14 +19,15 @@ if TYPE_CHECKING:
     from bot import Harmony
 
 
+class Category(NamedTuple):
+    cog: str
+    commands: str
+
+
 class HelpCommand(commands.HelpCommand):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(verify_checks=False, *args, **kwargs)
         self.verify_checks = False
-
-    @property
-    def ctx(self) -> Context:
-        return Context.from_context(self.context)
 
     async def send_bot_help(self, mapping: Mapping[BaseCog | None, list[Command]]) -> None:
         embed = PrimaryEmbed(title="Help")
@@ -36,17 +36,20 @@ class HelpCommand(commands.HelpCommand):
             f"You can also use `{self.context.clean_prefix}help [category]` for more infomation on a category."
         )
 
-        categories: list[tuple[str, str]] = []
+        categories: list[Category] = []
 
         for cog, cmds in mapping.items():
             if cog is None or cog.qualified_name == "Jishaku" or cog.is_hidden():
                 continue
 
             cmds_ = await self.filter_commands(cmds, sort=True)
-            categories.append((cog.qualified_name, ", ".join([f"`{cmd.name}`" for cmd in cmds_])))
+            category = Category(
+                cog.qualified_name, ", ".join([f"`{cmd.name}`" if cmd.enabled else f"~~`{cmd.name}`~~" for cmd in cmds_])
+            )
+            categories.append(category)
 
         for category in categories:
-            embed.add_field(name=category[0], value=category[1], inline=False)
+            embed.add_field(name=category.cog, value=category.commands, inline=False)
 
         await self.get_destination().send(embed=embed)
 
@@ -66,7 +69,7 @@ class HelpCommand(commands.HelpCommand):
 
         formatted = []
         for cmd in group.commands:
-            formatted.append(get_command_signature((self.ctx.clean_prefix, cmd)))
+            formatted.append(get_command_signature((self.context.clean_prefix, cmd)))
 
         nl = "\n"
         embed.add_field(name="Commands", value=f"```\n{nl.join(formatted)}\n```")
@@ -90,7 +93,7 @@ class HelpCommand(commands.HelpCommand):
 
             embeds.append(embed)
 
-        await Paginator(embeds).start(self.get_destination())
+        await Paginator(embeds, self.context.author).start(self.get_destination())
 
     async def send_error_message(self, error: str) -> None:
         await self.get_destination().send(embed=ErrorEmbed(description=error))
