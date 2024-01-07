@@ -1,4 +1,5 @@
 from __future__ import annotations
+from io import BytesIO
 
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -91,15 +92,33 @@ class Utilities(BaseCog, hidden=True):
                 )
 
     @commands.command(usage="<argument>")
-    async def raw(self, ctx: Context, *, argument: str | None = None):
-        """Displays the raw content of a message (no markdown, etc.). Can be used by replying to a message."""
-        if argument is None:
-            converted = await ArgumentOrReference().convert(ctx, argument=argument)  # type: ignore
-        else:
-            converted = argument
+    async def raw(
+        self,
+        ctx: Context,
+        *,
+        argument: str = commands.parameter(
+            default=lambda ctx: ctx.message.reference.resolved.content if ctx.message.reference else ""
+        ),
+    ):
+        """Displays the raw content of a message (no markdown); can be used by replying to a message."""
 
-        if converted is None:
+        if not argument:
             raise commands.MissingRequiredArgument(ctx.command.params["argument"])
 
-        escaped = converted.replace("```", "``\u200b`")
+        escaped = argument.replace("```", "``\u200b`")
         await ctx.send(f"```\n{escaped}\n```")
+
+    @commands.command()
+    async def tiktok(self, ctx: Context, link: str):
+        """Downloads a watermark-free TikTok video via a URL."""
+        async with ctx.typing():
+            URL = "http://itswilliboy.com/api/tiktok?q="
+            async with self.bot.session.get(URL + link) as resp:
+                if resp.content_type == "application/json":
+                    json = await resp.json()
+                    raise GenericError(json["message"])
+
+                buffer = BytesIO(await resp.content.read())
+
+            file = discord.File(fp=buffer, filename="video.mp4")
+            await ctx.send("Here is your video:", file=file)
