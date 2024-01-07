@@ -94,9 +94,11 @@ class General(BaseCog):
     @commands.bot_has_guild_permissions(manage_messages=True)
     @commands.guild_only()
     @commands.command(aliases=["purge"])
-    async def clear(self, ctx: Context, amount: commands.Range[int, 1, 250]):
-        """Clears up to 250 messages from the current channel."""
+    async def clear(self, ctx: Context, amount: commands.Range[int, 1, 500]):
+        """Clears up to 500 messages from the current channel."""
         assert not isinstance(ctx.channel, (discord.DMChannel, discord.PartialMessageable, discord.GroupChannel))
         await ctx.channel.purge(limit=amount, before=ctx.message)
+
         with suppress(discord.NotFound):
             await ctx.message.add_reaction("\N{OK HAND SIGN}")
+
