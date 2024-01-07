@@ -1,16 +1,48 @@
 from __future__ import annotations
 
+import re
+from random import randint
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import discord
 from aiohttp import ClientSession
 from discord.ext import commands
 
-from utils import BaseCog, GenericError, PrimaryEmbed
+from utils import BaseCog, GenericError, PrimaryEmbed, Paginator
 
 if TYPE_CHECKING:
     from bot import Harmony
-    from utils.context import Context
+    from utils import Context
+
+
+class UrbanEntry:
+    DEFINITION = re.compile(r"(\[(.+?)\])")
+
+    def __init__(self, data: dict[str, Any]) -> None:
+        self.definition: str = data["definition"]
+        self.permalink: str = data["permalink"]
+        self.ups: int = data["thumbs_up"]
+        self.downs: int = data["thumbs_down"]
+        self.author: str = data["author"]
+        self.word: str = data["word"]
+        self.id: int = data["defid"]
+        self._written_on: str = data["written_on"]
+        self.example: str = data["example"]
+
+    @property
+    def written_on(self) -> datetime:
+        return datetime.fromisoformat(self._written_on)
+
+    @staticmethod
+    def hyperlinked(text: str, *, pattern=DEFINITION) -> str:
+        """Returns the text, but with bracketed words replaced by a hyperlink to the definition."""
+
+        def repl(match: re.Match) -> str:
+            word = match.group(2)
+            return f"**[{word}](http://{word.replace(' ', '-')}.urbanup.com)**"
+
+        return pattern.sub(repl, text)
 
 
 class MemeView(discord.ui.View):
@@ -51,7 +83,7 @@ class Fun(BaseCog):
         embed = PrimaryEmbed().set_image(url=json["url"])
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(enabled=False)
     async def cat(self, ctx: Context):
         """Sends a random picture of a cat"""
         await ctx.typing()
@@ -75,3 +107,36 @@ class Fun(BaseCog):
             PrimaryEmbed(title=meme["title"]).set_image(url=meme["url"]).set_footer(text=f"\N{THUMBS UP SIGN} {meme['ups']}")
         )
         await ctx.send(embed=embed)
+
+    @commands.command(aliases=["ud", "define"])
+    async def urban(self, ctx: Context, *, query: str):
+        """Get a defnition of a phrase from the Urban Dictionary."""
+        url = "http://api.urbandictionary.com/v0/define"
+        async with self.bot.session.get(url, params={"term": query}) as resp:
+            json = await resp.json()
+            data = json.get("list")
+
+        embeds: list[discord.Embed] = []
+        for item in data:
+            entry = UrbanEntry(item)
+
+            embed = PrimaryEmbed(
+                title=entry.word.title(),
+                url=entry.permalink,
+                description=entry.hyperlinked(entry.definition)
+            )
+            embed.timestamp = entry.written_on
+            embed.add_field(name="Example", value=entry.hyperlinked(entry.example))
+            embed.set_footer(text=f"{entry.ups} ↑ | {entry.downs} ↓ | {entry.author}")
+
+            embeds.append(embed)
+
+        if not embeds:
+            raise GenericError("Couldn't find any definitions for that term.")
+
+        await Paginator(embeds, ctx.author).start(ctx)
+
+    @commands.command(aliases=["cf", "flip"])
+    async def coinflip(self, ctx: Context):
+        """Flips a coin."""
+        await ctx.send(f"\N{COIN} {'Heads' if randint(0, 1) else 'Tails'}")
