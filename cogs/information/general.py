@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any, NamedTuple, Self
 import aiohttp
 import asyncpg
 import discord
-import langcodes
 from cutlet import Cutlet
 from discord.ext import commands
+from langcodes import Language
 from psutil import Process, cpu_percent, virtual_memory
 
 from utils import BaseCog, GenericError, PrimaryEmbed
@@ -230,7 +230,7 @@ class General(BaseCog):
             json: list[Any] = (await resp.json())[0]
             data = TranslatorResponse(json[0], json[1])
 
-        language = langcodes.Language(data.language)
+        language = Language.make(data.language)
 
         embed = PrimaryEmbed(title="Translation")
         embed.add_field(
