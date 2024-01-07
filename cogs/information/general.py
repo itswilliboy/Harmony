@@ -4,14 +4,15 @@ import time
 from os import getpid
 from sys import version_info
 from textwrap import dedent
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
 import aiohttp
 import asyncpg
 import discord
+import langcodes
+from cutlet import Cutlet
 from discord.ext import commands
 from psutil import Process, cpu_percent, virtual_memory
-from typing_extensions import Self
 
 from utils import BaseCog, GenericError, PrimaryEmbed
 
@@ -27,8 +28,15 @@ class AvatarView(discord.ui.View):
             if format == "gif" and avatar.is_animated() is False:
                 continue
 
-            button: discord.ui.Button[Self] = discord.ui.Button(label=format.upper(), url=avatar.replace(format=format).url)
+            button: discord.ui.Button[Self] = discord.ui.Button(
+                label=format.upper(), url=avatar.replace(format=format, size=1024).url
+            )
             self.add_item(button)
+
+
+class TranslatorResponse(NamedTuple):
+    translated: str
+    language: str
 
 
 class General(BaseCog):
@@ -177,8 +185,8 @@ class General(BaseCog):
         formatted = lambda x: f"{int(to_mebibytes(x)):,}"
 
         value = f"""
-            `CPU (Server)`: {cpu:1}%
-            `RAM (Server)`: {formatted(server_ram)} MiB
+            `CPU (Server) `: {cpu:1}%
+            `RAM (Server) `: {formatted(server_ram)} MiB
             `RAM (Process)`: {formatted(process_ram)} MiB
         """
         embed.add_field(name="Process Information", value=dedent(value))
@@ -188,10 +196,50 @@ class General(BaseCog):
 
         version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"
         value = f"""
-            `Python`: v{version}
+            `CPython   `: v{version}
             `discord.py`: v{discord.__version__}
-            `aiohttp`: v{aiohttp.__version__}
-            `asyncpg`: v{asyncpg.__version__}
+            `aiohttp   `: v{aiohttp.__version__}
+            `asyncpg   `: v{asyncpg.__version__}
         """
         embed.add_field(name="Version Information", value=dedent(value), inline=False)
+        await ctx.send(embed=embed)
+
+    @commands.command(usage="<query or message reply>")
+    async def translate(
+        self,
+        ctx: Context,
+        *,
+        query: str = commands.parameter(
+            default=lambda ctx: ctx.message.reference.resolved.content if ctx.message.reference else ""
+        ),
+    ):
+        """Translate a piece of text into English."""
+
+        if not query:
+            raise commands.MissingRequiredArgument(ctx.command.params["query"])
+
+        await ctx.typing()
+
+        query_ = {"client": "dict-chrome-ex", "sl": "auto", "tl": "en", "q": query}
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"  # noqa: E501
+        }
+
+        async with self.bot.session.get("https://clients5.google.com/translate_a/t", params=query_, headers=headers) as resp:
+            json: list[Any] = (await resp.json())[0]
+            data = TranslatorResponse(json[0], json[1])
+
+        language = langcodes.Language(data.language)
+
+        embed = PrimaryEmbed(title="Translation")
+        embed.add_field(
+            name=f"Original Text ({language.display_name().title()} | {language.display_name(data.language).title()})",
+            value=query,
+        )
+        embed.add_field(name="Translated Text", value=data.translated, inline=False)
+
+        if data.language == "ja":
+            embed.insert_field_at(1, name="Romaji", value=Cutlet(use_foreign_spelling=False).romaji(query), inline=False)
+
         await ctx.send(embed=embed)
