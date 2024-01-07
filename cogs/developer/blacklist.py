@@ -105,7 +105,6 @@ class Blacklist(BaseCog):
             self.blacklist[record["user_id"]] = BlacklistItem(self, record)
 
     def blacklist_check(self, ctx: Context) -> bool:
-        print(len(self.blacklist))
         if ctx.author.id in self.blacklist.keys():
             item = self.blacklist[ctx.author.id]
             if item.is_global:
