@@ -5,9 +5,10 @@ from typing import Any
 import discord
 from aiohttp import ClientSession
 from asyncpg import Pool, create_pool
-from discord.ext import commands
+from discord.ext import commands, ipc
 
 from config import DEFAULT_PREFIX, POSTGRES_SETTINGS
+from utils import Context
 
 
 class Harmony(commands.Bot):
@@ -16,6 +17,7 @@ class Harmony(commands.Bot):
     session: ClientSession
     pool: Pool
     log: logging.Logger
+    ipc: ipc.Server  # type: ignore
 
     user: discord.User
 
@@ -32,6 +34,9 @@ class Harmony(commands.Bot):
         prefix = await self.pool.fetchval("SELECT prefix FROM prefixes WHERE guild_id = $1", message.guild.id)
         return prefix and commands.when_mentioned_or(prefix)(self, message) or commands.when_mentioned(self, message)
 
+    async def get_context(self, message, *, cls=Context):
+        return await super().get_context(message, cls=cls)
+
     async def setup_hook(self) -> None:
         discord.utils.setup_logging(level=logging.INFO)
         logging.getLogger("discord.gateway").setLevel(logging.WARNING)
@@ -41,6 +46,11 @@ class Harmony(commands.Bot):
             raise Exception("Pool is closed")
 
         self.pool = pool
+
+        # Run schema
+        with open("schema.sql", "r", encoding="utf-8") as f:
+            schema = f.read()
+            await pool.execute(schema)
 
         self.session = ClientSession()
         self.log = logging.getLogger("Harmony")
@@ -52,11 +62,6 @@ class Harmony(commands.Bot):
 
             except Exception as exc:
                 self.log.error("Failed to load extension: %s", exc, exc_info=exc)
-
-        # Run schema
-        with open("schema.sql", "r", encoding="utf-8") as f:
-            schema = f.read()
-            await pool.execute(schema)
 
     async def on_ready(self) -> None:
         self.log.info("Logged in as %s on discord.py version %s", self.user, discord.__version__)
