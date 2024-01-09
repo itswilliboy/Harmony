@@ -1,10 +1,10 @@
 import logging
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import discord
 from aiohttp import ClientSession
-from asyncpg import Pool, create_pool
+from asyncpg import Pool, Record, create_pool
 from discord.ext import commands, ipc
 
 from config import DEFAULT_PREFIX, POSTGRES_SETTINGS
@@ -15,9 +15,11 @@ class Harmony(commands.Bot):
     """Bot class for Harmony"""
 
     session: ClientSession
-    pool: Pool
     log: logging.Logger
     ipc: ipc.Server  # type: ignore
+
+    if TYPE_CHECKING:
+        pool: Pool[Record]
 
     user: discord.User
 
@@ -43,7 +45,7 @@ class Harmony(commands.Bot):
 
         pool = await create_pool(**POSTGRES_SETTINGS)
         if not pool or pool and pool._closed:
-            raise Exception("Pool is closed")
+            raise RuntimeError("Pool is closed")
 
         self.pool = pool
 
