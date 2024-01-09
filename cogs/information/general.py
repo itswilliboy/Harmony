@@ -14,7 +14,7 @@ from discord.ext import commands
 from langcodes import Language
 from psutil import Process, cpu_percent, virtual_memory
 
-from utils import BaseCog, GenericError, PrimaryEmbed
+from utils import BaseCog, GenericError, PrimaryEmbed, argument_or_reference
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -209,18 +209,16 @@ class General(BaseCog):
         self,
         ctx: Context,
         *,
-        query: str = commands.parameter(
-            default=lambda ctx: ctx.message.reference.resolved.content if ctx.message.reference else ""
-        ),
+        text: str = argument_or_reference,
     ):
         """Translate a piece of text into English."""
 
-        if not query:
-            raise commands.MissingRequiredArgument(ctx.command.params["query"])
+        if not text:
+            raise commands.MissingRequiredArgument(ctx.command.params["text"])
 
         await ctx.typing()
 
-        query_ = {"client": "dict-chrome-ex", "sl": "auto", "tl": "en", "q": query}
+        query_ = {"client": "dict-chrome-ex", "sl": "auto", "tl": "en", "q": text}
 
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"  # noqa: E501
@@ -235,11 +233,11 @@ class General(BaseCog):
         embed = PrimaryEmbed(title="Translation")
         embed.add_field(
             name=f"Original Text ({language.display_name().title()} | {language.display_name(data.language).title()})",
-            value=query,
+            value=text,
         )
         embed.add_field(name="Translated Text", value=data.translated, inline=False)
 
         if data.language == "ja":
-            embed.insert_field_at(1, name="Romaji", value=Cutlet(use_foreign_spelling=False).romaji(query), inline=False)
+            embed.insert_field_at(1, name="Romaji", value=Cutlet(use_foreign_spelling=False).romaji(text), inline=False)
 
         await ctx.send(embed=embed)
