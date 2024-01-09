@@ -30,6 +30,10 @@ class ErrorHandler(BaseCog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: Context, error: Exception):
+
+        if ctx.is_blacklisted():
+            return
+
         command = ctx.command
 
         try:
@@ -86,11 +90,18 @@ class ErrorHandler(BaseCog):
             )
             embed.set_footer(text="< > = required | [ ] = optional")
 
+        elif isinstance(error, commands.BadArgument):
+            usage = get_command_signature(ctx)
+            embed = ErrorEmbed(
+                title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```"  # type: ignore
+            )
+            embed.set_footer(text="< > = required | [ ] = optional")
+
         elif isinstance(error, commands.NotOwner):
             embed = ErrorEmbed(title="Owner Only", description="Only bot developers can use this command.")
 
         elif isinstance(error, GenericError):
-            embed = ErrorEmbed(description=f"{str(error)}")
+            embed = ErrorEmbed(description=f"{error!s}")
 
         elif isinstance(error, commands.NoPrivateMessage):
             embed = ErrorEmbed(description="This command can only be used inside of a server.")
