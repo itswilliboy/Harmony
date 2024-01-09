@@ -7,4 +7,7 @@ class GenericError(CommandInvokeError):
         self.footer = footer
 
     def __str__(self) -> str:
-        return self.message or ""
+        return self.message or "\u200b"
+
+    def __repr__(self) -> str:
+        return str(self)
