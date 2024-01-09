@@ -14,11 +14,17 @@ CREATE TABLE IF NOT EXISTS statistics(
 );
 
 CREATE TABLE IF NOT EXISTS blacklist(
-    id SERIAL PRIMARY KEY,
+    user_id BIGINT PRIMARY KEY,
     guild_ids BIGINT[],
-    user_id BIGINT NOT NULL,
     global boolean NOT NULL,
-    reason TEXT DEFAULT 'No reason given.'
+    reason TEXT,
+    timestamp TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS guild_blacklist(
+    guild_id BIGINT PRIMARY KEY,
+    reason TEXT,
+    timestamp TIMESTAMP NOT NULL
 );
 
 COMMIT;
