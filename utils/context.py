@@ -9,6 +9,7 @@ from discord.ext.commands.core import Command
 
 if TYPE_CHECKING:
     from bot import Harmony  # noqa: F401
+    from cogs.developer.blacklist import BlacklistItem
 
 
 class Context(DiscordContext["Harmony"]):
@@ -22,6 +23,26 @@ class Context(DiscordContext["Harmony"]):
             return "(at) "
 
         return clean
+
+    def is_blacklisted(self):
+        """Checks if the guild or author is blacklisted."""
+        cog = self.bot.cogs["developer"]
+        blacklist, guild_blacklist = cog.blacklist, cog.guild_blacklist # type: ignore
+
+        if self.guild.id in guild_blacklist:
+            return True
+
+        if self.author.id in blacklist:
+            item: BlacklistItem = blacklist[self.author.id]
+
+            if item.is_global:
+                return True
+
+            if self.guild is not None:
+                if self.guild.id in item.guild_ids:
+                    return True
+
+        return False
 
 
 @overload
