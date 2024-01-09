@@ -9,23 +9,11 @@ import discord
 from aiohttp import ClientConnectionError, InvalidURL
 from discord.ext import commands
 
-from utils import BaseCog, ErrorEmbed, GenericError, SuccessEmbed
+from utils import BaseCog, ErrorEmbed, GenericError, SuccessEmbed, argument_or_reference
 
 if TYPE_CHECKING:
     from bot import Harmony
     from utils import Context
-
-
-class ArgumentOrReference(commands.Converter):
-    async def convert(self, ctx: Context, argument) -> str | None:
-        if argument and isinstance(argument, str):
-            return argument
-
-        if ref := ctx.message.reference:
-            if not ref.resolved or isinstance(ref.resolved, discord.DeletedReferencedMessage):
-                raise commands.MissingRequiredArgument(ctx.command.params["content"])
-
-            return ref.resolved.content
 
 
 class Utilities(BaseCog, hidden=True):
@@ -91,21 +79,19 @@ class Utilities(BaseCog, hidden=True):
                     True,
                 )
 
-    @commands.command(usage="<argument>")
+    @commands.command(usage="<text or message reply>")
     async def raw(
         self,
         ctx: Context,
         *,
-        argument: str = commands.parameter(
-            default=lambda ctx: ctx.message.reference.resolved.content if ctx.message.reference else ""
-        ),
+        text: str = argument_or_reference,
     ):
         """Displays the raw content of a message (no markdown); can be used by replying to a message."""
 
-        if not argument:
-            raise commands.MissingRequiredArgument(ctx.command.params["argument"])
+        if not text:
+            raise commands.MissingRequiredArgument(ctx.command.params["text"])
 
-        escaped = argument.replace("```", "``\u200b`")
+        escaped = text.replace("```", "``\u200b`")
         await ctx.send(f"```\n{escaped}\n```")
 
     @commands.command()
