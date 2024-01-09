@@ -83,14 +83,14 @@ class Fun(BaseCog):
         embed = PrimaryEmbed().set_image(url=json["url"])
         await ctx.send(embed=embed)
 
-    @commands.command(enabled=False)
+    @commands.command()
     async def cat(self, ctx: Context):
         """Sends a random picture of a cat"""
         await ctx.typing()
         async with self.bot.session.get("https://cataas.com/cat?json=true") as resp:
             json = await resp.json()
 
-        url = f"https://cataas.com/{json['url']}"
+        url = f"https://cataas.com/cat/{json['_id']}"
         embed = PrimaryEmbed().set_image(url=url)
         await ctx.send(embed=embed)
 
