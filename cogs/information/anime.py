@@ -501,7 +501,6 @@ class RelationView(discord.ui.View):
                     )
                 )
 
-
         if select_options:
             self.add_item(RelationSelect(self.cog, select_options))
 
