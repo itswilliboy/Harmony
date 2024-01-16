@@ -101,4 +101,3 @@ class General(BaseCog):
 
         with suppress(discord.NotFound):
             await ctx.message.add_reaction("\N{OK HAND SIGN}")
-

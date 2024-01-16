@@ -1,6 +1,6 @@
 from __future__ import annotations
-import datetime
 
+import datetime
 from typing import TYPE_CHECKING, Self
 
 import discord
@@ -273,7 +273,7 @@ class Blacklist(BaseCog):
         ctx: Context,
         guild_id: int = commands.param(default=lambda ctx: ctx.guild.id),
         *,
-        reason: str = "No reason given."
+        reason: str = "No reason given.",
     ):
         guild = self.bot.get_guild(guild_id)
 
@@ -296,7 +296,7 @@ class Blacklist(BaseCog):
 
         embed = PrimaryEmbed(
             title="Guild Blacklisted",
-            description=f"Reason: {item.reason}\nSince: {discord.utils.format_dt(item.timestamp, 'D')}"
+            description=f"Reason: {item.reason}\nSince: {discord.utils.format_dt(item.timestamp, 'D')}",
         )
 
         if guild.icon:

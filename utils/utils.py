@@ -14,6 +14,5 @@ def _check(ctx: Context) -> str:
 
     return ""
 
+
 argument_or_reference = commands.parameter(default=lambda ctx: _check(ctx))
-
-

@@ -15,7 +15,8 @@ class MediaType(StrEnum):
 
 
 class MediaStatus(StrEnum):
-    """"The current publishing status of the media."""
+    """ "The current publishing status of the media."""
+
     FINISHED = "FINISHED"
     RELEASING = "RELEASING"
     NOT_YET_RELEASED = "NOT_YET_RELEASED"
@@ -73,7 +74,7 @@ class Media:
         studio: Studio | None,
         episodes: int,
         duration: int,
-        genres: list[str]
+        genres: list[str],
     ) -> None:
         self.id = id
         self.id_mal = id_mal
@@ -219,7 +220,7 @@ class AniList(BaseCog):
             studio,
             data["episodes"],
             data["duration"],
-            data["genres"]
+            data["genres"],
         )
 
     @commands.command()
@@ -240,7 +241,7 @@ class AniList(BaseCog):
         elif t := anime.title["romaji"]:
             title = t
 
-        elif t:= anime.title["native"]:
+        elif t := anime.title["native"]:
             title = t
 
         embed = discord.Embed(title=title, description=anime.description, color=anime.colour, url=url)
@@ -259,8 +260,6 @@ class AniList(BaseCog):
         if genres := anime.genres:
             embed.add_field(name="Genres", value=", ".join(f"**{genre}**" for genre in genres), inline=False)
 
-
-
         if hashtags := anime.hashtags:
             embed.add_field(
                 name="Hashtags",
@@ -274,7 +273,6 @@ class AniList(BaseCog):
         )
 
         await ctx.send(embed=embed)
-
 
     @commands.command()
     async def manga(self, ctx: Context, *, search: str):
@@ -294,7 +292,7 @@ class AniList(BaseCog):
         elif t := manga.title["romaji"]:
             title = t
 
-        elif t:= manga.title["native"]:
+        elif t := manga.title["native"]:
             title = t
 
         embed = discord.Embed(title=title, description=manga.description, color=manga.colour, url=url)

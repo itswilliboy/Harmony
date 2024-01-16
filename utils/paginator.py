@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import discord
@@ -22,7 +23,7 @@ class PageModal(discord.ui.Modal):
         self.add_item(self.page)
 
     async def on_submit(self, interaction: Interaction[Harmony]):
-        if not self.page.value.isnumeric() or int(self.page.value) not in range(self.min_page, self.max_page+1):
+        if not self.page.value.isnumeric() or int(self.page.value) not in range(self.min_page, self.max_page + 1):
             return await interaction.response.send_message(
                 f"The page number needs to be between {self.min_page} and {self.max_page}", ephemeral=True
             )

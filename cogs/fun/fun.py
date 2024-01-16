@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import re
-from random import randint
 from datetime import datetime
+from random import randint
 from typing import TYPE_CHECKING, Any
 
 import discord
 from aiohttp import ClientSession
 from discord.ext import commands
 
-from utils import BaseCog, GenericError, PrimaryEmbed, Paginator
+from utils import BaseCog, GenericError, Paginator, PrimaryEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -121,9 +121,7 @@ class Fun(BaseCog):
             entry = UrbanEntry(item)
 
             embed = PrimaryEmbed(
-                title=entry.word.title(),
-                url=entry.permalink,
-                description=entry.hyperlinked(entry.definition)
+                title=entry.word.title(), url=entry.permalink, description=entry.hyperlinked(entry.definition)
             )
             embed.timestamp = entry.written_on
             embed.add_field(name="Example", value=entry.hyperlinked(entry.example))

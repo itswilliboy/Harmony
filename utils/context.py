@@ -28,7 +28,7 @@ class Context(DiscordContext["Harmony"]):
     def is_blacklisted(self):
         """Checks if the guild or author is blacklisted."""
         cog = self.bot.cogs["developer"]
-        blacklist, guild_blacklist = cog.blacklist, cog.guild_blacklist # type: ignore
+        blacklist, guild_blacklist = cog.blacklist, cog.guild_blacklist  # type: ignore
 
         if self.guild.id in guild_blacklist:
             return True

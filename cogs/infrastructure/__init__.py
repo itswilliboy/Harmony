@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 from .error_handler import ErrorHandler
 from .help import Help
+from .ipc import IPC
 from .prefix import Prefix
 from .statistics import Statistics
-from .ipc import IPC
 
 if TYPE_CHECKING:
     from bot import Harmony

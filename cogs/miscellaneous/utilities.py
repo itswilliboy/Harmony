@@ -1,6 +1,6 @@
 from __future__ import annotations
-from io import BytesIO
 
+from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import urljoin, urlparse
