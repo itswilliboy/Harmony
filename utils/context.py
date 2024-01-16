@@ -19,8 +19,9 @@ class Context(DiscordContext["Harmony"]):
     @property
     def clean_prefix(self) -> str:
         clean = super().clean_prefix
-        if clean[0] == "@":
-            return "(at) "
+        if clean:
+            if clean[0] == "@":
+                return "(at) "
 
         return clean
 
