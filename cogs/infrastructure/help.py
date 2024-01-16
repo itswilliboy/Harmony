@@ -17,6 +17,7 @@ from utils import (
 
 if TYPE_CHECKING:
     from bot import Harmony
+    from utils import Context
 
 
 class Category(NamedTuple):
@@ -25,6 +26,9 @@ class Category(NamedTuple):
 
 
 class HelpCommand(commands.HelpCommand):
+
+    context: Context
+    
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(verify_checks=False, *args, **kwargs)
         self.verify_checks = False
@@ -68,8 +72,10 @@ class HelpCommand(commands.HelpCommand):
         embed.description = group.short_doc
 
         formatted = []
+        formatted.append(get_command_signature((self.context.clean_prefix, group)))
         for cmd in group.commands:
             formatted.append(get_command_signature((self.context.clean_prefix, cmd)))
+
 
         nl = "\n"
         embed.add_field(name="Commands", value=f"```\n{nl.join(formatted)}\n```")
