@@ -1,12 +1,17 @@
+from __future__ import annotations
+
 import datetime
 import re
 from enum import StrEnum
-from typing import ClassVar, TypedDict
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Self, TypedDict
 
 import discord
 from discord.ext import commands
 
 from utils import BaseCog, Context, GenericError
+
+if TYPE_CHECKING:
+    from bot import Harmony
 
 
 class MediaType(StrEnum):
@@ -15,7 +20,7 @@ class MediaType(StrEnum):
 
 
 class MediaStatus(StrEnum):
-    """ "The current publishing status of the media."""
+    """The current publishing status of the media."""
 
     FINISHED = "FINISHED"
     RELEASING = "RELEASING"
@@ -24,12 +29,31 @@ class MediaStatus(StrEnum):
     HIATUS = "HIATUS"
 
 
+class MediaRelation(StrEnum):
+    """The type of relation."""
+
+    SOURCE = "SOURCE"
+    PREQUEL = "PREQUEL"
+    SEQUEL = "SEQUEL"
+    SIDE_STORY = "SIDE_STORY"
+    ALTERNATIVE = "ALTERNATIVE"
+
+    ADAPTATION = "ADAPTATION"
+    PARENT = "PARENT"
+    CHARACTER = "CHARACTER"
+    SUMMARY = "SUMMARY"
+    SPIN_OFF = "SPIN_OFF"
+    OTHER = "OTHER"
+    COMPILATION = "COMPILATION"
+    CONTAINS = "CONTAINS"
+
+
 class MediaTitle(TypedDict):
     """The official titles of the media in various languages."""
 
     romaji: str
-    english: str
-    native: str
+    english: str | None
+    native: str | None
 
 
 class FuzzyDate(TypedDict):
@@ -49,6 +73,12 @@ class MediaCoverImage(TypedDict):
     color: str
 
 
+class Edge(NamedTuple):
+    id: int
+    title: str
+    type: MediaRelation
+
+
 class Studio(TypedDict):
     name: str
     siteUrl: str
@@ -56,6 +86,119 @@ class Studio(TypedDict):
 
 TAG_REGEX = re.compile(r"</?\w+/?>")
 SOURCE_REGEX = re.compile(r"\(Source: .+\)")
+NOTE_REGEX = re.compile(r"Note: .+")
+
+SEARCH_QUERY = """
+    query ($search: String, $type: MediaType) {
+        Media (search: $search, type: $type) {
+            id
+            idMal
+            type
+            description(asHtml: false)
+            episodes
+            hashtag
+            status
+            bannerImage
+            episodes
+            duration
+            genres
+            title {
+                romaji
+                english
+                native
+            }
+            startDate {
+                year
+                month
+                day
+            }
+            endDate {
+                year
+                month
+                day
+            }
+            coverImage {
+                extraLarge
+                large
+                medium
+                color
+            }
+            studios(isMain: true) {
+                nodes {
+                    name
+                    siteUrl
+                }
+            }
+            relations {
+                edges {
+                    node {
+                        id
+                        title {
+                            romaji
+                        }
+                    }
+                    relationType(version: 2)
+                }
+            }
+        }
+    }
+"""
+
+FETCH_QUERY = """
+    query ($id: Int) {
+        Media (id: $id) {
+            id
+            idMal
+            type
+            description(asHtml: false)
+            episodes
+            hashtag
+            status
+            bannerImage
+            episodes
+            duration
+            genres
+            title {
+                romaji
+                english
+                native
+            }
+            startDate {
+                year
+                month
+                day
+            }
+            endDate {
+                year
+                month
+                day
+            }
+            coverImage {
+                extraLarge
+                large
+                medium
+                color
+            }
+            studios(isMain: true) {
+                nodes {
+                    name
+                    siteUrl
+                }
+            }
+            relations {
+                edges {
+                    node {
+                        id
+                        title {
+                            romaji
+                        }
+                    }
+                    relationType(version: 2)
+                }
+            }
+        }
+    }
+"""
 
 
 class Media:
@@ -63,6 +206,7 @@ class Media:
         self,
         id: int,
         id_mal: int,
+        type: MediaType,
         title: MediaTitle,
         description: str,
         start_date: FuzzyDate,
@@ -75,9 +219,11 @@ class Media:
         episodes: int,
         duration: int,
         genres: list[str],
+        relations: list[Edge],
     ) -> None:
         self.id = id
         self.id_mal = id_mal
+        self.type = type
         self.title = title
         self._description = description
         self._start_date = start_date
@@ -89,7 +235,43 @@ class Media:
         self.studio = studio
         self.episodes = episodes
         self.duration = duration
-        self.genres = genres
+        self._genres = genres
+        self.relations = relations
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        type_ = MediaType(data["type"])
+        title = MediaTitle(data["title"])
+        start_date = FuzzyDate(data["startDate"])
+        end_date = FuzzyDate(data["endDate"])
+        cover_image = MediaCoverImage(data["coverImage"])
+        studio = data["studios"]["nodes"][0] if data["studios"]["nodes"] else None
+
+        relations: list[Edge] = []
+        if edges := data["relations"]["edges"]:
+            for edge in edges:
+                node = edge["node"]
+                title_ = MediaTitle(node["title"])
+                relations.append(Edge(node["id"], title_["romaji"], edge["relationType"]))
+
+        return cls(
+            data["id"],
+            data["idMal"],
+            type_,
+            title,
+            data["description"],
+            start_date,
+            end_date,
+            data["status"],
+            cover_image,
+            data["bannerImage"],
+            data["hashtag"],
+            studio,
+            data["episodes"],
+            data["duration"],
+            data["genres"],
+            relations,
+        )
 
     @staticmethod
     def _to_date(date: FuzzyDate) -> datetime.date:
@@ -117,8 +299,12 @@ class Media:
     @property
     def description(self) -> str:
         """Returns a cleaned version of the description."""
+        if self._description is None:
+            return ""
+
         desc = TAG_REGEX.sub("", self._description)
         desc = SOURCE_REGEX.sub("", desc)
+        desc = NOTE_REGEX.sub("", desc)
         desc = desc.replace("\N{HORIZONTAL ELLIPSIS}", "").replace("...", "").rstrip()
 
         if not desc.endswith((".", "!", "?")):
@@ -136,9 +322,196 @@ class Media:
     def hashtags(self) -> list[str]:
         return self._hashtags.split() if self._hashtags else []
 
+    @property
+    def genres(self) -> list[str]:
+        """Returns a set of hyperlinked genres linked with the media."""
 
-class MediaView(discord.ui.View):
-    ...
+        if self.type == MediaType.MANGA:
+            BASE_URL = "https://anilist.co/search/manga/"
+
+        else:
+            BASE_URL = "https://anilist.co/search/anime/"
+
+        to_return: list[str] = []
+        for genre in self._genres:
+            url = (BASE_URL + genre).replace(" ", "%20")
+            to_return.append(f"[{genre}]({url})")
+
+        return to_return
+
+    @property
+    def embed(self) -> discord.Embed:
+        if self.type == MediaType.MANGA:
+            url = f"https://anilist.co/manga/{self.id}"
+
+        else:
+            url = f"https://anilist.co/anime/{self.id}"
+
+        title: str = ""
+        if t := self.title.get("english"):
+            title = t
+
+        elif t := self.title.get("romaji"):
+            title = t
+
+        elif t := self.title.get("native"):
+            title = t
+
+        embed = discord.Embed(title=title, description=self.description, color=self.colour, url=url)
+
+        if title != self.title["romaji"]:
+            embed.set_author(name=self.title["romaji"])
+
+        embed.set_thumbnail(url=self.cover_image["extraLarge"])
+        embed.set_image(url=self.banner_image)
+
+        if title_ := self.title.get("native"):
+            embed.add_field(name="Native Title", value=f"**{title_}**")
+
+        if studio := self.studio:
+            embed.add_field(name="Studio", value=f"**[{studio['name']}]({studio['siteUrl']})**")
+
+        if genres := self.genres:
+            embed.add_field(name="Genres", value=", ".join(f"**{genre}**" for genre in genres))
+
+        if hashtags := self.hashtags:
+            embed.add_field(
+                name="Hashtags",
+                value=" ".join(f"**[{tag}](https://twitter.com/hashtag/{tag.replace('#', '')})**" for tag in hashtags),
+            )
+
+        if self.episodes and self.duration:
+            time = self.episodes * self.duration / 60
+            embed.add_field(
+                name="Episodes | Time to Watch",
+                value=f"**{self.episodes} | ~{time:.1f} hours**",
+            )
+
+        elif self.episodes:
+            embed.add_field(name="Episodes", value=f"**{self.episodes}**")
+
+        if self.status:
+            embed.add_field(name="Current Status", value=f"**{self.status.title()}**")
+
+        return embed
+
+
+async def callback(cog: AniList, id: int, interaction: discord.Interaction[Harmony]):
+    media = await cog.fetch_media(id)
+
+    if media is None:
+        return await interaction.response.send_message(
+            "Something went wrong when trying to find that media.", ephemeral=True
+        )
+
+    view = discord.utils.MISSING
+    if media.relations:
+        view = RelationView(cog, media)
+
+    await interaction.response.send_message(embed=media.embed, view=view, ephemeral=True)
+
+
+class RelationButton(discord.ui.Button):
+    def __init__(self, cog: AniList, edge: Edge, text: str, emoji: str, row: int | None = None) -> None:
+        label = f"{text}: {edge.title}"
+        if len(label) > 80:
+            label = label[:77] + "..."
+
+        super().__init__(label=label, emoji=emoji)
+        self.cog = cog
+        self.edge = edge
+        self.text = text
+
+    async def callback(self, interaction: discord.Interaction[Harmony]) -> None:
+        await callback(self.cog, self.edge.id, interaction)
+
+
+class RelationSelect(discord.ui.Select):
+    def __init__(self, cog: AniList, options: list[discord.SelectOption]) -> None:
+        for option in options:
+            option.label += f": {self._get_name(option.value)}"
+
+            if len(option.label) > 80:
+                option.label = option.label[:77] + "..."
+
+        super().__init__(placeholder="Select a relation to view", min_values=1, max_values=1, options=options[:25])
+        self.cog = cog
+
+    async def callback(self, interaction: discord.Interaction[Harmony]):
+        print(self.values)
+        await callback(self.cog, self._edge_id, interaction)
+
+    @property
+    def _edge_name(self) -> str:
+        return self.values[0].split("\u200b")[0]
+
+    @property
+    def _edge_id(self) -> int:
+        return int(self.values[0].split("\u200b")[1])
+
+    @staticmethod
+    def _get_name(value: str) -> str:
+        return value.split("\u200b")[0]
+
+
+class RelationView(discord.ui.View):
+    def __init__(self, cog: AniList, media: Media) -> None:
+        super().__init__()
+        self.media = media
+        self.cog = cog
+
+        select_options = []
+        relations = sorted(media.relations, key=self._sort_relations)
+        for edge in relations:
+            value = f"{edge.title}\u200b{edge.id}"
+
+            if edge.type == MediaRelation.SOURCE:
+                self.add_item(RelationButton(self.cog, edge, "Source", "\N{OPEN BOOK}", row=0))
+
+            elif edge.type == MediaRelation.PREQUEL:
+                self.add_item(RelationButton(self.cog, edge, "Prequel", "\N{LEFTWARDS BLACK ARROW}", row=0))
+
+            elif edge.type == MediaRelation.SEQUEL:
+                self.add_item(RelationButton(self.cog, edge, "Sequel", "\N{BLACK RIGHTWARDS ARROW}", row=0))
+
+            elif edge.type == MediaRelation.ADAPTATION:
+                self.add_item(RelationButton(self.cog, edge, "Adaptation", "\N{MOVIE CAMERA}", row=1))
+
+            elif edge.type == MediaRelation.SIDE_STORY:
+                select_options.append(
+                    discord.SelectOption(
+                        emoji="\N{TWISTED RIGHTWARDS ARROWS}", label=edge.title, value=value, description="Side Story"
+                    )
+                )
+
+            elif edge.type == MediaRelation.ALTERNATIVE:
+                select_options.append(
+                    discord.SelectOption(
+                        emoji="\N{TWISTED RIGHTWARDS ARROWS}", label=edge.title, value=value, description="Alternative"
+                    )
+                )
+
+            elif edge.type == MediaRelation.SPIN_OFF:
+                select_options.append(
+                    discord.SelectOption(
+                        emoji="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}",
+                        label=edge.title,
+                        value=value,
+                        description="Spin Off",
+                    )
+                )
+
+
+        if select_options:
+            self.add_item(RelationSelect(self.cog, select_options))
+
+        if len(self.children) > 25:
+            self._children = self._children[:25]
+
+    @staticmethod
+    def _sort_relations(edge: Edge) -> int:
+        enums = [enum.value for enum in MediaRelation]
+        return enums.index(edge.type)
 
 
 class AniList(BaseCog):
@@ -146,82 +519,42 @@ class AniList(BaseCog):
 
     async def search_media(self, search: str, *, type: MediaType) -> Media | None:
         """Searchs and returns a media via a search query."""
-        query = """
-            query ($search: String, $type: MediaType) {
-                Media (search: $search, type: $type) {
-                    id
-                    idMal
-                    description(asHtml: false)
-                    episodes
-                    hashtag
-                    status
-                    bannerImage
-                    episodes
-                    duration
-                    genres
-                    title {
-                        romaji
-                        english
-                        native
-                    }
-                    startDate {
-                        year
-                        month
-                        day
-                    }
-                    endDate {
-                        year
-                        month
-                        day
-                    }
-                    coverImage {
-                        extraLarge
-                        large
-                        medium
-                        color
-                    }
-                    studios(isMain: true) {
-                        nodes {
-                            name
-                            siteUrl
-                        }
-                    }
-                }
-            }
-        """
 
         variables = {"search": search, "type": type}
 
-        async with self.bot.session.post(self.URL, json={"query": query, "variables": variables}) as resp:
+        async with self.bot.session.post(self.URL, json={"query": SEARCH_QUERY, "variables": variables}) as resp:
             json = await resp.json()
-            data = json["data"]["Media"]
-            print(data)
+            print(json)
+
+            try:
+                data_ = json["data"]
+                data = data_["Media"]
+
+            except KeyError:
+                return None
 
             if data is None:
                 return None
 
-        title = MediaTitle(data["title"])
-        start_date = FuzzyDate(data["startDate"])
-        end_date = FuzzyDate(data["endDate"])
-        cover_image = MediaCoverImage(data["coverImage"])
-        studio = data["studios"]["nodes"][0] if data["studios"]["nodes"] else None
+        return Media.from_json(data)
 
-        return Media(
-            data["id"],
-            data["idMal"],
-            title,
-            data["description"],
-            start_date,
-            end_date,
-            data["status"],
-            cover_image,
-            data["bannerImage"],
-            data["hashtag"],
-            studio,
-            data["episodes"],
-            data["duration"],
-            data["genres"],
-        )
+    async def fetch_media(self, id: int) -> Media | None:
+        """Fetches and returns a media via an id."""
+
+        variables = {"id": id}
+
+        async with self.bot.session.post(self.URL, json={"query": FETCH_QUERY, "variables": variables}) as resp:
+            json = await resp.json()
+            print(json)
+
+            try:
+                data_ = json["data"]
+                data = data_["Media"]
+
+            except IndexError:
+                return None
+
+        return Media.from_json(data)
 
     @commands.command()
     async def anime(self, ctx: Context, *, search: str):
@@ -232,47 +565,11 @@ class AniList(BaseCog):
         if anime is None:
             raise GenericError("Couldn't find any anime with that name.")
 
-        url = f"https://anilist.co/anime/{anime.id}"
+        view = discord.utils.MISSING
+        if anime.relations:
+            view = RelationView(self, anime)
 
-        title = ""
-        if t := anime.title["english"]:
-            title = t
-
-        elif t := anime.title["romaji"]:
-            title = t
-
-        elif t := anime.title["native"]:
-            title = t
-
-        embed = discord.Embed(title=title, description=anime.description, color=anime.colour, url=url)
-
-        if title != anime.title["romaji"]:
-            embed.set_author(name=anime.title["romaji"])
-        embed.set_thumbnail(url=anime.cover_image["extraLarge"])
-        embed.set_image(url=anime.banner_image)
-
-        if title := anime.title["native"]:
-            embed.add_field(name="Native Title", value=f"**{title}**")
-
-        if studio := anime.studio:
-            embed.add_field(name="Studio", value=f"**[{studio['name']}]({studio['siteUrl']})**")
-
-        if genres := anime.genres:
-            embed.add_field(name="Genres", value=", ".join(f"**{genre}**" for genre in genres), inline=False)
-
-        if hashtags := anime.hashtags:
-            embed.add_field(
-                name="Hashtags",
-                value=" ".join(f"**[{tag}](https://twitter.com/hashtag/{tag.replace('#', '')})**" for tag in hashtags),
-            )
-
-        time = anime.episodes * anime.duration / 60
-        embed.add_field(
-            name="Episodes | Time to Watch",
-            value=f"**{anime.episodes} | ~{time:.1f} hours**",
-        )
-
-        await ctx.send(embed=embed)
+        await ctx.send(embed=anime.embed, view=view)
 
     @commands.command()
     async def manga(self, ctx: Context, *, search: str):
@@ -283,35 +580,8 @@ class AniList(BaseCog):
         if manga is None:
             raise GenericError("Couldn't find any manga with that name.")
 
-        url = f"https://anilist.co/manga/{manga.id}"
+        view = discord.utils.MISSING
+        if manga.relations:
+            view = RelationView(self, manga)
 
-        title = ""
-        if t := manga.title["english"]:
-            title = t
-
-        elif t := manga.title["romaji"]:
-            title = t
-
-        elif t := manga.title["native"]:
-            title = t
-
-        embed = discord.Embed(title=title, description=manga.description, color=manga.colour, url=url)
-
-        if title != manga.title["romaji"]:
-            embed.set_author(name=manga.title["romaji"])
-        embed.set_thumbnail(url=manga.cover_image["extraLarge"])
-        embed.set_image(url=manga.banner_image)
-
-        if title := manga.title["native"]:
-            embed.add_field(name="Native Title", value=f"**{title}**")
-
-        if genres := manga.genres:
-            embed.add_field(name="Genres", value=", ".join(f"**{genre}**" for genre in genres), inline=False)
-
-        if hashtags := manga.hashtags:
-            embed.add_field(
-                name="Hashtags",
-                value=" ".join(f"**[{tag}](https://twitter.com/hashtag/{tag.replace('#', '')})**" for tag in hashtags),
-            )
-
-        await ctx.send(embed=embed)
+        await ctx.send(embed=manga.embed, view=view)
