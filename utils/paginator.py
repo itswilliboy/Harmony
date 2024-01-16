@@ -1,7 +1,34 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import discord
 from discord.interactions import Interaction
+
+if TYPE_CHECKING:
+    from bot import Harmony
+
+
+class PageModal(discord.ui.Modal):
+    def __init__(self, paginator: Paginator, view: PaginatorView, min_page: int, max_page: int) -> None:
+        super().__init__(title=f"Enter a page number ({min_page}-{max_page})")
+        self.paginator = paginator
+        self.view = view
+        self.min_page = min_page
+        self.max_page = max_page
+
+        self.page = discord.ui.TextInput(
+            label="Page", min_length=len(str(self.min_page)), max_length=len(str(self.max_page))
+        )
+        self.add_item(self.page)
+
+    async def on_submit(self, interaction: Interaction[Harmony]):
+        if not self.page.value.isnumeric() or int(self.page.value) not in range(self.min_page, self.max_page+1):
+            return await interaction.response.send_message(
+                f"The page number needs to be between {self.min_page} and {self.max_page}", ephemeral=True
+            )
+        self.paginator.set_page(int(self.page.value) - 1)
+        self.view.update()
+        await interaction.response.edit_message(embed=self.paginator.current_page, view=self.view)
 
 
 class PaginatorView(discord.ui.View):
@@ -14,10 +41,10 @@ class PaginatorView(discord.ui.View):
         self.prev.disabled = False
         self.next.disabled = False
 
-        if self.paginator.index == 0:
+        if self.paginator.index <= 0:
             self.prev.disabled = True
 
-        elif self.paginator.user_page == self.paginator.length:
+        elif self.paginator.user_page >= self.paginator.length:
             self.next.disabled = True
 
         self.page.label = f"{self.paginator.user_page}/{self.paginator.length}"
@@ -34,7 +61,7 @@ class PaginatorView(discord.ui.View):
     async def prev(self, interaction: discord.Interaction, _):
         page = self.paginator
 
-        if page.index == 0:
+        if page.index <= 0:
             pass
 
         else:
@@ -64,6 +91,11 @@ class PaginatorView(discord.ui.View):
     async def delete(self, interaction: discord.Interaction, _):
         assert interaction.message
         await interaction.message.delete()
+
+    @discord.ui.button(label="Enter Page", style=discord.ButtonStyle.blurple, row=1)
+    async def enter_page(self, interaction: discord.Interaction, _):
+        modal = PageModal(self.paginator, self, 1, self.paginator.length)
+        await interaction.response.send_modal(modal)
 
 
 class Paginator:
@@ -104,6 +136,10 @@ class Paginator:
         self.page -= 1
         index = self.index
         self.current_page = self.embeds[index - 1]
+
+    def set_page(self, page: int) -> None:
+        self.page = page
+        self.current_page = self.embeds[page]
 
     async def start(self, messageable: discord.abc.Messageable) -> None:
         view = self.view if len(self.embeds) > 1 else discord.utils.MISSING
