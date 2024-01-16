@@ -25,7 +25,7 @@ class AvatarView(discord.ui.View):
     def __init__(self, avatar: discord.Asset) -> None:
         super().__init__(timeout=None)
         for format in ("png", "jpeg", "webp", "gif"):
-            if format == "gif" and avatar.is_animated() is False:
+            if format == "gif" and not avatar.is_animated():
                 continue
 
             button: discord.ui.Button[Self] = discord.ui.Button(
@@ -204,7 +204,7 @@ class General(BaseCog):
         embed.add_field(name="Version Information", value=dedent(value), inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(usage="<query or message reply>")
+    @commands.command(usage="<text or message reply>")
     async def translate(
         self,
         ctx: Context,
