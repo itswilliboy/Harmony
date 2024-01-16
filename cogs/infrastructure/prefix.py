@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 import discord
@@ -11,6 +12,8 @@ from utils import BaseCog, ErrorEmbed, PrimaryEmbed, SuccessEmbed
 if TYPE_CHECKING:
     from bot import Harmony
     from utils import Context
+
+MENTION_REGEX = re.compile("^<@!?[0-9]+>$")
 
 
 class Prefix(BaseCog):
@@ -60,17 +63,32 @@ class Prefix(BaseCog):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         await self.bot.pool.execute("DELETE FROM prefixes WHERE guild_id = $1", guild.id)
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        if MENTION_REGEX.fullmatch(message.content):
+            ctx = await self.bot.get_context(message)
+            cmd = self.bot.get_command("prefix")
+
+            await ctx.invoke(cmd)  # type: ignore
+
+    @commands.guild_only()
     @commands.group(invoke_without_command=True)
     async def prefix(self, ctx: Context):
         """Displays the server's prefix."""
-        embed = PrimaryEmbed(description=f"The current prefix is: `{await self.get_custom_prefix(ctx.message)}`")
-        embed.set_footer(text=f"You can set a new one with '{ctx.clean_prefix}prefix set <prefix>'")
+
+        prefix = await self.get_custom_prefix(ctx.message)
+        embed = PrimaryEmbed(description=f"The current prefix is: `{prefix}`")
+        embed.set_author(name=f"Get started with {prefix}help !")
+
+        if ctx.author.guild_permissions.manage_guild:  # type: ignore
+            embed.set_footer(text=f"You can set a new one with '{prefix}prefix set <prefix>'")
         await ctx.send(embed=embed)
 
     @commands.has_guild_permissions(manage_guild=True)
     @prefix.command()
     async def set(self, ctx: Context, prefix: str):
         """Updates the server's prefix."""
+
         if len(prefix) > 5:
             embed = ErrorEmbed(description="The prefix needs to be shorter than 5 characters.")
             return await ctx.send(embed=embed)
@@ -83,6 +101,7 @@ class Prefix(BaseCog):
     @prefix.command()
     async def reset(self, ctx: Context):
         """Resets the server's prefix to the default prefix."""
+
         await self.set_custom_prefix(ctx.guild, DEFAULT_PREFIX)
         embed = SuccessEmbed(description=f"Successfully reset the prefix to: `{DEFAULT_PREFIX}`")
         await ctx.send(embed=embed)
