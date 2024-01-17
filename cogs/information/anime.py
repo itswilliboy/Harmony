@@ -429,8 +429,6 @@ class RelationButton(discord.ui.Button):
 class RelationSelect(discord.ui.Select):
     def __init__(self, cog: AniList, options: list[discord.SelectOption]) -> None:
         for option in options:
-            option.label += f": {self._get_name(option.value)}"
-
             if len(option.label) > 80:
                 option.label = option.label[:77] + "..."
 
@@ -438,7 +436,6 @@ class RelationSelect(discord.ui.Select):
         self.cog = cog
 
     async def callback(self, interaction: discord.Interaction[Harmony]):
-        print(self.values)
         await callback(self.cog, self._edge_id, interaction)
 
     @property
@@ -454,13 +451,22 @@ class RelationSelect(discord.ui.Select):
         return value.split("\u200b")[0]
 
 
+class AdaptationSelect(discord.ui.Select):
+    def __init__(self, cog: AniList, options: list[discord.SelectOption]) -> None:
+        super().__init__(placeholder="Select an adaptation to view", min_values=1, max_values=1, options=options[:25])
+        self.cog = cog
+
+    async def callback(self, interaction: discord.Interaction[Harmony]):
+        await callback(self.cog, int(self.values[0].split("\u200b")[1]), interaction)
+
 class RelationView(discord.ui.View):
     def __init__(self, cog: AniList, media: Media) -> None:
         super().__init__()
         self.media = media
         self.cog = cog
 
-        select_options = []
+        relation_options = []
+        adaptation_options = []
         relations = sorted(media.relations, key=self._sort_relations)
         for edge in relations:
             value = f"{edge.title}\u200b{edge.id}"
@@ -475,24 +481,28 @@ class RelationView(discord.ui.View):
                 self.add_item(RelationButton(self.cog, edge, "Sequel", "\N{BLACK RIGHTWARDS ARROW}", row=0))
 
             elif edge.type == MediaRelation.ADAPTATION:
-                self.add_item(RelationButton(self.cog, edge, "Adaptation", "\N{MOVIE CAMERA}", row=1))
+                adaptation_options.append(
+                    discord.SelectOption(
+                        emoji="\N{MOVIE CAMERA}", label=edge.title, value=value, description="Adaptation"
+                    )
+                )
 
             elif edge.type == MediaRelation.SIDE_STORY:
-                select_options.append(
+                relation_options.append(
                     discord.SelectOption(
                         emoji="\N{TWISTED RIGHTWARDS ARROWS}", label=edge.title, value=value, description="Side Story"
                     )
                 )
 
             elif edge.type == MediaRelation.ALTERNATIVE:
-                select_options.append(
+                relation_options.append(
                     discord.SelectOption(
                         emoji="\N{TWISTED RIGHTWARDS ARROWS}", label=edge.title, value=value, description="Alternative"
                     )
                 )
 
             elif edge.type == MediaRelation.SPIN_OFF:
-                select_options.append(
+                relation_options.append(
                     discord.SelectOption(
                         emoji="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}",
                         label=edge.title,
@@ -501,8 +511,12 @@ class RelationView(discord.ui.View):
                     )
                 )
 
-        if select_options:
-            self.add_item(RelationSelect(self.cog, select_options))
+        if adaptation_options:
+            self.add_item(AdaptationSelect(self.cog, adaptation_options))
+
+        if relation_options:
+            self.add_item(RelationSelect(self.cog, relation_options))
+
 
         if len(self.children) > 25:
             self._children = self._children[:25]
