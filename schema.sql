@@ -2,11 +2,11 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS prefixes(
     guild_id BIGINT PRIMARY KEY,
-    prefix VARCHAR(5) NOT NULL
+    prefixes VARCHAR(5)[] NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS prefixes_guild_id_idx ON prefixes (guild_id);
-CREATE INDEX IF NOT EXISTS prefixes_prefix_idx ON prefixes (prefix);
+CREATE INDEX IF NOT EXISTS prefixes_prefix_idx ON prefixes (prefixes);
 
 CREATE TABLE IF NOT EXISTS statistics(
     guild_id BIGINT PRIMARY KEY,

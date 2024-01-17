@@ -7,6 +7,8 @@ from discord.ext import commands
 from discord.ext.commands import Context as DiscordContext
 from discord.ext.commands.core import Command
 
+from config import DEFAULT_PREFIX
+
 if TYPE_CHECKING:
     from bot import Harmony  # noqa: F401
     from cogs.developer.blacklist import BlacklistItem
@@ -23,15 +25,20 @@ class Context(DiscordContext["Harmony"]):
             if clean[0] == "@":
                 return "(at) "
 
-        return clean
+            return clean
+
+        else:
+            return DEFAULT_PREFIX
 
     def is_blacklisted(self):
         """Checks if the guild or author is blacklisted."""
+
         cog = self.bot.cogs["developer"]
         blacklist, guild_blacklist = cog.blacklist, cog.guild_blacklist  # type: ignore
 
-        if self.guild.id in guild_blacklist:
-            return True
+        if self.guild is not None:
+            if self.guild.id in guild_blacklist:
+                return True
 
         if self.author.id in blacklist:
             item: BlacklistItem = blacklist[self.author.id]

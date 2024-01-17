@@ -29,12 +29,12 @@ class Harmony(commands.Bot):
         super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, *args, **kwargs)  # type: ignore
         self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # Hacky way for lowercase cog arguments in help command
 
-    async def get_prefix(self, message: discord.Message) -> str | list[str]:
+    async def get_prefix(self, message: discord.Message) -> list[str]:
         if message.guild is None:
             return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
 
-        prefix = await self.pool.fetchval("SELECT prefix FROM prefixes WHERE guild_id = $1", message.guild.id)
-        return prefix and commands.when_mentioned_or(prefix)(self, message) or commands.when_mentioned(self, message)
+        prefixes = await self.pool.fetchval("SELECT prefixes FROM prefixes WHERE guild_id = $1", message.guild.id)
+        return prefixes and commands.when_mentioned_or(*prefixes)(self, message) or commands.when_mentioned(self, message)
 
     async def get_context(self, message, *, cls=Context):
         return await super().get_context(message, cls=cls)
