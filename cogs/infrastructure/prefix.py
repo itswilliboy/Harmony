@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from bot import Harmony
     from utils import Context
 
-MENTION_REGEX = re.compile("^<@!?[0-9]+>$")
+MENTION_REGEX = re.compile(r"^<@!?([\d]+)>$")
 
 
 class Prefix(BaseCog):
@@ -84,11 +84,12 @@ class Prefix(BaseCog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        if MENTION_REGEX.fullmatch(message.content):
-            ctx = await self.bot.get_context(message)
-            cmd = self.bot.get_command("prefix")
+        if match := MENTION_REGEX.fullmatch(message.content):
+            if match and match.group(1) == str(self.bot.user.id):
+                ctx = await self.bot.get_context(message)
+                cmd = self.bot.get_command("prefix")
 
-            await ctx.invoke(cmd)  # type: ignore
+                await ctx.invoke(cmd)  # type: ignore
 
     @commands.guild_only()
     @commands.group(invoke_without_command=True)
