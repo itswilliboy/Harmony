@@ -116,7 +116,7 @@ class ErrorHandler(BaseCog):
 
         else:
             embed = ErrorEmbed(description="An unknown error occurred")
-            self.bot.log.error(error, exc_info=error)
+            self.bot.log.error("In %s: %s", ctx.command, error, exc_info=error)
 
         if not embed.footer:
             if isinstance(error, GenericError) and error.footer:
