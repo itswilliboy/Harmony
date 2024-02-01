@@ -470,6 +470,8 @@ class RelationView(discord.ui.View):
         relations = sorted(media.relations, key=self._sort_relations)
         for edge in relations:
             value = f"{edge.title}\u200b{edge.id}"
+            if len(value) > 100:
+                value = f"{edge.title[:100-len(value)]}\u200b{edge.id}"  # Shorten value to 100 characters, but keep ID
 
             if edge.type == MediaRelation.SOURCE:
                 self.add_item(RelationButton(self.cog, edge, "Source", "\N{OPEN BOOK}", row=0))
