@@ -63,7 +63,7 @@ class Harmony(commands.Bot):
                 self.log.info("Loading extension: %s", ext)
 
             except Exception as exc:
-                self.log.error("Failed to load extension: %s", exc, exc_info=exc)
+                self.log.error("Failed to load extension: %s", ext, exc_info=exc)
 
     async def on_ready(self) -> None:
         self.log.info("Logged in as %s on discord.py version %s", self.user, discord.__version__)
