@@ -311,7 +311,7 @@ class Media:
             desc += "."
 
         if len(desc) > 2048:
-            desc = desc[:2038]
+            desc = desc[:2036]
             desc += " **[...]**"
 
         desc += "\n\u200b"
@@ -566,7 +566,10 @@ class AniList(BaseCog):
                 data_ = json["data"]
                 data = data_["Media"]
 
-            except IndexError:
+            except KeyError:
+                return None
+
+            if data is None:
                 return None
 
         return Media.from_json(data)
