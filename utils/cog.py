@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any
 
 from discord.ext import commands
 
@@ -14,7 +14,7 @@ class BaseCogMeta(commands.CogMeta):
     hidden: bool
     owner_only: bool
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+    def __new__(cls, *args: Any, **kwargs: Any) -> BaseCogMeta:
         hidden = kwargs.pop("hidden", False)
         owner_only = kwargs.pop("owner_only", False)
 
