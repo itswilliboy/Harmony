@@ -7,7 +7,7 @@ from aiohttp import ClientSession
 from asyncpg import Pool, Record, create_pool
 from discord.ext import commands, ipc
 
-from config import DEFAULT_PREFIX, POSTGRES_SETTINGS
+from config import DEFAULT_PREFIX, POSTGRES_CREDENTIALS
 from utils import Context
 
 
@@ -43,7 +43,7 @@ class Harmony(commands.Bot):
         discord.utils.setup_logging(level=logging.INFO)
         logging.getLogger("discord.gateway").setLevel(logging.WARNING)
 
-        pool = await create_pool(**POSTGRES_SETTINGS)
+        pool = await create_pool(**POSTGRES_CREDENTIALS)
         if not pool or pool and pool._closed:
             raise RuntimeError("Pool is closed")
 
