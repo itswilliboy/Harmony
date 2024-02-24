@@ -162,7 +162,7 @@ class General(BaseCog):
         embed.set_field_at(1, name="Bot Response Time", value=get_color(resp_time))
         await msg.edit(embed=embed)
 
-    @commands.command(aliases=["bot", "about"])
+    @commands.command(aliases=["bot", "about", "abt"])
     async def botinfo(self, ctx: Context):
         """Displays information about the bot."""
         app_info = self.bot.application
