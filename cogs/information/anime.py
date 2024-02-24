@@ -537,7 +537,6 @@ class AniList(BaseCog):
 
         async with self.bot.session.post(self.URL, json={"query": SEARCH_QUERY, "variables": variables}) as resp:
             json = await resp.json()
-            print(json)
 
             try:
                 data_ = json["data"]
@@ -558,7 +557,6 @@ class AniList(BaseCog):
 
         async with self.bot.session.post(self.URL, json={"query": FETCH_QUERY, "variables": variables}) as resp:
             json = await resp.json()
-            print(json)
 
             try:
                 data_ = json["data"]
