@@ -101,9 +101,7 @@ class Prefix(BaseCog):
         formatted.insert(0, self.bot.user.mention)
 
         nl = "\n"
-        embed = PrimaryEmbed(
-            description=f"Here is a list of the server-prefixes:\n* {f' {nl}* '.join(formatted)}"
-        )
+        embed = PrimaryEmbed(description=f"Here is a list of the server-prefixes:\n* {f' {nl}* '.join(formatted)}")
         embed.set_author(name=f"Get started with {ctx.clean_prefix}help !")
 
         if ctx.author.guild_permissions.manage_guild:  # type: ignore

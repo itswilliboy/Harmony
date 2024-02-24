@@ -459,6 +459,7 @@ class AdaptationSelect(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction[Harmony]):
         await callback(self.cog, int(self.values[0].split("\u200b")[1]), interaction)
 
+
 class RelationView(discord.ui.View):
     def __init__(self, cog: AniList, media: Media) -> None:
         super().__init__()
@@ -484,9 +485,7 @@ class RelationView(discord.ui.View):
 
             elif edge.type == MediaRelation.ADAPTATION:
                 adaptation_options.append(
-                    discord.SelectOption(
-                        emoji="\N{MOVIE CAMERA}", label=edge.title, value=value, description="Adaptation"
-                    )
+                    discord.SelectOption(emoji="\N{MOVIE CAMERA}", label=edge.title, value=value, description="Adaptation")
                 )
 
             elif edge.type == MediaRelation.SIDE_STORY:
@@ -518,7 +517,6 @@ class RelationView(discord.ui.View):
 
         if relation_options:
             self.add_item(RelationSelect(self.cog, relation_options))
-
 
         if len(self.children) > 25:
             self._children = self._children[:25]
