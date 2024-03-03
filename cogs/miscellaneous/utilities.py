@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from utils import Context
 
 
-class Utilities(BaseCog, hidden=True):
+class Utilities(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
 
