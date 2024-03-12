@@ -38,6 +38,31 @@ class General(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
 
+    @commands.has_guild_permissions(kick_members=True)
+    @commands.bot_has_guild_permissions(kick_members=True)
+    @commands.guild_only()
+    @commands.command()
+    async def kick(self, ctx: Context, member: discord.Member, *, reason: str | None = None):
+        """Kicks a user."""
+
+        assert isinstance(ctx.author, discord.Member)
+
+        if member == ctx.guild.owner:
+            raise GenericError("I can't kick the server owner.")
+
+        elif member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+            raise GenericError(f"Your top role needs to be higher than {member.mention}'s top role to kick them.")
+
+        elif ctx.guild.me.top_role <= member.top_role:
+            raise GenericError(f"My top role is not high enough to kick {member.mention}.")
+
+        reason = reason or "No reason given."
+        await ctx.guild.kick(member, reason=reason)
+        embed = SuccessEmbed(description=f"Sucessfully kicked <@{member.id}>.\nReason: `{reason}`")
+        embed.set_footer(text=f"ID: {member.id}").timestamp = discord.utils.utcnow()
+
+        await ctx.send(embed=embed)
+
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.guild_only()
