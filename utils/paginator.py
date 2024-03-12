@@ -33,12 +33,14 @@ class PageModal(discord.ui.Modal):
 
 
 class PaginatorView(discord.ui.View):
+    message: discord.Message
+
     def __init__(self, paginator: Paginator) -> None:
         super().__init__(timeout=300)
         self.paginator = paginator
         self.page.label = f"1/{paginator.length}"
 
-    def update(self):
+    def update(self) -> None:
         self.prev.disabled = False
         self.next.disabled = False
 
@@ -57,6 +59,16 @@ class PaginatorView(discord.ui.View):
                 return False
 
         return True
+
+    async def on_timeout(self) -> None:
+        for child in self.children:
+            child.disabled = True  # type: ignore
+
+        try:
+            await self.message.edit(view=self)
+
+        except:  # noqa: E722
+            pass
 
     @discord.ui.button(label="<<", style=discord.ButtonStyle.blurple, disabled=True)
     async def prev(self, interaction: discord.Interaction, _):
@@ -144,4 +156,4 @@ class Paginator:
 
     async def start(self, messageable: discord.abc.Messageable) -> None:
         view = self.view if len(self.embeds) > 1 else discord.utils.MISSING
-        await messageable.send(embed=self.current_page, view=view)
+        self.view.message = await messageable.send(embed=self.current_page, view=view)
