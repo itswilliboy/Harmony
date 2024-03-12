@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from io import BytesIO
 from os import getpid
 from sys import version_info
 from textwrap import dedent
@@ -11,9 +12,12 @@ import asyncpg
 import discord
 from cutlet import Cutlet
 from discord.ext import commands
+from jishaku.functools import executor_function
 from langcodes import Language
+from PIL import Image
 from psutil import Process, cpu_percent, virtual_memory
 
+from config import JEYY_API
 from utils import BaseCog, GenericError, PrimaryEmbed, argument_or_reference
 
 if TYPE_CHECKING:
@@ -241,3 +245,44 @@ class General(BaseCog):
             embed.insert_field_at(1, name="Romaji", value=Cutlet(use_foreign_spelling=False).romaji(text), inline=False)
 
         await ctx.send(embed=embed)
+
+    @executor_function
+    def get_image_colour(self, buffer: BytesIO) -> discord.Colour:
+        """Gets the colour of the image by reading a specific pixel."""
+
+        with Image.open(buffer) as image:
+            pixels = image.load()
+            colour = pixels[255, 0]
+            colour = list(colour)
+            del colour[3]  # Delete the alpha value
+
+        buffer.seek(0)
+        return discord.Colour.from_rgb(*colour)
+
+    @commands.command()
+    async def spotify(self, ctx: Context, user: discord.Member = commands.Author):
+        """Shows the current spotify status of a user."""
+
+        if user.activity is None or not isinstance(user.activity, discord.Spotify):
+            raise GenericError(f"{user.mention} isn't currently listening to anything on Spotify.")
+
+        spt = user.activity
+        params = {
+            "title": spt.title,
+            "cover_url": spt.album_cover_url,
+            "duration_seconds": spt.duration.seconds,
+            "start_timestamp": int((spt.created_at or discord.utils.utcnow()).timestamp()),
+            "artists": spt.artists
+        }
+        headers = dict(Authorization=f"Bearer {JEYY_API}")
+
+        await ctx.typing()
+
+        async with self.bot.session.get("https://api.jeyy.xyz/v2/discord/spotify", params=params, headers=headers) as resp:
+            buffer = BytesIO(await resp.read())
+
+        colour = await self.get_image_colour(buffer)
+        file = discord.File(buffer, "spotify.png")
+        embed = discord.Embed(colour=colour)
+        embed.set_image(url="attachment://spotify.png")
+        await ctx.send(embed=embed, file=file)
