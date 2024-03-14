@@ -261,7 +261,7 @@ class General(BaseCog):
 
     @commands.command()
     async def spotify(self, ctx: Context, user: discord.Member = commands.Author):
-        """Shows the current spotify status of a user."""
+        """Shows the current Spotify status of a user."""
 
         if user.activity is None or not isinstance(user.activity, discord.Spotify):
             raise GenericError(f"{user.mention} isn't currently listening to anything on Spotify.")
