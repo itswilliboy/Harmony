@@ -138,3 +138,5 @@ class Fun(BaseCog):
     async def coinflip(self, ctx: Context):
         """Flips a coin."""
         await ctx.send(f"\N{COIN} {'Heads' if randint(0, 1) else 'Tails'}")
+
+# This line is just useless af haha. ~ 20.03.2024 Marvin
