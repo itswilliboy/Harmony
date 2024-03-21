@@ -112,11 +112,21 @@ class PaginatorView(discord.ui.View):
 
 
 class Paginator:
-    def __init__(self, embeds: list[discord.Embed], author: discord.User | discord.Member | None = None) -> None:
+    def __init__(
+        self, embeds: list[discord.Embed], author: discord.User | discord.Member | None = None, *, page: int = 1
+    ) -> None:
         self.embeds = embeds
         self.author = author
         self._current_page = embeds[0]
-        self.page = 0
+
+        if page > self.length:
+            self.page = self.length - 1
+
+        elif page < 1:
+            self.page = 1
+
+        else:
+            self.page = page
 
         self.view = PaginatorView(self)
 
