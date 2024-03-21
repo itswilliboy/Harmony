@@ -27,4 +27,8 @@ CREATE TABLE IF NOT EXISTS guild_blacklist(
     timestamp TIMESTAMP NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS snipe_optout(
+    user_id BIGINT PRIMARY KEY
+);
+
 COMMIT;

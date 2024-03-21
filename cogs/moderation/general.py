@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import datetime
 from contextlib import suppress
 from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import commands
 
-from utils import BaseCog, GenericError, SuccessEmbed
+from utils import BaseCog, GenericError, SuccessEmbed, PrimaryEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -37,6 +38,30 @@ class BannedMember(commands.Converter):
 class General(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
+        bot.loop.create_task(self.init_dict())
+
+        self.snipes: dict[int, dict[int, tuple[discord.Message | None, datetime.datetime | None]]]
+
+
+    async def init_dict(self):
+        await self.bot.wait_until_ready()
+
+        self.snipes = {}
+        for guild in self.bot.guilds:
+            self.snipes[guild.id] = {}
+
+            for channel in guild.channels:
+                self.snipes[guild.id].update({channel.id: (None, None)})
+
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: discord.Message):
+        guild = message.guild
+        channel = message.channel
+
+        assert guild, channel
+
+        self.snipes[guild.id][channel.id] = (message, datetime.datetime.now())
 
     @commands.has_guild_permissions(kick_members=True)
     @commands.bot_has_guild_permissions(kick_members=True)
@@ -126,3 +151,38 @@ class General(BaseCog):
 
         with suppress(discord.NotFound):
             await ctx.message.add_reaction("\N{OK HAND SIGN}")
+
+    @commands.guild_only()
+    @commands.command()
+    async def snipe(self, ctx: Context):
+        """Views (snipes) the most recently deleted message in the current channel."""
+        exists = await self.bot.pool.fetchval("SELECT EXISTS(SELECT 1 FROM snipe_optout WHERE user_id = $1)", ctx.author.id)
+        if exists is True:
+            raise GenericError("You are opted out from snipes.")
+
+        snipe = self.snipes[ctx.guild.id].get(ctx.channel.id)
+
+        assert snipe
+        if snipe[0] is None:
+            raise GenericError("No sniped messages in this channel.")
+
+        message, timestamp = snipe
+        assert message, timestamp
+
+        embed = PrimaryEmbed(description=message.content or "*No Content*", timestamp=timestamp)
+        embed.set_author(name=message.author, icon_url=message.author.display_avatar.url)
+
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def snipe_opt_out(self, ctx: Context):
+        """Toggles opt-out from snipes."""
+        exists = await self.bot.pool.fetchval("SELECT EXISTS(SELECT 1 FROM snipe_optout WHERE user_id = $1)", ctx.author.id)
+
+        if exists is True:
+            await self.bot.pool.execute("DELETE FROM snipe_optout WHERE user_id = $1", ctx.author.id)
+            await ctx.send("Successfully opted you in.")
+
+        else:
+            await self.bot.pool.execute("INSERT INTO snipe_optout VALUES ($1)", ctx.author.id)
+            await ctx.send("Successfully opted you out.")
