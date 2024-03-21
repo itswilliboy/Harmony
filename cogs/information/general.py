@@ -263,10 +263,10 @@ class General(BaseCog):
     async def spotify(self, ctx: Context, user: discord.Member = commands.Author):
         """Shows the current Spotify status of a user."""
 
-        if user.activity is None or not isinstance(user.activity, discord.Spotify):
+        if not any((isinstance(activity, discord.Spotify) for activity in user.activities)):
             raise GenericError(f"{user.mention} isn't currently listening to anything on Spotify.")
 
-        spt = user.activity
+        spt = next((activity for activity in user.activities if isinstance(activity, discord.Spotify)))
         params = {
             "title": spt.title,
             "cover_url": spt.album_cover_url,
