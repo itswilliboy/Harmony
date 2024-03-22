@@ -35,10 +35,12 @@ class PageModal(discord.ui.Modal):
 class PaginatorView(discord.ui.View):
     message: discord.Message
 
-    def __init__(self, paginator: Paginator) -> None:
+    def __init__(self, paginator: Paginator, *, start_page: int = 1) -> None:
         super().__init__(timeout=300)
         self.paginator = paginator
-        self.page.label = f"1/{paginator.length}"
+        self.page.label = f"{start_page}/{paginator.length}"
+
+        self.update()
 
     def update(self) -> None:
         self.prev.disabled = False
@@ -70,7 +72,7 @@ class PaginatorView(discord.ui.View):
         except:  # noqa: E722
             pass
 
-    @discord.ui.button(label="<<", style=discord.ButtonStyle.blurple, disabled=True)
+    @discord.ui.button(label="<<", style=discord.ButtonStyle.blurple)
     async def prev(self, interaction: discord.Interaction, _):
         page = self.paginator
 
@@ -117,18 +119,20 @@ class Paginator:
     ) -> None:
         self.embeds = embeds
         self.author = author
-        self._current_page = embeds[0]
 
         if page > self.length:
-            self.page = self.length - 1
+            self.page = self.length
 
         elif page < 1:
-            self.page = 1
+            self.page
 
         else:
             self.page = page
 
-        self.view = PaginatorView(self)
+        self.page -= 1
+        self._current_page = embeds[self.page]
+
+        self.view = PaginatorView(self, start_page=self.user_page)
 
     @property
     def current_page(self) -> discord.Embed:
