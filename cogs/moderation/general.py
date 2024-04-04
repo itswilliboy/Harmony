@@ -42,7 +42,6 @@ class General(BaseCog):
 
         self.snipes: dict[int, dict[int, tuple[discord.Message | None, datetime.datetime | None]]]
 
-
     async def init_dict(self):
         await self.bot.wait_until_ready()
 
