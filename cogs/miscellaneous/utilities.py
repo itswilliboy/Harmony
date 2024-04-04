@@ -20,21 +20,42 @@ class Utilities(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
 
-    @commands.has_guild_permissions(manage_expressions=True)
-    @commands.bot_has_guild_permissions(manage_expressions=True)
     @commands.command(aliases=["steal", "stealemoji"])
-    async def addemoji(self, ctx: Context, emoji: discord.PartialEmoji | str, name: str | None = None):
+    async def addemoji(
+        self, ctx: Context, emoji: discord.PartialEmoji | str, name: str | None = None, server_id: int | None = None
+    ):
         """Add an emoji via an image URL or steal one from another server :^)"""
         if name and len(name) < 2:
             return await ctx.send(embed=ErrorEmbed(description="The emoji name needs to be at least 2 characters long."))
 
         reason = f"Added with `addemoji` command by {ctx.author}"
 
+        guild = self.bot.get_guild(server_id) if server_id else None
+        if guild is None:
+            guild = ctx.guild
+            author = ctx.author
+
+        else:
+            author = guild.get_member(ctx.author.id)
+
+        assert isinstance(ctx.author, discord.Member) and isinstance(author, discord.Member)
+        perm = discord.Permissions(manage_expressions=True)
+
+        if guild != ctx.guild and ctx.author not in guild.members:
+            raise GenericError("You aren't in that server.")
+
+        if not author.guild_permissions.is_superset(perm):
+            raise commands.MissingPermissions(missing_permissions=["Manage Expressions"])
+
+        elif not guild.me.guild_permissions.is_superset(perm):
+            raise commands.BotMissingPermissions(missing_permissions=["Manage Expressions"])
+
         if isinstance(emoji, discord.PartialEmoji):
             name_ = name or emoji.name
-            created = await ctx.guild.create_custom_emoji(name=name_, image=await emoji.read(), reason=reason)
+            created = await guild.create_custom_emoji(name=name_, image=await emoji.read(), reason=reason)
 
             embed = SuccessEmbed(description=f"Successfully added {created} as `{created.name}`")
+            embed.set_footer(text=f"Server: {guild}")
             return await ctx.send(str(created), embed=embed)
 
         else:
@@ -44,6 +65,7 @@ class Utilities(BaseCog):
                         raise GenericError(
                             "Something went wrong when trying to download the image, make sure it exists.", True
                         )
+
 
                     if resp.content_type not in ("image/png", "image/jpeg", "image/webp", "image/gif"):
                         raise GenericError("Unsupported format, must be: `PNG`, `JPEG`, `WEBP`, or `GIF`.")
@@ -68,9 +90,10 @@ class Utilities(BaseCog):
                 )
 
             try:
-                created = await ctx.guild.create_custom_emoji(name=name_, image=image, reason=reason)
+                created = await guild.create_custom_emoji(name=name_, image=image, reason=reason)
 
                 embed = SuccessEmbed(description=f"Successfully added {created} as `{created.name}`")
+                embed.set_footer(text=f"Server: {guild}")
                 return await ctx.send(str(created), embed=embed)
 
             except discord.HTTPException:
