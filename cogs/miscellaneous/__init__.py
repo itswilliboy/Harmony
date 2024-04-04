@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .utilities import Utilities
+from .avatar import Avatar
 
 if TYPE_CHECKING:
     from bot import Harmony
 
 
-class Miscellaneous(Utilities):
+class Miscellaneous(Utilities, Avatar):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
 
