@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, overload
 
 import discord
+from aiohttp import ClientSession
+from asyncpg import Pool
 from discord.ext import commands
 from discord.ext.commands import Context as DiscordContext
 from discord.ext.commands.core import Command
@@ -30,7 +32,15 @@ class Context(DiscordContext["Harmony"]):
         else:
             return DEFAULT_PREFIX
 
-    def is_blacklisted(self):
+    @property
+    def session(self) -> ClientSession:
+        return self.bot.session
+
+    @property
+    def pool(self) -> Pool:
+        return self.bot.pool
+
+    def is_blacklisted(self) -> bool:
         """Checks if the guild or author is blacklisted."""
 
         cog = self.bot.cogs["developer"]
