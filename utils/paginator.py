@@ -29,7 +29,13 @@ class PageModal(discord.ui.Modal):
             )
         self.paginator.set_page(int(self.page.value) - 1)
         self.view.update()
-        await interaction.response.edit_message(embed=self.paginator.current_page, view=self.view)
+        file = self.paginator.current_file or None
+        if file:
+            file.reset()
+            await interaction.response.edit_message(embed=self.paginator.current_page, view=self.view, attachments=[file])
+
+        else:
+            await interaction.response.edit_message(embed=self.paginator.current_page, view=self.view)
 
 
 class PaginatorView(discord.ui.View):
@@ -45,12 +51,16 @@ class PaginatorView(discord.ui.View):
     def update(self) -> None:
         self.prev.disabled = False
         self.next.disabled = False
+        self.start.disabled = False
+        self.end.disabled = False
 
         if self.paginator.index <= 0:
             self.prev.disabled = True
+            self.start.disabled = True
 
         elif self.paginator.user_page >= self.paginator.length:
             self.next.disabled = True
+            self.end.disabled = True
 
         self.page.label = f"{self.paginator.user_page}/{self.paginator.length}"
 
@@ -72,6 +82,25 @@ class PaginatorView(discord.ui.View):
         except:  # noqa: E722
             pass
 
+    async def edit_message(self, interaction: Interaction) -> None:
+        page = self.paginator
+        file = page.current_file or discord.utils.MISSING
+        if file:
+            file.reset()
+            await interaction.response.edit_message(embed=page.current_page, view=self, attachments=[file])
+
+        else:
+            await interaction.response.edit_message(embed=page.current_page, view=self)
+
+
+    @discord.ui.button(label="<<<", style=discord.ButtonStyle.blurple)
+    async def start(self, interaction: discord.Interaction, _):
+        page = self.paginator
+        page.set_page(0)
+
+        self.update()
+        await self.edit_message(interaction)
+
     @discord.ui.button(label="<<", style=discord.ButtonStyle.blurple)
     async def prev(self, interaction: discord.Interaction, _):
         page = self.paginator
@@ -83,11 +112,12 @@ class PaginatorView(discord.ui.View):
             page.previous_page()
 
         self.update()
-        await interaction.response.edit_message(embed=page.current_page, view=self)
+        await self.edit_message(interaction)
 
-    @discord.ui.button(label="", style=discord.ButtonStyle.gray, disabled=True)
-    async def page(self, *_):
-        pass
+    @discord.ui.button(label="", style=discord.ButtonStyle.gray)
+    async def page(self, interaction: Interaction, _):
+        modal = PageModal(self.paginator, self, 1, self.paginator.length)
+        await interaction.response.send_modal(modal)
 
     @discord.ui.button(label=">>", style=discord.ButtonStyle.blurple)
     async def next(self, interaction: discord.Interaction, _):
@@ -100,37 +130,61 @@ class PaginatorView(discord.ui.View):
             page.next_page()
 
         self.update()
-        await interaction.response.edit_message(embed=page.current_page, view=self)
+        await self.edit_message(interaction)
+
+    @discord.ui.button(label=">>>", style=discord.ButtonStyle.blurple)
+    async def end(self, interaction: discord.Interaction, _):
+        page = self.paginator
+        page.set_page(page.length - 1)
+
+        self.update()
+        await self.edit_message(interaction)
 
     @discord.ui.button(label="\N{WASTEBASKET}\N{VARIATION SELECTOR-16}", style=discord.ButtonStyle.red)
     async def delete(self, interaction: discord.Interaction, _):
         assert interaction.message
         await interaction.message.delete()
 
-    @discord.ui.button(label="Enter Page", style=discord.ButtonStyle.blurple, row=1)
-    async def enter_page(self, interaction: discord.Interaction, _):
-        modal = PageModal(self.paginator, self, 1, self.paginator.length)
-        await interaction.response.send_modal(modal)
-
 
 class Paginator:
     def __init__(
-        self, embeds: list[discord.Embed], author: discord.User | discord.Member | None = None, *, page: int = 1
+        self,
+        embeds: list[discord.Embed],
+        author: discord.User | discord.Member | None = None,
+        *,
+        page: int = 1,
+        files: list[discord.File] | None = None,
+        reversed: bool = False,
     ) -> None:
-        self.embeds = embeds
+        self.embeds = embeds.copy()
+        self.files = files
         self.author = author
+        self.reversed = reversed
+
+        if not self.embeds:
+            raise ValueError("List is empty")
 
         if page > self.length:
             self.page = self.length
 
         elif page < 1:
-            self.page
+            self.page = 1
 
         else:
             self.page = page
 
         self.page -= 1
-        self._current_page = embeds[self.page]
+
+        if reversed is True:
+            self.page = self.length - 1
+            self.current_page = embeds[-1]
+
+            last_embed = self.embeds[-1]
+            self.current_page = last_embed
+
+        else:
+            self.current_page = embeds[self.page]
+
 
         self.view = PaginatorView(self, start_page=self.user_page)
 
@@ -141,6 +195,11 @@ class Paginator:
     @current_page.setter
     def current_page(self, embed: discord.Embed) -> None:
         self._current_page = embed
+
+    @property
+    def current_file(self) -> discord.File | None:
+        if self.files:
+            return self.files[self.index]
 
     @property
     def length(self) -> int:
@@ -170,4 +229,5 @@ class Paginator:
 
     async def start(self, messageable: discord.abc.Messageable) -> None:
         view = self.view if len(self.embeds) > 1 else discord.utils.MISSING
-        self.view.message = await messageable.send(embed=self.current_page, view=view)
+        file = self.current_file or discord.utils.MISSING
+        self.view.message = await messageable.send(embed=self.current_page, view=view, file=file)
