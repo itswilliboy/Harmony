@@ -94,6 +94,9 @@ class ErrorHandler(BaseCog):
             embed = ErrorEmbed(title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```")  # type: ignore
             embed.set_footer(text="< > = required | [ ] = optional")
 
+            if msgs := error.args:
+                embed.description += f"\n`{msgs[0]}`"  # type: ignore
+
         elif isinstance(error, commands.NotOwner):
             embed = ErrorEmbed(title="Owner Only", description="Only bot developers can use this command.")
 
