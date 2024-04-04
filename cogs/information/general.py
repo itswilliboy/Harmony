@@ -96,6 +96,20 @@ class General(BaseCog):
         await ctx.send(embed=embed, view=view)
 
     @commands.command()
+    async def banner(self, ctx: Context, user: discord.User = commands.Author):
+        """Get someone's banner"""
+        fetched = await self.bot.fetch_user(user.id)
+        if fetched is None:
+            raise commands.BadArgument("Couldn't find that user")
+
+        elif fetched.banner is None:
+            raise GenericError(f"{user.mention} doesn't have a banner.")
+
+        view = AvatarView(fetched.banner)
+        embed = PrimaryEmbed(title=f"{user.name}'s Banner").set_image(url=fetched.banner.url)
+        await ctx.send(embed=embed, view=view)
+
+    @commands.command()
     async def icon(self, ctx: Context):
         """Get the server's icon."""
         if ctx.guild.icon is None:
@@ -263,16 +277,17 @@ class General(BaseCog):
     async def spotify(self, ctx: Context, user: discord.Member = commands.Author):
         """Shows the current Spotify status of a user."""
 
-        if not any((isinstance(activity, discord.Spotify) for activity in user.activities)):
+        spotify = discord.utils.find(lambda a: isinstance(a, discord.Spotify), user.activities)
+        if spotify is None:
             raise GenericError(f"{user.mention} isn't currently listening to anything on Spotify.")
 
-        spt = next((activity for activity in user.activities if isinstance(activity, discord.Spotify)))
+        assert isinstance(spotify, discord.Spotify)
         params = {
-            "title": spt.title,
-            "cover_url": spt.album_cover_url,
-            "duration_seconds": spt.duration.seconds,
-            "start_timestamp": int((spt.created_at or discord.utils.utcnow()).timestamp()),
-            "artists": spt.artists
+            "title": spotify.title,
+            "cover_url": spotify.album_cover_url,
+            "duration_seconds": spotify.duration.seconds,
+            "start_timestamp": int((spotify.created_at or discord.utils.utcnow()).timestamp()),
+            "artists": spotify.artists
         }
         headers = dict(Authorization=f"Bearer {JEYY_API}")
 
