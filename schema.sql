@@ -31,4 +31,17 @@ CREATE TABLE IF NOT EXISTS snipe_optout(
     user_id BIGINT PRIMARY KEY
 );
 
+CREATE TABLE IF NOT EXISTS avatar_history(
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    image_data BYTEA,
+    timestamp TIMESTAMP DEFAULT current_timestamp
+);
+
+CREATE TABLE IF NOT EXISTS anilist_codes(
+    user_id BIGINT PRIMARY KEY,
+    access_token TEXT NOT NULL,
+    expires_in TIMESTAMP NOT NULL
+);
+
 COMMIT;
