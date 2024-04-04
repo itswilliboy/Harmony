@@ -58,4 +58,3 @@ class Avatar(BaseCog):
             files.append(file)
 
         await Paginator(embeds, ctx.author, files=files, reversed=True).start(ctx)
-

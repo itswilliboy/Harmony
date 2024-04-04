@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from config import DEFAULT_PREFIX
-from utils import BaseCog, PrimaryEmbed, SuccessEmbed, GenericError
+from utils import BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony

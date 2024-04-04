@@ -66,7 +66,6 @@ class Utilities(BaseCog):
                             "Something went wrong when trying to download the image, make sure it exists.", True
                         )
 
-
                     if resp.content_type not in ("image/png", "image/jpeg", "image/webp", "image/gif"):
                         raise GenericError("Unsupported format, must be: `PNG`, `JPEG`, `WEBP`, or `GIF`.")
 

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from utils import BaseCog, GenericError, SuccessEmbed, PrimaryEmbed
+from utils import BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -51,7 +51,6 @@ class General(BaseCog):
 
             for channel in guild.channels:
                 self.snipes[guild.id].update({channel.id: (None, None)})
-
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message):

@@ -146,6 +146,7 @@ USER_QUERY = """
     }
 """
 
+
 class UserStatistics(NamedTuple):
     count: int
     mean_score: float
@@ -155,9 +156,11 @@ class UserStatistics(NamedTuple):
     chapters_read: int
     volumes_read: int
 
+
 class PartialNode(NamedTuple):
     name: str
     site_url: str
+
 
 class Favourites(TypedDict):
     anime: PartialNode
@@ -166,9 +169,11 @@ class Favourites(TypedDict):
     staff: PartialNode
     studios: PartialNode
 
+
 class AccessToken(NamedTuple):
     token: str
     expiry: datetime
+
 
 class User:
     def __init__(
@@ -181,7 +186,7 @@ class User:
         created_at: int,
         anime_stats: UserStatistics,
         manga_stats: UserStatistics,
-        favourites: Favourites
+        favourites: Favourites,
     ) -> None:
         self.name = name
         self.about = about
@@ -207,7 +212,7 @@ class User:
             stats["anime"]["minutesWatched"],
             stats["anime"]["episodesWatched"],
             0,
-            0
+            0,
         )
 
         manga_stats = UserStatistics(
@@ -216,7 +221,7 @@ class User:
             0,
             0,
             stats["manga"]["chaptersRead"],
-            stats["manga"]["volumesRead"]
+            stats["manga"]["volumesRead"],
         )
 
         favourites: Favourites = {}  # type: ignore
@@ -251,7 +256,7 @@ class User:
             data["createdAt"],
             anime_stats,
             manga_stats,
-            favourites
+            favourites,
         )
 
     @property
@@ -263,8 +268,8 @@ class User:
         empty = "\N{LIGHT SHADE}"
         full = "\N{FULL BLOCK}"
 
-        score = round(percentage/10)
-        bar = (full*score).ljust(10, empty)
+        score = round(percentage / 10)
+        bar = (full * score).ljust(10, empty)
         return bar
 
 
@@ -276,11 +281,7 @@ class OAuth:
 
     @staticmethod
     def _get_headers(token: str) -> dict[str, str]:
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"}
 
         return headers
 
@@ -292,13 +293,10 @@ class OAuth:
             "client_id": ANILIST_ID,
             "client_secret": ANILIST_SECRET,
             "redirect_uri": "https://anilist.co/api/v2/oauth/pin",
-            "code": auth_code
+            "code": auth_code,
         }
 
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
         async with self.session.post("https://anilist.co/api/v2/oauth/token", json=json, headers=headers) as resp:
             json = await resp.json()

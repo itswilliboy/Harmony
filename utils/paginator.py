@@ -92,7 +92,6 @@ class PaginatorView(discord.ui.View):
         else:
             await interaction.response.edit_message(embed=page.current_page, view=self)
 
-
     @discord.ui.button(label="<<<", style=discord.ButtonStyle.blurple)
     async def start(self, interaction: discord.Interaction, _):
         page = self.paginator
@@ -184,7 +183,6 @@ class Paginator:
 
         else:
             self.current_page = embeds[self.page]
-
 
         self.view = PaginatorView(self, start_page=self.user_page)
 

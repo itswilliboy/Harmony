@@ -287,7 +287,7 @@ class General(BaseCog):
             "cover_url": spotify.album_cover_url,
             "duration_seconds": spotify.duration.seconds,
             "start_timestamp": int((spotify.created_at or discord.utils.utcnow()).timestamp()),
-            "artists": spotify.artists
+            "artists": spotify.artists,
         }
         headers = dict(Authorization=f"Bearer {JEYY_API}")
 

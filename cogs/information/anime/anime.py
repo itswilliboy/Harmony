@@ -12,7 +12,7 @@ from discord.ext import commands
 from config import ANILIST_URL
 from utils import BaseCog, Context, ErrorEmbed, GenericError, PrimaryEmbed, SuccessEmbed
 
-from .oauth import OAuth, AccessToken
+from .oauth import AccessToken, OAuth
 
 if TYPE_CHECKING:
     from bot import Harmony
