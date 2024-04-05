@@ -188,7 +188,7 @@ class General(BaseCog):
 
     @commands.command()
     async def cleanup(self, ctx: Context, amount: int = 25):
-        """Removes bot messages and command invocations in the current channel."""
+        """Removes the bot's messages, and command invocations in the current channel."""
 
         assert isinstance(ctx.author, discord.Member)
         if ctx.channel.permissions_for(ctx.author).is_superset(discord.Permissions(manage_messages=True)):
