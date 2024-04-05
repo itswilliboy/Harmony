@@ -1,5 +1,7 @@
 import logging
 from datetime import datetime
+import re
+import traceback
 from typing import TYPE_CHECKING, Any
 
 import discord
@@ -53,6 +55,21 @@ class Harmony(commands.Bot):
 
             self.prefix_cache[guild_id] = prefix
 
+    async def populate_command_permissions(self) -> None:
+        pattern = re.compile(r"<function has_(guild_)?permissions\.<locals>.predicate at 0x\w+>")
+        for cmd in self.commands:
+            for _, check in enumerate(cmd.checks):
+                if not pattern.fullmatch(str(check)):
+                    continue
+
+                try:
+                    check(0)  # type: ignore  # 0 is passed to force an exception
+
+                except Exception as exc:
+                    *_, last = traceback.walk_tb(exc.__traceback__)
+                    frame = last[0]
+                    cmd.extras["perms"] = frame.f_locals["perms"]
+
     async def get_context(self, message, *, cls=Context) -> Context:
         return await super().get_context(message, cls=cls)
 
@@ -83,6 +100,7 @@ class Harmony(commands.Bot):
                 self.log.error("Failed to load extension: %s", ext, exc_info=exc)
 
         await self.populate_prefix_cache()
+        await self.populate_command_permissions()
 
     async def on_ready(self) -> None:
         self.log.info("Logged in as %s on discord.py version %s", self.user, discord.__version__)

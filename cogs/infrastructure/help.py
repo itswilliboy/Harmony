@@ -64,6 +64,11 @@ class HelpCommand(commands.HelpCommand):
         if aliases := command.aliases:
             embed.add_field(name="Aliases", value=", ".join([f"`{alias}`" for alias in aliases]), inline=False)
 
+        if perms := command.extras.get("perms"):
+            nl = "\n"
+            keys = [key.replace("_", " ").title() for key in list(perms.keys())]
+            embed.add_field(name="Required Permissions", value=f"* {f' {nl}*'.join(keys)}", inline=False)
+
         await self.get_destination().send(embed=embed)
 
     async def send_group_help(self, group: Group) -> None:
