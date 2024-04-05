@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-from contextlib import suppress
 from typing import TYPE_CHECKING
 
 import discord
@@ -147,8 +146,10 @@ class General(BaseCog):
         assert not isinstance(ctx.channel, (discord.DMChannel, discord.PartialMessageable, discord.GroupChannel))
         await ctx.channel.purge(limit=amount, before=ctx.message)
 
-        with suppress(discord.NotFound):
+        try:
             await ctx.message.add_reaction("\N{OK HAND SIGN}")
+        except Exception:
+            pass
 
     @commands.guild_only()
     @commands.command()
@@ -184,3 +185,25 @@ class General(BaseCog):
         else:
             await self.bot.pool.execute("INSERT INTO snipe_optout VALUES ($1)", ctx.author.id)
             await ctx.send("Successfully opted you out.")
+
+    @commands.command()
+    async def cleanup(self, ctx: Context, amount: int = 25):
+        """Removes bot messages and command invocations in the current channel."""
+
+        assert isinstance(ctx.author, discord.Member)
+        if ctx.channel.permissions_for(ctx.author).is_superset(discord.Permissions(manage_messages=True)):
+            limit = min(max(2, amount), 250)
+
+        else:
+            limit = min(max(2, amount), 25)
+
+        prefixes = await ctx.bot.get_prefix(ctx.message)
+
+        def check(msg: discord.Message) -> bool:
+            # fmt: off
+            return (msg.author == ctx.bot.user or msg.content.startswith(tuple(prefixes))) \
+                and msg.created_at.replace(tzinfo=None) > datetime.datetime.now() - datetime.timedelta(weeks=2)
+            # fmt: on
+
+        deleted = await ctx.channel.purge(limit=limit, check=check, before=ctx.message)  # type: ignore
+        await ctx.send(f"Deleted **{len(deleted)}** messages", delete_after=5)
