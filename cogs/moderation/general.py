@@ -186,6 +186,7 @@ class General(BaseCog):
             await self.bot.pool.execute("INSERT INTO snipe_optout VALUES ($1)", ctx.author.id)
             await ctx.send("Successfully opted you out.")
 
+    @commands.has_permissions(manage_messages=True, read_message_history=True)
     @commands.command()
     async def cleanup(self, ctx: Context, amount: int = 25):
         """Removes the bot's messages, and command invocations in the current channel."""
