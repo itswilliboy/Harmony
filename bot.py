@@ -24,19 +24,36 @@ class Harmony(commands.Bot):
     user: discord.User
 
     def __init__(self, intents: discord.Intents, initial_extensions: list[str], *args: Any, **kwargs: Any) -> None:
-        self.initial_extensions = initial_extensions
-        self.started_at = datetime.now()
         super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, *args, **kwargs)  # type: ignore
         self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # Hacky way for lowercase cog arguments in help command
+
+        self.initial_extensions = initial_extensions
+        self.started_at = datetime.now()
+
+        self.prefix_cache: dict[int, list[str]] = {}
 
     async def get_prefix(self, message: discord.Message) -> list[str]:
         if message.guild is None:
             return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
 
-        prefixes = await self.pool.fetchval("SELECT prefixes FROM prefixes WHERE guild_id = $1", message.guild.id)
-        return prefixes and commands.when_mentioned_or(*prefixes)(self, message) or commands.when_mentioned(self, message)
+        prefixes = self.prefix_cache.get(message.guild.id)
+        if prefixes is not None:
+            return commands.when_mentioned_or(*prefixes)(self, message)
 
-    async def get_context(self, message, *, cls=Context):
+        else:
+            self.log.warning("Prefix not found for guild with ID %s, using default prefix", message.guild.id)
+            return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
+
+    async def populate_prefix_cache(self) -> None:
+        resp = await self.pool.fetch("SELECT * FROM prefixes")
+
+        for guild_id, prefix in resp:
+            guild_id: int
+            prefix: list[str]
+
+            self.prefix_cache[guild_id] = prefix
+
+    async def get_context(self, message, *, cls=Context) -> Context:
         return await super().get_context(message, cls=cls)
 
     async def setup_hook(self) -> None:
@@ -64,6 +81,8 @@ class Harmony(commands.Bot):
 
             except Exception as exc:
                 self.log.error("Failed to load extension: %s", ext, exc_info=exc)
+
+        await self.populate_prefix_cache()
 
     async def on_ready(self) -> None:
         self.log.info("Logged in as %s on discord.py version %s", self.user, discord.__version__)
