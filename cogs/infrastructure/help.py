@@ -67,7 +67,7 @@ class HelpCommand(commands.HelpCommand):
         if perms := command.extras.get("perms"):
             nl = "\n"
             keys = [key.replace("_", " ").title() for key in list(perms.keys())]
-            embed.add_field(name="Required Permissions", value=f"* {f' {nl}*'.join(keys)}", inline=False)
+            embed.add_field(name="Required Permissions", value=f"* {f' {nl}* '.join(keys)}", inline=False)
 
         await self.get_destination().send(embed=embed)
 
