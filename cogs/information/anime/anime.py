@@ -5,7 +5,7 @@ import discord
 import datetime
 import re
 
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from .types import (
     Edge,
@@ -208,24 +208,24 @@ class Media:
         isAdult: bool,
         type: MediaType,
         title: MediaTitle,
-        description: Optional[str],
+        description: str | None,
         start_date: FuzzyDate,
         end_date: FuzzyDate,
-        season: Optional[MediaSeason],
-        season_year: Optional[int],
-        mean_score: Optional[int],
+        season: MediaSeason | None,
+        season_year: int | None,
+        mean_score: int | None,
         status: MediaStatus,
         cover_image: MediaCoverImage,
         banner_image: str,
         hashtags: str,
-        studio: Optional[Studio],
+        studio: Studio | None,
         episodes: int,
         duration: int,
         chapters: int,
         volumes: int,
         genres: list[str],
         relations: list[Edge],
-        list_entry: Optional[MediaList],
+        list_entry: MediaList | None,
     ) -> None:
         self.id = id
         self.id_mal = id_mal

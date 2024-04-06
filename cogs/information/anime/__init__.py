@@ -11,7 +11,7 @@ from utils.utils import progress_bar
 from .types import Edge, MediaRelation, MediaType
 from .anime import AniListClient, Media
 
-from typing import Any, Self, Optional
+from typing import Any, Self
 
 from bot import Harmony
 
@@ -240,7 +240,7 @@ class LoginView(ui.View):
 
     async def check_login(
         self,
-        code: Optional[str],
+        code: str | None,
     ) -> bool:
         if code is None:
             return False
