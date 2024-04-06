@@ -8,3 +8,13 @@ line-length = 125
 
 [tool.isort]
 profile = "black"
+
+[tool.pyright]
+pythonVersion = "3.11"
+reportIncompatibleMethodOverride = "none"
+reportPrivateUsage = "none"
+reportIncompatibleVariableOverride = "none"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportMissingTypeStubs = "warning"
+
+stubPath = "./typings"

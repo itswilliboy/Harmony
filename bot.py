@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import re
 import traceback
@@ -6,12 +8,16 @@ from typing import TYPE_CHECKING, Any
 
 import discord
 from aiohttp import ClientSession
-from asyncache import cachedmethod
+from asyncache import cachedmethod  # type: ignore
 from asyncpg import Pool, Record, create_pool
 from discord.ext import commands, ipc
+from discord.ext.commands.core import _CaseInsensitiveDict  # type: ignore
 
 from config import DEFAULT_PREFIX, POSTGRES_CREDENTIALS
 from utils import Context
+
+if TYPE_CHECKING:
+    from cogs.developer.blacklist import BlacklistItem, GuildBlacklistItem
 
 
 class Harmony(commands.Bot):
@@ -26,9 +32,12 @@ class Harmony(commands.Bot):
 
     user: discord.User
 
+    blacklist: dict[int, BlacklistItem]
+    guild_blacklist: dict[int, GuildBlacklistItem]
+
     def __init__(self, intents: discord.Intents, initial_extensions: list[str], *args: Any, **kwargs: Any) -> None:
         super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, *args, **kwargs)  # type: ignore
-        self._BotBase__cogs = commands.core._CaseInsensitiveDict()  # Hacky way for lowercase cog arguments in help command
+        self._BotBase__cogs = _CaseInsensitiveDict()  # Hacky way to allow  lowercase cog arguments in help command
 
         self.initial_extensions = initial_extensions
         self.started_at = datetime.now()
@@ -68,14 +77,15 @@ class Harmony(commands.Bot):
                     frame = last[0]
                     cmd.extras["perms"] = frame.f_locals["perms"]
 
-    async def get_context(self, message, *, cls=Context) -> Context:
-        return await super().get_context(message, cls=cls)
+    async def get_context(self, origin: discord.Message | discord.Interaction, *, cls: Any = Context) -> Context:
+        return await super().get_context(origin, cls=cls)
 
     async def setup_hook(self) -> None:
         discord.utils.setup_logging(level=logging.INFO)
         logging.getLogger("discord.gateway").setLevel(logging.WARNING)
 
-        pool = await create_pool(**POSTGRES_CREDENTIALS)
+        credentials: dict[str, Any] = POSTGRES_CREDENTIALS
+        pool: Pool[Record] | None = await create_pool(**credentials)
         if not pool or pool and pool._closed:
             raise RuntimeError("Pool is closed")
 

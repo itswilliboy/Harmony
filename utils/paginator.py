@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import discord
+from discord.ui import TextInput
 from discord.interactions import Interaction
 
 if TYPE_CHECKING:
@@ -17,7 +18,7 @@ class PageModal(discord.ui.Modal):
         self.min_page = min_page
         self.max_page = max_page
 
-        self.page = discord.ui.TextInput(
+        self.page: TextInput[Self] = TextInput(
             label="Page", min_length=len(str(self.min_page)), max_length=len(str(self.max_page))
         )
         self.add_item(self.page)

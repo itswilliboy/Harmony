@@ -23,6 +23,7 @@ class General(BaseCog):
     @commands.command(aliases=["r"])
     async def reload(self, ctx: Context, extension: str | None = None):
         """Reloads one or more extensions."""
+        ext = None
         try:
             if extension is None:
                 for ext in list(self.bot.extensions).copy():

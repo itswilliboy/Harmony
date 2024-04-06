@@ -119,8 +119,8 @@ class Flags(commands.FlagConverter, prefix="--", delimiter=" "):
 class Blacklist(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        self.blacklist: dict[int, BlacklistItem] = {}
-        self.guild_blacklist: dict[int, GuildBlacklistItem] = {}
+        bot.blacklist = {}
+        bot.guild_blacklist = {}
         bot.loop.create_task(self.fill_cache())
         bot.add_check(self.blacklist_check, call_once=True)
 
@@ -131,11 +131,11 @@ class Blacklist(BaseCog):
     async def fill_cache(self) -> None:
         records = await self.bot.pool.fetch("SELECT * FROM blacklist")
         for record in records:
-            self.blacklist[record["user_id"]] = BlacklistItem(self, record)
+            self.bot.blacklist[record["user_id"]] = BlacklistItem(self, record)
 
         records = await self.bot.pool.fetch("SELECT * FROM guild_blacklist")
         for record in records:
-            self.guild_blacklist[record["guild_id"]] = GuildBlacklistItem(record)
+            self.bot.guild_blacklist[record["guild_id"]] = GuildBlacklistItem(record)
 
     async def add_blacklist(
         self, user: discord.User, *, guild: discord.Guild | None = None, reason: str | None = None
@@ -161,7 +161,7 @@ class Blacklist(BaseCog):
 
         assert record
         item = BlacklistItem(self, record)
-        self.blacklist[user.id] = item
+        self.bot.blacklist[user.id] = item
 
         return item
 
@@ -169,7 +169,7 @@ class Blacklist(BaseCog):
         """Remove the blacklist of a user from everywhere."""
         query = "DELETE FROM blacklist WHERE user_id = $1"
         await self.bot.pool.execute(query, user.id)
-        del self.blacklist[user.id]
+        del self.bot.blacklist[user.id]
 
     async def add_guild_blacklist(self, guild: discord.Guild, reason: str) -> GuildBlacklistItem:
         """Add a guild to the blacklist."""
@@ -181,7 +181,7 @@ class Blacklist(BaseCog):
 
         assert record
         item = GuildBlacklistItem(record)
-        self.guild_blacklist[guild.id] = item
+        self.bot.guild_blacklist[guild.id] = item
 
         return item
 
@@ -191,7 +191,7 @@ class Blacklist(BaseCog):
             DELETE FROM guild_blacklist WHERE guild_id = $1
         """
         await self.bot.pool.execute(query, guild.id)
-        self.guild_blacklist.pop(guild.id, None)
+        self.bot.guild_blacklist.pop(guild.id, None)
 
     @commands.group(name="blacklist", hidden=True)
     async def blacklist_(self, ctx: Context) -> None:
@@ -203,7 +203,7 @@ class Blacklist(BaseCog):
         guild: discord.Guild | None = flags and flags.guild
         reason: str | None = flags and flags.reason
 
-        if item := self.blacklist.get(user.id):
+        if item := self.bot.blacklist.get(user.id):
             if item.is_global:
                 raise GenericError("User is globally blacklisted")
 
@@ -223,7 +223,7 @@ class Blacklist(BaseCog):
     async def remove(self, ctx: Context, user: discord.User, *, flags: Flags):
         guild: discord.Guild | None = flags and flags.guild
 
-        item = self.blacklist.get(user.id, None)
+        item = self.bot.blacklist.get(user.id, None)
         if item is None:
             raise GenericError("User isn't blacklisted.")
 
@@ -241,7 +241,7 @@ class Blacklist(BaseCog):
 
     @blacklist_.command()
     async def status(self, ctx: Context, user: discord.User):
-        item = self.blacklist.get(user.id)
+        item = self.bot.blacklist.get(user.id)
         if item is None:
             raise GenericError("User isn't blacklisted.")
 
@@ -271,7 +271,7 @@ class Blacklist(BaseCog):
     async def g_add(
         self,
         ctx: Context,
-        guild_id: int = commands.param(default=lambda ctx: ctx.guild.id),
+        guild_id: int = commands.param(default=lambda ctx: ctx.guild.id),  # type: ignore
         *,
         reason: str = "No reason given.",
     ):
@@ -286,7 +286,7 @@ class Blacklist(BaseCog):
 
     @guild_blacklist_.command(name="status")
     async def g_status(self, ctx: Context, guild_id: int):
-        item = self.guild_blacklist.get(guild_id)
+        item = self.bot.guild_blacklist.get(guild_id)
 
         if item is None:
             raise GenericError("That guild isn't blacklisted.")
@@ -306,7 +306,7 @@ class Blacklist(BaseCog):
 
     @guild_blacklist_.command(name="remove")
     async def g_remove(self, ctx: Context, guild_id: int):
-        item = self.guild_blacklist.get(guild_id)
+        item = self.bot.guild_blacklist.get(guild_id)
 
         if item is None:
             raise GenericError("That guild isn't blacklisted.")
