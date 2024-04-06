@@ -187,6 +187,7 @@ class General(BaseCog):
             await ctx.send("Successfully opted you out.")
 
     @commands.bot_has_permissions(manage_messages=True, read_message_history=True)
+    @commands.guild_only()
     @commands.command()
     async def cleanup(self, ctx: Context, amount: int = 25):
         """Removes the bot's messages, and command invocations in the current channel."""

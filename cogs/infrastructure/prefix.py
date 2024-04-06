@@ -124,6 +124,7 @@ class Prefix(BaseCog):
             raise GenericError("That prefix already exists.")
 
         await self.add_custom_prefix(ctx.guild, prefix)
+        ctx.bot.prefix_cache.pop(ctx.guild.id)
         embed = SuccessEmbed(description=f"Successfully added `{prefix}` as a prefix.")
         await ctx.send(embed=embed)
 
@@ -139,6 +140,7 @@ class Prefix(BaseCog):
             raise GenericError("That prefix doesn't exist.")
 
         await self.remove_custom_prefix(ctx.guild, prefix)
+        ctx.bot.prefix_cache.pop(ctx.guild.id)
         embed = SuccessEmbed(description=f"Successfully removed `{prefix}` as a prefix.")
         await ctx.send(embed=embed)
 
@@ -148,5 +150,6 @@ class Prefix(BaseCog):
         """Resets the server's prefixes."""
 
         await self.reset_prefixes(ctx.guild)
+        ctx.bot.prefix_cache.pop(ctx.guild.id)
         embed = SuccessEmbed(description="Successfully reset all of the prefixes")
         await ctx.send(embed=embed)

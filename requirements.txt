@@ -3,6 +3,7 @@ asyncpg
 asyncpg-stubs
 jishaku
 psutil
+asyncache
 
 langcodes[data]
 cutlet

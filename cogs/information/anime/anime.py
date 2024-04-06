@@ -501,8 +501,6 @@ class Media:
 
         return embed
 
-
-class AniListClient:
     URL: ClassVar[str] = "https://graphql.anilist.co"
 
     def __init__(self, bot: Harmony):

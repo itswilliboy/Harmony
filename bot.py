@@ -1,11 +1,12 @@
 import logging
-from datetime import datetime
 import re
 import traceback
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import discord
 from aiohttp import ClientSession
+from asyncache import cachedmethod
 from asyncpg import Pool, Record, create_pool
 from discord.ext import commands, ipc
 
@@ -34,26 +35,23 @@ class Harmony(commands.Bot):
 
         self.prefix_cache: dict[int, list[str]] = {}
 
+    def _key(self, message: discord.Message) -> int:
+        if message.guild is None:
+            return 0
+        return message.guild.id
+
+    @cachedmethod(lambda self: self.prefix_cache, key=_key)
     async def get_prefix(self, message: discord.Message) -> list[str]:
         if message.guild is None:
             return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
 
-        prefixes = self.prefix_cache.get(message.guild.id)
+        prefixes = await self.pool.fetchval("SELECT prefixes FROM prefixes WHERE guild_id = $1", message.guild.id)
         if prefixes is not None:
             return commands.when_mentioned_or(*prefixes)(self, message)
 
         else:
             self.log.warning("Prefix not found for guild with ID %s, using default prefix", message.guild.id)
             return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
-
-    async def populate_prefix_cache(self) -> None:
-        resp = await self.pool.fetch("SELECT * FROM prefixes")
-
-        for guild_id, prefix in resp:
-            guild_id: int
-            prefix: list[str]
-
-            self.prefix_cache[guild_id] = prefix
 
     async def populate_command_permissions(self) -> None:
         pattern = re.compile(r"<function has_(guild_)?permissions\.<locals>.predicate at 0x\w+>")
@@ -99,7 +97,6 @@ class Harmony(commands.Bot):
             except Exception as exc:
                 self.log.error("Failed to load extension: %s", ext, exc_info=exc)
 
-        await self.populate_prefix_cache()
         await self.populate_command_permissions()
 
     async def on_ready(self) -> None:
