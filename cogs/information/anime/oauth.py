@@ -263,15 +263,6 @@ class User:
     def created_at(self) -> datetime:
         return datetime.fromtimestamp(self._created_at)
 
-    @staticmethod
-    def _get_progress_bar(percentage: float) -> str:
-        empty = "\N{LIGHT SHADE}"
-        full = "\N{FULL BLOCK}"
-
-        score = round(percentage / 10)
-        bar = (full * score).ljust(10, empty)
-        return bar
-
 
 class OAuth:
     URL: ClassVar[str] = "https://graphql.anilist.co"
