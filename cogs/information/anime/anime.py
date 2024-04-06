@@ -3,8 +3,24 @@
 from __future__ import annotations
 
 import discord
+import discord
 import datetime
 import re
+
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self
+
+from .types import (
+    Edge,
+    FuzzyDate,
+    MediaCoverImage,
+    MediaList,
+    MediaSeason,
+    MediaStatus,
+    MediaTitle,
+    MediaType,
+    Studio,
+)
+
 
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self
 
@@ -263,13 +279,9 @@ class Media:
             for edge in edges:
                 node = edge["node"]
                 title_ = MediaTitle(node["title"])
-                relations.append(
-                    Edge(node["id"], title_["romaji"], edge["relationType"])
-                )
+                relations.append(Edge(node["id"], title_["romaji"], edge["relationType"]))
 
-        list_entry = (
-            MediaList(data["mediaListEntry"]) if data["mediaListEntry"] else None
-        )
+        list_entry = MediaList(data["mediaListEntry"]) if data["mediaListEntry"] else None
 
         return cls(
             data["id"],
@@ -302,9 +314,7 @@ class Media:
         try:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
             # it will be more convenient to be able to call the .timestamp() on datetime.datetime object.
-            return datetime.datetime(
-                year=date["year"] or 0, month=date["month"] or 0, day=date["day"] or 0
-            )
+            return datetime.datetime(year=date["year"] or 0, month=date["month"] or 0, day=date["day"] or 0)
         except ValueError:
             return None
 
@@ -373,15 +383,9 @@ class Media:
         else:
             url = f"https://anilist.co/anime/{self.id}"
 
-        title = (
-            self.title.get("english")
-            or self.title.get("romaji")
-            or self.title.get("native")
-        )
+        title = self.title.get("english") or self.title.get("romaji") or self.title.get("native")
 
-        embed = discord.Embed(
-            title=title, description=self.description, color=self.colour, url=url
-        )
+        embed = discord.Embed(title=title, description=self.description, color=self.colour, url=url)
 
         if title != self.title["romaji"]:
             embed.set_author(name=self.title["romaji"])
@@ -390,28 +394,20 @@ class Media:
         embed.set_image(url=self.banner_image)
 
         info = [
-            f"↪ Native Title: **{self.title['native']}**"
-            if self.title["native"]
-            else "",
-            f"↪ Studio: **[{self.studio['name']}]({self.studio['siteUrl']})**"
-            if self.studio
-            else "",
+            f"↪ Native Title: **{self.title['native']}**" if self.title["native"] else "",
+            f"↪ Studio: **[{self.studio['name']}]({self.studio['siteUrl']})**" if self.studio else "",
             f"↪ Episodes: **{self.episodes} \
             {f' | {(self.episodes*self.duration)/60:.1f} hours' if self.duration else ''}**"
             if self.episodes
             else "",
             f"↪ Volumes: **{self.volumes}**" if self.volumes else "",
             f"↪ Chapters: **{self.chapters}**" if self.chapters else "",
-            f"↪ Year: **{self.season_year}{f' | {(self.season or str()).title()}'}**"
-            if self.season_year
-            else "",
+            f"↪ Year: **{self.season_year}{f' | {(self.season or str()).title()}'}**" if self.season_year else "",
         ]
 
         if self.start_date:
             started_at = discord.utils.format_dt(self.start_date, "d")
-            ended_at = (
-                discord.utils.format_dt(self.end_date, "d") if self.end_date else "TBA"
-            )
+            ended_at = discord.utils.format_dt(self.end_date, "d") if self.end_date else "TBA"
 
             info.append(f"↪ Releasing: **{started_at} ⟶ {ended_at}**")
 
@@ -429,10 +425,7 @@ class Media:
         if self.hashtags:
             embed.add_field(
                 name="Hashtags",
-                value=" ".join(
-                    f"**[{tag}](https://twitter.com/hashtag/{tag.replace('#', '')})**"
-                    for tag in self.hashtags
-                ),
+                value=" ".join(f"**[{tag}](https://twitter.com/hashtag/{tag.replace('#', '')})**" for tag in self.hashtags),
             )
 
         if self.mean_score:
@@ -454,16 +447,10 @@ class Media:
 
         desc = [
             f"↪ Status: **{entry['status'].title()}**",
-            f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**"
-            if self.type == MediaType.MANGA
-            else "",
+            f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**" if self.type == MediaType.MANGA else "",
             f"↪ Progress: **{entry['progress']}"
             + " / "
-            + (
-                str(self.episodes)
-                if self.type == MediaType.ANIME
-                else str(self.chapters)
-            )
+            + (str(self.episodes) if self.type == MediaType.ANIME else str(self.chapters))
             + (" episode(s)" if self.type == MediaType.ANIME else " chapter(s)")
             + "**",
             f"↪ Score: **{entry['score']} / 10**",
@@ -495,21 +482,21 @@ class Media:
         embed = discord.Embed(colour=self.colour, description="\n".join(desc))
 
         if entry["updatedAt"]:
-            embed.set_footer(
-                text="Last Updated"
-            ).timestamp = datetime.datetime.fromtimestamp(entry["updatedAt"])
+            embed.set_footer(text="Last Updated").timestamp = datetime.datetime.fromtimestamp(entry["updatedAt"])
 
         return embed
 
+
+class AniListClient:
     URL: ClassVar[str] = "https://graphql.anilist.co"
 
     def __init__(self, bot: Harmony):
         self.bot = bot
         self.oauth = OAuth(bot.session)
+        self.bot = bot
+        self.oauth = OAuth(bot.session)
 
-    async def search_media(
-        self, search: str, *, type: MediaType, user_id: int | None = None
-    ) -> Media | None:
+    async def search_media(self, search: str, *, type: MediaType, user_id: int | None = None) -> Media | None:
         """Searchs and returns a media via a search query."""
 
         variables = {"search": search, "type": type}
