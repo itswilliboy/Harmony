@@ -267,8 +267,8 @@ class LoginView(ui.View):
         await interaction.response.send_modal(modal)
         await modal.wait()
 
-        isLoggedIn = await self.check_login(modal.code)
-        if isLoggedIn:
+        is_logged_in = await self.check_login(modal.code)
+        if is_logged_in:
             await interaction.edit_original_response(
                 embed=SuccessEmbed(description="Successfully logged you in."),
                 view=None,
@@ -308,7 +308,7 @@ class AniList(BaseCog):
         if item is None:
             raise GenericError(f"Couldn't find any {search_type.value.lower()} with that name.")
 
-        if item.isAdult and not (
+        if item.is_adult and not (
             isinstance(
                 ctx.channel,
                 discord.DMChannel,
@@ -357,9 +357,6 @@ class AniList(BaseCog):
             user = await self.client.oauth.get_current_user(token.token)
         else:
             user = await self.client.oauth.get_user(username)
-
-            if user is None:
-                raise GenericError("Couldn't find a user with that name.")
 
         embed = PrimaryEmbed(
             title=user.name,

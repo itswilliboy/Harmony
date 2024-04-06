@@ -205,7 +205,7 @@ class Media:
         self,
         id: int,
         id_mal: int,
-        isAdult: bool,
+        is_adult: bool,
         type: MediaType,
         title: MediaTitle,
         description: str | None,
@@ -229,7 +229,7 @@ class Media:
     ) -> None:
         self.id = id
         self.id_mal = id_mal
-        self.isAdult = isAdult
+        self.is_adult = is_adult
         self.type = type
         self.title = title
         self._description = description

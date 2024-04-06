@@ -12,6 +12,8 @@ from typing import (
     Literal,
 )
 
+from utils import GenericError
+
 from config import ANILIST_ID, ANILIST_SECRET
 
 if TYPE_CHECKING:
@@ -334,12 +336,12 @@ class OAuth:
             json = await resp.json()
             return User.from_json(json["data"]["Viewer"])
 
-    async def get_user(self, username: str) -> User | None:
+    async def get_user(self, username: str) -> User:
         """Gets a user by their username."""
 
         async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": {"name": username}}) as resp:
             json = await resp.json()
             try:
                 return User.from_json(json["data"]["User"])
-            except:
-                raise
+            except Exception:
+                raise GenericError("Couldn't find a user with that name.")
