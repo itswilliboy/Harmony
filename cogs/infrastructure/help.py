@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Mapping, NamedTuple
+from typing import TYPE_CHECKING, Any, Mapping, NamedTuple
 
 from discord import Embed
 from discord.ext import commands
-from discord.ext.commands import Cog, Command, Group
 
 from utils import (
     BaseCog,
@@ -19,6 +18,10 @@ if TYPE_CHECKING:
     from bot import Harmony
     from utils import Context
 
+    Command = commands.Command[Any, Any, Any]
+    Group = commands.Group[Any, Any, Any]
+    Cog = commands.Cog
+
 
 class Category(NamedTuple):
     cog: str
@@ -28,7 +31,7 @@ class Category(NamedTuple):
 class HelpCommand(commands.HelpCommand):
     context: Context
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(verify_checks=False, *args, **kwargs)
         self.verify_checks = False
 
@@ -75,7 +78,7 @@ class HelpCommand(commands.HelpCommand):
         embed = PrimaryEmbed(title=group.name.title())
         embed.description = group.short_doc
 
-        formatted = []
+        formatted: list[str] = []
         formatted.append(get_command_signature((self.context.clean_prefix, group)))
         for cmd in group.commands:
             formatted.append(get_command_signature((self.context.clean_prefix, cmd)))

@@ -21,18 +21,18 @@ class BaseCogMeta(commands.CogMeta):
         if hidden:
             kwargs["command_attrs"] = dict(hidden=True)
 
-        inst = super().__new__(cls, *args, **kwargs)
+        inst = super().__new__(cls, *args, **kwargs)  # type: ignore
 
         inst.hidden = hidden
         inst.owner_only = owner_only
 
-        return inst
+        return inst  # type: ignore
 
 
 class BaseCog(commands.Cog, metaclass=BaseCogMeta):
     """Base class used in the creation of cogs."""
 
-    def __init__(self, bot: Harmony, *args, **kwargs) -> None:
+    def __init__(self, bot: Harmony, *args: Any, **kwargs: Any) -> None:
         self.bot = bot
         super().__init__(*args, **kwargs)
 

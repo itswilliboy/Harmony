@@ -1,4 +1,4 @@
-from discord.ext.commands import CommandInvokeError
+from discord.ext.commands import CommandInvokeError  # type: ignore
 
 
 class GenericError(CommandInvokeError):

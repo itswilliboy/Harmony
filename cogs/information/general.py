@@ -98,11 +98,13 @@ class General(BaseCog):
     @commands.command()
     async def banner(self, ctx: Context, user: discord.User = commands.Author):
         """Get someone's banner"""
-        fetched = await self.bot.fetch_user(user.id)
-        if fetched is None:
+        try:
+            fetched = await self.bot.fetch_user(user.id)
+
+        except discord.NotFound:
             raise commands.BadArgument("Couldn't find that user")
 
-        elif fetched.banner is None:
+        if fetched.banner is None:
             raise GenericError(f"{user.mention} doesn't have a banner.")
 
         view = AvatarView(fetched.banner)
@@ -153,7 +155,7 @@ class General(BaseCog):
         )
 
     @commands.command(aliases=["latency"])
-    async def ping(self, ctx: commands.Context):
+    async def ping(self, ctx: Context):
         """Displays the latencies of various services used by the bot."""
 
         def get_color(ping: int) -> str:
@@ -199,8 +201,12 @@ class General(BaseCog):
         cpu = cpu_percent()
         server_ram = virtual_memory().used
         process_ram = process.memory_info().rss
-        to_mebibytes = lambda x: x / float(1 << 20)
-        formatted = lambda x: f"{int(to_mebibytes(x)):,}"
+
+        def formatted(bytes: int) -> str:
+            def to_mebibytes(bytes_: int) -> int:
+                return int(bytes_ / (1 << 20))
+
+            return f"{to_mebibytes(bytes):,}"
 
         value = f"""
             `CPU (Server) `: {cpu:1}%
@@ -256,7 +262,8 @@ class General(BaseCog):
         embed.add_field(name="Translated Text", value=data.translated, inline=False)
 
         if data.language == "ja":
-            embed.insert_field_at(1, name="Romaji", value=Cutlet(use_foreign_spelling=False).romaji(text), inline=False)
+            cutlet = Cutlet()
+            embed.insert_field_at(1, name="Romaji", value=cutlet.romaji(text), inline=False)
 
         await ctx.send(embed=embed)
 

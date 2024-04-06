@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord.ext import commands
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 # The code below below is sourced with small changes from Rapptz's RoboDanny (https://github.com/Rapptz/RoboDanny)
-class BannedMember(commands.Converter):
+class BannedMember(commands.Converter[Any]):
     async def convert(self, ctx: Context, argument: str) -> discord.BanEntry:
         if argument.isdigit():
             id = int(argument)
@@ -207,5 +207,8 @@ class General(BaseCog):
                 and msg.created_at.replace(tzinfo=None) > datetime.datetime.now() - datetime.timedelta(weeks=2)
             # fmt: on
 
-        deleted = await ctx.channel.purge(limit=limit, check=check, before=ctx.message)  # type: ignore
+        if TYPE_CHECKING:
+            assert isinstance(ctx.channel, discord.TextChannel)
+
+        deleted = await ctx.channel.purge(limit=limit, check=check, before=ctx.message)
         await ctx.send(f"Deleted **{len(deleted)}** messages", delete_after=5)

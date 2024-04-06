@@ -34,7 +34,7 @@ class Statistics(BaseCog):
 
     @commands.Cog.listener()
     async def on_command_completion(self, ctx: Context):
-        if ctx.guild is None:
+        if ctx.guild is None:  # type: ignore
             return
 
         await self.bot.pool.execute(

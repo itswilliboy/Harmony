@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import discord
 from discord.ext import commands
@@ -29,16 +29,14 @@ class ErrorHandler(BaseCog):
         return f"{text}\n{underline}"
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: Context, error: Exception):
+    async def on_command_error(self, ctx: Context, error: Any):
         if ctx.is_blacklisted():
             return
 
         command = ctx.command
 
-        try:
-            error = error.original  # type: ignore
-        except AttributeError:
-            pass
+        if hasattr(error, "original"):
+            error = error.original
 
         if isinstance(error, commands.CommandNotFound):
             return await ctx.message.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
@@ -91,7 +89,7 @@ class ErrorHandler(BaseCog):
 
         elif isinstance(error, commands.BadArgument):
             usage = get_command_signature(ctx)
-            embed = ErrorEmbed(title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```")  # type: ignore
+            embed = ErrorEmbed(title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```")
             embed.set_footer(text="< > = required | [ ] = optional")
 
             if msgs := error.args:

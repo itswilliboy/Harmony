@@ -35,10 +35,10 @@ class UrbanEntry:
         return datetime.fromisoformat(self._written_on)
 
     @staticmethod
-    def hyperlinked(text: str, *, pattern=DEFINITION) -> str:
+    def hyperlinked(text: str, *, pattern: re.Pattern[Any] = DEFINITION) -> str:
         """Returns the text, but with bracketed words replaced by a hyperlink to the definition."""
 
-        def repl(match: re.Match) -> str:
+        def repl(match: re.Match[Any]) -> str:
             word = match.group(2)
             return f"**[{word}](http://{word.replace(' ', '-')}.urbanup.com)**"
 

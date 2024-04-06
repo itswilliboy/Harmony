@@ -2,7 +2,7 @@ from types import NoneType
 
 import discord
 from discord.ext import commands
-from discord.utils import as_chunks as chunk  # noqa: F401
+from discord.utils import as_chunks as chunk  # type: ignore # noqa: F401
 
 from . import Context
 
@@ -15,7 +15,7 @@ def _check(ctx: Context) -> str:
     return ""
 
 
-argument_or_reference = commands.parameter(default=lambda ctx: _check(ctx))
+argument_or_reference = commands.parameter(default=lambda ctx: _check(ctx))  # type: ignore
 
 
 def progress_bar(percentage: float) -> str:

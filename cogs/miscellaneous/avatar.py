@@ -45,8 +45,8 @@ class Avatar(BaseCog):
         if not resp:
             raise GenericError(f"There are no avatars stored for {member.mention}.")
 
-        embeds = []
-        files = []
+        embeds: list[discord.Embed] = []
+        files: list[discord.File] = []
         for record in resp:
             embed = PrimaryEmbed(title=f"Avatar History for {member}", timestamp=record["timestamp"])
             embed.set_footer(text=f"ID: {record['id']}")
