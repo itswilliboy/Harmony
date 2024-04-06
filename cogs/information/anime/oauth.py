@@ -271,8 +271,12 @@ class OAuth:
         self.session = session
 
     @staticmethod
-    def _get_headers(token: str) -> dict[str, str]:
-        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"}
+    def get_headers(token: str) -> dict[str, str]:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
         return headers
 
@@ -289,7 +293,9 @@ class OAuth:
 
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
-        async with self.session.post("https://anilist.co/api/v2/oauth/token", json=json, headers=headers) as resp:
+        async with self.session.post(
+            "https://anilist.co/api/v2/oauth/token", json=json, headers=headers
+        ) as resp:
             json = await resp.json()
             token = json.get("access_token", None)
 
@@ -303,14 +309,18 @@ class OAuth:
     async def get_current_user(self, token: str) -> User:
         """Gets the current user with the Access Token."""
 
-        async with self.session.post(self.URL, headers=self._get_headers(token), json={"query": VIEWER_QUERY}) as resp:
+        async with self.session.post(
+            self.URL, headers=self._get_headers(token), json={"query": VIEWER_QUERY}
+        ) as resp:
             json = await resp.json()
             return User.from_json(json["data"]["Viewer"])
 
     async def get_user(self, username: str) -> User | None:
         """Gets a user by their username."""
 
-        async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": {"name": username}}) as resp:
+        async with self.session.post(
+            self.URL, json={"query": USER_QUERY, "variables": {"name": username}}
+        ) as resp:
             json = await resp.json()
             try:
                 return User.from_json(json["data"]["User"])
