@@ -40,9 +40,7 @@ async def callback(cog: AniList, id: int, interaction: discord.Interaction):
     if media.relations:
         view = RelationView(cog, media)
 
-    await interaction.response.send_message(
-        embed=media.embed, view=view, ephemeral=True
-    )
+    await interaction.response.send_message(embed=media.embed, view=view, ephemeral=True)
 
 
 class RelationButton(ui.Button["RelationView"]):
@@ -131,23 +129,13 @@ class RelationView(ui.View):
                 value = f"{edge.title[:100-len(value)]}\u200b{edge.id}"  # Shorten value to 100 characters, but keep ID
 
             if edge.type == MediaRelation.SOURCE:
-                self.add_item(
-                    RelationButton(self.cog, edge, "Source", "\N{OPEN BOOK}", row=0)
-                )
+                self.add_item(RelationButton(self.cog, edge, "Source", "\N{OPEN BOOK}"))
 
             elif edge.type == MediaRelation.PREQUEL:
-                self.add_item(
-                    RelationButton(
-                        self.cog, edge, "Prequel", "\N{LEFTWARDS BLACK ARROW}", row=0
-                    )
-                )
+                self.add_item(RelationButton(self.cog, edge, "Prequel", "\N{LEFTWARDS BLACK ARROW}"))
 
             elif edge.type == MediaRelation.SEQUEL:
-                self.add_item(
-                    RelationButton(
-                        self.cog, edge, "Sequel", "\N{BLACK RIGHTWARDS ARROW}", row=0
-                    )
-                )
+                self.add_item(RelationButton(self.cog, edge, "Sequel", "\N{BLACK RIGHTWARDS ARROW}"))
 
             elif edge.type == MediaRelation.ADAPTATION:
                 adaptation_options.append(
@@ -207,15 +195,11 @@ class RelationView(ui.View):
 class CodeModal(ui.Modal, title="Enter OAuth Code"):
     code: str
 
-    code_input: ui.TextInput[Self] = ui.TextInput(
-        label="OAuth Code", style=discord.TextStyle.short
-    )
+    code_input: ui.TextInput[Self] = ui.TextInput(label="OAuth Code", style=discord.TextStyle.short)
 
     async def on_submit(self, interaction: discord.Interaction):
         self.code = self.code_input.value
-        await interaction.response.send_message(
-            "Successfully retrieved code", ephemeral=True
-        )
+        await interaction.response.send_message("Successfully retrieved code", ephemeral=True)
         self.stop()
 
 
@@ -226,9 +210,7 @@ class CodeView(ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.author:
-            await interaction.response.send_message(
-                "This is not your button.", ephemeral=True
-            )
+            await interaction.response.send_message("This is not your button.", ephemeral=True)
             return False
         return True
 
@@ -247,9 +229,7 @@ class LoginView(ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.author:
-            await interaction.response.send_message(
-                "This is not your button.", ephemeral=True
-            )
+            await interaction.response.send_message("This is not your button.", ephemeral=True)
             return False
         return True
 
@@ -278,9 +258,7 @@ class AniList(BaseCog):
     async def anime(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific anime."""
 
-        anime = await self.client.search_media(
-            search, type=MediaType.ANIME, user_id=ctx.author.id
-        )
+        anime = await self.client.search_media(search, type=MediaType.ANIME, user_id=ctx.author.id)
 
         if anime is None:
             raise GenericError("Couldn't find any anime with that name.")
@@ -299,9 +277,7 @@ class AniList(BaseCog):
     async def manga(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific manga."""
 
-        manga = await self.client.search_media(
-            search, type=MediaType.MANGA, user_id=ctx.author.id
-        )
+        manga = await self.client.search_media(search, type=MediaType.MANGA, user_id=ctx.author.id)
 
         if manga is None:
             raise GenericError("Couldn't find any manga with that name.")
@@ -327,9 +303,7 @@ class AniList(BaseCog):
                 )
 
             elif token.expiry < datetime.datetime.now():
-                raise GenericError(
-                    f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login."
-                )
+                raise GenericError(f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login.")
 
             user = await self.client.oauth.get_current_user(token.token)
 
@@ -412,12 +386,8 @@ class AniList(BaseCog):
         expiry: datetime.datetime = await self.bot.pool.fetchval(query, ctx.author.id)
         if expiry:
             if expiry > datetime.datetime.now():
-                embed = SuccessEmbed(
-                    description="You are already logged in. Log out and back in to re-new session."
-                )
-                embed.set_footer(
-                    text=f"Run `{ctx.clean_prefix}anilist logout` to log out."
-                )
+                embed = SuccessEmbed(description="You are already logged in. Log out and back in to re-new session.")
+                embed.set_footer(text=f"Run `{ctx.clean_prefix}anilist logout` to log out.")
                 return await ctx.send(embed=embed)
 
         view = LoginView(ctx.author)
@@ -427,26 +397,20 @@ class AniList(BaseCog):
         )
         message = await ctx.send(embed=embed, view=view)
 
-        await (
-            view.wait()
-        )  # FIXME: Fix structure of callbacks, and try to remove View.wait() (s)
+        await view.wait()  # FIXME: Fix structure of callbacks, and try to remove View.wait() (s)
         if view.code is None:
             return
 
         resp = await self.client.oauth.get_access_token(view.code)
         if resp is None:
-            return await message.edit(
-                embed=ErrorEmbed(description="Invalid code, try again.")
-            )
+            return await message.edit(embed=ErrorEmbed(description="Invalid code, try again."))
 
         token, expires_in = resp
 
         query = "INSERT INTO anilist_codes VALUES ($1, $2, $3)"
         await self.bot.pool.execute(query, ctx.author.id, token, expires_in)
 
-        await message.edit(
-            embed=SuccessEmbed(description="Successfully logged you in.")
-        )
+        await message.edit(embed=SuccessEmbed(description="Successfully logged you in."))
 
     @anilist.command()
     async def logout(self, ctx: Context):
