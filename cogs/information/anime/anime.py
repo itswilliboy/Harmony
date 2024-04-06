@@ -1,4 +1,5 @@
 # TODO: Check if Media is NSFW, and refer to use the command in an NSFW-channel.
+# TODO: Add docstrings to all(?) class properties
 from __future__ import annotations
 
 import datetime
@@ -10,7 +11,15 @@ import discord
 from discord.ext import commands
 
 from config import ANILIST_URL
-from utils import BaseCog, Context, ErrorEmbed, GenericError, PrimaryEmbed, SuccessEmbed
+from utils import (
+    BaseCog,
+    Context,
+    ErrorEmbed,
+    GenericError,
+    PrimaryEmbed,
+    SuccessEmbed,
+    progress_bar,
+)
 
 from .oauth import AccessToken, OAuth
 
@@ -155,8 +164,9 @@ SEARCH_QUERY = """
                 month
                 day
             }
-            season,
-            seasonYear,
+            season
+            seasonYear
+            meanScore
             coverImage {
                 extraLarge
                 large
@@ -235,8 +245,9 @@ FETCH_QUERY = """
                 month
                 day
             }
-            season,
-            seasonYear,
+            season
+            seasonYear
+            meanScore
             coverImage {
                 extraLarge
                 large
@@ -297,6 +308,7 @@ class Media:
         end_date: FuzzyDate,
         season: MediaSeason | None,
         season_year: int | None,
+        mean_score: int | None,
         status: MediaStatus,
         cover_image: MediaCoverImage,
         banner_image: str,
@@ -319,6 +331,7 @@ class Media:
         self._end_date = end_date
         self.season = season
         self.season_year = season_year
+        self.mean_score = mean_score
         self.status = status
         self.cover_image = cover_image
         self.banner_image = banner_image
@@ -361,6 +374,7 @@ class Media:
             end_date,
             season,
             data["seasonYear"],
+            data["meanScore"],
             data["status"],
             cover_image,
             data["bannerImage"],
@@ -505,6 +519,9 @@ class Media:
                 name="Hashtags",
                 value=" ".join(f"**[{tag}](https://twitter.com/hashtag/{tag.replace('#', '')})**" for tag in self.hashtags),
             )
+
+        if self.mean_score:
+            embed.add_field(name="Average Score", value=f"**{self.mean_score} // 100**\n{progress_bar(self.mean_score)}")
 
         return embed
 
@@ -890,10 +907,11 @@ class AniList(BaseCog):
                 ),
                 inline=True,
             )
+
             if s.mean_score:
                 embed.add_field(
                     name="Average Anime Score",
-                    value=f"**{s.mean_score} // 100**\n{user._get_progress_bar(s.mean_score)}",
+                    value=f"**{s.mean_score} // 100**\n{progress_bar(s.mean_score)}",
                     inline=False,
                 )
 
@@ -908,10 +926,11 @@ class AniList(BaseCog):
                 ),
                 inline=True,
             )
+
             if s.mean_score:
                 embed.add_field(
                     name="Average Manga Score",
-                    value=f"**{s.mean_score} // 100**\n{user._get_progress_bar(s.mean_score)}",
+                    value=f"**{s.mean_score} // 100**\n{progress_bar(s.mean_score)}",
                     inline=False,
                 )
 
