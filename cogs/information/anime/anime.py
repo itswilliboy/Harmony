@@ -199,6 +199,29 @@ FETCH_QUERY = """
     }
 """
 
+FOLLOWING_QUERY = """
+    query ($id: Int, $page: Int, $perPage: Int) {
+        Page(page: $page, perPage: $perPage) {
+            mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
+                id
+                status
+                score
+                progress
+                user {
+                    id
+                    name
+                    avatar {
+                        large
+                    }
+                    mediaListOptions {
+                        scoreFormat
+                    }
+                }
+            }
+        }
+    }
+"""
+
 
 class Media:
     def __init__(
@@ -488,12 +511,7 @@ class AniListClient:
         """Searchs and returns a media via a search query."""
 
         variables = {"search": search, "type": type}
-
-        headers = {}
-        if user_id is not None:
-            token = await self.get_token(user_id)
-            if token is not None:
-                headers = self.oauth.get_headers(token.token)
+        headers = await self.get_headers(user_id) if user_id else {}
 
         async with self.bot.session.post(
             self.URL,
@@ -517,12 +535,7 @@ class AniListClient:
         """Fetches and returns a media via an ID."""
 
         variables = {"id": id}
-
-        headers = {}
-        if user_id is not None:
-            token = await self.get_token(user_id)
-            if token is not None:
-                headers = self.oauth.get_headers(token.token)
+        headers = await self.get_headers(user_id) if user_id else {}
 
         async with self.bot.session.post(
             self.URL,
@@ -542,6 +555,22 @@ class AniListClient:
 
         return Media.from_json(data)
 
+    async def fetch_following_user_status(self, media_id: int, user_id: int, *, page: int = 1, per_page: int = 4) -> ...:
+        """Fetches all the ratings of the followed users."""
+
+        variables = {"id": media_id, "page": page, "perPage": per_page}
+        headers = await self.get_headers(user_id)
+
+        async with self.bot.session.post(
+            self.URL,
+            json={
+                "query": FOLLOWING_QUERY,
+                "variables": variables,
+            },
+            headers=headers,
+        ) as req:
+            ...
+
     async def get_token(self, user_id: int) -> AccessToken | None:
         query = "SELECT * FROM anilist_codes WHERE user_id = $1"
         resp = await self.bot.pool.fetchrow(query, user_id)
@@ -552,3 +581,10 @@ class AniListClient:
             resp["access_token"],
             resp["expires_in"],
         )
+
+    async def get_headers(self, user_id: int) -> dict[str, str]:
+        token = await self.get_token(user_id)
+        if token is not None:
+            return self.oauth.get_headers(token.token)
+
+        return {}
