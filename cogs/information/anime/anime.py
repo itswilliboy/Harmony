@@ -16,7 +16,8 @@ from .types import (
     MediaStatus,
     MediaTitle,
     MediaType,
-    Studio,
+    FollowingStatus,
+    Object,
 )
 
 
@@ -203,19 +204,17 @@ FOLLOWING_QUERY = """
     query ($id: Int, $page: Int, $perPage: Int) {
         Page(page: $page, perPage: $perPage) {
             mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
-                id
                 status
                 score
                 progress
+                repeat
+                media {
+	        		episodes
+                    chapters
+                }
                 user {
-                    id
+                    siteUrl
                     name
-                    avatar {
-                        large
-                    }
-                    mediaListOptions {
-                        scoreFormat
-                    }
                 }
             }
         }
@@ -241,12 +240,13 @@ class Media:
         cover_image: MediaCoverImage,
         banner_image: str,
         hashtags: str,
-        studio: Studio | None,
+        studio: Object | None,
         episodes: int,
         duration: int,
         chapters: int,
         volumes: int,
         genres: list[str],
+        following_statuses: list[FollowingStatus],
         relations: list[Edge],
         list_entry: MediaList | None,
     ) -> None:
@@ -271,11 +271,12 @@ class Media:
         self.chapters = chapters
         self.volumes = volumes
         self._genres = genres
+        self.following_statuses = following_statuses
         self.relations = relations
         self.list_entry = list_entry
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> Self:
+    def from_json(cls, data: dict[str, Any], following_status: dict[str, Any]) -> Self:
         type_ = MediaType(data["type"])
         title = MediaTitle(data["title"])
         start_date = FuzzyDate(data["startDate"])
@@ -283,6 +284,11 @@ class Media:
         season = MediaSeason(data["season"]) if data["season"] else None
         cover_image = MediaCoverImage(data["coverImage"])
         studio = data["studios"]["nodes"][0] if data["studios"]["nodes"] else None
+
+        following_statuses: list[FollowingStatus] = []
+        following_users = following_status.get("data", {}).get("Page", {}).get("mediaList", [])
+        for user in following_users:
+            following_statuses.append(FollowingStatus(user))
 
         relations: list[Edge] = []
         if edges := data["relations"]["edges"]:
@@ -315,6 +321,7 @@ class Media:
             data["chapters"],
             data["volumes"],
             data["genres"],
+            following_statuses,
             relations,
             list_entry,
         )
@@ -390,7 +397,6 @@ class Media:
     def embed(self) -> discord.Embed:
         if self.type == MediaType.MANGA:
             url = f"https://anilist.co/manga/{self.id}"
-
         else:
             url = f"https://anilist.co/anime/{self.id}"
 
@@ -492,8 +498,41 @@ class Media:
         desc = [i for i in desc if i != ""]
         embed = discord.Embed(colour=self.colour, description="\n".join(desc))
 
-        if entry["updatedAt"]:
+        if entry["updatedAt"] and not self.following_statuses:
             embed.set_footer(text="Last Updated").timestamp = datetime.datetime.fromtimestamp(entry["updatedAt"])
+
+        return embed
+
+    @property
+    def following_status(self) -> discord.Embed | None:
+        fl_st = self.following_statuses
+        if not fl_st:
+            return
+
+        FULL_WIDTH_INVIS = " "
+
+        progress: list[str] = []
+        for status in fl_st:
+            user = status["user"]
+            TOTAL_PROGRESS = status["media"]["episodes"] or status["media"]["chapters"]
+
+            desc = (
+                f"↪ [{user['name']}]({user['siteUrl']}) - "
+                "**"
+                f"\U00002b50 {status['score']}\n"
+                f"{FULL_WIDTH_INVIS * 2} ↪ {status['progress']}/{TOTAL_PROGRESS} "
+                f"({status['status'].title()})"
+                "**"
+            )
+
+            progress.append(desc)
+
+        embed = discord.Embed(colour=self.colour, description="\n".join(progress))
+
+        if self.list_entry and self.list_entry["updatedAt"]:
+            embed.set_footer(text="Last Updated").timestamp = datetime.datetime.fromtimestamp(
+                self.list_entry["updatedAt"],
+            )
 
         return embed
 
@@ -529,7 +568,15 @@ class AniListClient:
             if data is None:
                 return None
 
-        return Media.from_json(data)
+        following_status = {}
+        if user_id:
+            following_status = await self.fetch_following_status(
+                data["id"],
+                user_id,
+                headers=headers,
+            )
+
+        return Media.from_json(data, following_status or {})
 
     async def fetch_media(self, id: int, *, user_id: int | None = None) -> Media | None:
         """Fetches and returns a media via an ID."""
@@ -553,13 +600,32 @@ class AniListClient:
             if data is None:
                 return None
 
-        return Media.from_json(data)
+        following_status = {}
+        if user_id:
+            following_status = await self.fetch_following_status(
+                id,
+                user_id,
+                headers=headers,
+            )
 
-    async def fetch_following_user_status(self, media_id: int, user_id: int, *, page: int = 1, per_page: int = 4) -> ...:
+        return Media.from_json(data, following_status or {})
+
+    async def fetch_following_status(
+        self,
+        media_id: int,
+        user_id: int,
+        *,
+        headers: dict[str, str] | None = None,
+        page: int = 1,
+        per_page: int = 4,
+    ) -> dict[str, Any] | None:
         """Fetches all the ratings of the followed users."""
 
         variables = {"id": media_id, "page": page, "perPage": per_page}
-        headers = await self.get_headers(user_id)
+        headers = headers or await self.get_headers(user_id)
+
+        if not headers:
+            return
 
         async with self.bot.session.post(
             self.URL,
@@ -568,12 +634,15 @@ class AniListClient:
                 "variables": variables,
             },
             headers=headers,
-        ) as _req:
-            ...
+        ) as req:
+            if req.status == 200:
+                data = await req.json()
+                return data
 
     async def get_token(self, user_id: int) -> AccessToken | None:
         query = "SELECT * FROM anilist_codes WHERE user_id = $1"
         resp = await self.bot.pool.fetchrow(query, user_id)
+
         if not resp:
             return None
 

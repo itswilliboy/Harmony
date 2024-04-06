@@ -332,7 +332,7 @@ class OAuth:
     async def get_current_user(self, token: str) -> User:
         """Gets the current user with the Access Token."""
 
-        async with self.session.post(self.URL, headers=self._get_headers(token), json={"query": VIEWER_QUERY}) as resp:
+        async with self.session.post(self.URL, headers=self.get_headers(token), json={"query": VIEWER_QUERY}) as resp:
             json = await resp.json()
             return User.from_json(json["data"]["Viewer"])
 

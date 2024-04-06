@@ -325,8 +325,11 @@ class AniList(BaseCog):
             view = RelationView(self, item)
 
         embeds = [item.embed]
-        if item.list_embed:
-            embeds.append(item.list_embed)
+        if em := item.list_embed:
+            embeds.append(em)
+
+        if em := item.following_status:
+            embeds.append(item.following_status)
 
         await ctx.send(embeds=embeds, view=view)
 

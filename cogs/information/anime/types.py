@@ -1,5 +1,6 @@
 from enum import StrEnum
-from typing import NamedTuple, Optional, TypedDict
+
+from typing import NamedTuple, Optional, TypedDict, Literal
 
 
 class MediaType(StrEnum):
@@ -83,9 +84,22 @@ class Edge(NamedTuple):
     type: MediaRelation
 
 
-class Studio(TypedDict):
+class Object(TypedDict):
     name: str
     siteUrl: str
+
+
+class PartialMedia(TypedDict):
+    episodes: int | None
+    chapters: int | None
+
+
+class FollowingStatus(TypedDict):
+    status: Literal["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
+    score: int
+    progress: int
+    media: PartialMedia
+    user: Object
 
 
 class MediaList(TypedDict):
