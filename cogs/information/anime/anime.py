@@ -2,10 +2,26 @@
 from __future__ import annotations
 
 import discord
+import discord
 import datetime
 import re
 
 from typing import TYPE_CHECKING, Any, ClassVar, Self
+
+from .types import (
+    Edge,
+    FuzzyDate,
+    MediaCoverImage,
+    MediaList,
+    MediaSeason,
+    MediaStatus,
+    MediaTitle,
+    MediaType,
+    Studio,
+)
+
+
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self
 
 from .types import (
     Edge,
@@ -503,6 +519,8 @@ class AniListClient:
     URL: ClassVar[str] = "https://graphql.anilist.co"
 
     def __init__(self, bot: Harmony):
+        self.bot = bot
+        self.oauth = OAuth(bot.session)
         self.bot = bot
         self.oauth = OAuth(bot.session)
 
