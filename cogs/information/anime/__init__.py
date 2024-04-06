@@ -6,13 +6,12 @@ import discord
 from discord import ui
 from discord.ext import commands
 
-from cogs.information.anime.oauth import PartialNode
 from utils.utils import progress_bar
 
 from .types import Edge, MediaRelation, MediaType
 from .anime import AniListClient, Media
 
-from typing import Any, Self
+from typing import Any, Self, Optional
 
 from bot import Harmony
 
@@ -194,13 +193,11 @@ class RelationView(ui.View):
 
 class CodeModal(ui.Modal, title="Enter OAuth Code"):
     code: str
-
     code_input: ui.TextInput[Self] = ui.TextInput(label="OAuth Code", style=discord.TextStyle.short)
 
     async def on_submit(self, interaction: discord.Interaction):
         self.code = self.code_input.value
-        await interaction.response.send_message("Successfully retrieved code", ephemeral=True)
-        self.stop()
+        await interaction.response.defer()
 
 
 class CodeView(ui.View):
@@ -220,17 +217,48 @@ class CodeView(ui.View):
 
 
 class LoginView(ui.View):
-    def __init__(self, author: discord.User | discord.Member) -> None:
+    def __init__(self, bot: Harmony, author: discord.User | discord.Member, client: AniListClient) -> None:
         super().__init__(timeout=120)
         self.author = author
+        self.bot = bot
+        self.client = client
 
-        self._children.insert(0, ui.Button(url=ANILIST_URL, label="Get Code"))
-        self.code: str | None = None
+        self._children.insert(
+            0,
+            ui.Button(
+                url=ANILIST_URL,
+                label="Get Code",
+            ),
+        )
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.author:
             await interaction.response.send_message("This is not your button.", ephemeral=True)
             return False
+
+        return True
+
+    async def check_login(
+        self,
+        code: Optional[str],
+    ) -> bool:
+        if code is None:
+            return False
+
+        resp = await self.client.oauth.get_access_token(code)
+        if resp is None:
+            return False
+
+        token, expires_in = resp
+
+        query = "INSERT INTO anilist_codes VALUES ($1, $2, $3)"
+        await self.bot.pool.execute(
+            query,
+            self.author.id,
+            token,
+            expires_in,
+        )
+
         return True
 
     @ui.button(label="Enter Code", style=discord.ButtonStyle.green)
@@ -239,8 +267,17 @@ class LoginView(ui.View):
         await interaction.response.send_modal(modal)
         await modal.wait()
 
-        self.code = modal.code
-        self.stop()
+        isLoggedIn = await self.check_login(modal.code)
+        if isLoggedIn:
+            await interaction.edit_original_response(
+                embed=SuccessEmbed(description="Successfully logged you in."),
+                view=None,
+            )
+        else:
+            await interaction.followup.send(
+                embed=ErrorEmbed(description="Invalid code, try again."),
+                ephemeral=True,
+            )
 
 
 class AniList(BaseCog):
@@ -254,45 +291,56 @@ class AniList(BaseCog):
 
         self.client = AniListClient(bot)
 
+    async def search(
+        self,
+        ctx: Context,
+        search: str,
+        search_type: MediaType,
+    ):
+        assert not isinstance(ctx.channel, discord.PartialMessageable | discord.GroupChannel)
+
+        item = await self.client.search_media(
+            search,
+            type=search_type,
+            user_id=ctx.author.id,
+        )
+
+        if item is None:
+            raise GenericError(f"Couldn't find any {search_type.value.lower()} with that name.")
+
+        if item.isAdult and not (
+            isinstance(
+                ctx.channel,
+                discord.DMChannel,
+            )
+            or ctx.channel.is_nsfw()
+        ):
+            raise GenericError(
+                f"This {search_type.value.lower()} was flagged as NSFW. Please try searching in an NSFW channel or in my DMs."
+            )
+
+        view = discord.utils.MISSING
+
+        if item.relations:
+            view = RelationView(self, item)
+
+        embeds = [item.embed]
+        if item.list_embed:
+            embeds.append(item.list_embed)
+
+        await ctx.send(embeds=embeds, view=view)
+
     @commands.command()
     async def anime(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific anime."""
-
-        anime = await self.client.search_media(search, type=MediaType.ANIME, user_id=ctx.author.id)
-
-        if anime is None:
-            raise GenericError("Couldn't find any anime with that name.")
-
-        view = discord.utils.MISSING
-        if anime.relations:
-            view = RelationView(self, anime)
-
-        embeds = [anime.embed]
-        if anime.list_embed:
-            embeds.append(anime.list_embed)
-
-        await ctx.send(embeds=embeds, view=view)
+        await self.search(ctx, search, MediaType.ANIME)
 
     @commands.command()
     async def manga(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific manga."""
+        await self.search(ctx, search, MediaType.MANGA)
 
-        manga = await self.client.search_media(search, type=MediaType.MANGA, user_id=ctx.author.id)
-
-        if manga is None:
-            raise GenericError("Couldn't find any manga with that name.")
-
-        view = discord.utils.MISSING
-        if manga.relations:
-            view = RelationView(self, manga)
-
-        embeds = [manga.embed]
-        if manga.list_embed:
-            embeds.append(manga.list_embed)
-
-        await ctx.send(embeds=embeds, view=view)
-
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     async def anilist(self, ctx: Context, username: str | None = None):
         if username is None:
             token = await self.client.get_token(ctx.author.id)
@@ -301,12 +349,12 @@ class AniList(BaseCog):
                 raise commands.BadArgument(
                     message=f"You need to pass an AniList username or log in with {cp}anilist login to view yourself."
                 )
-
             elif token.expiry < datetime.datetime.now():
-                raise GenericError(f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login.")
+                raise GenericError(
+                    f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login.",
+                )
 
             user = await self.client.oauth.get_current_user(token.token)
-
         else:
             user = await self.client.oauth.get_user(username)
 
@@ -367,13 +415,15 @@ class AniList(BaseCog):
                 )
 
         values: list[str] = []
-        for k, v in user.favourites.items():  # type: ignore
-            v: PartialNode
+        for node in user.favourites:
+            name = node["_type"].title()
 
-            name = k.title()
-            if name[-1] == "s":
+            if name.endswith("s"):
                 name = name[:-1]
-            values.append(f"{name}: **[{v.name}]({v.site_url})**")
+
+            for item in node["items"]:
+                values.append(f"{name}: **[{item.name}]({item.site_url})**")
+                break
 
         if values:
             embed.add_field(name="Favourites", value="\n".join(values), inline=False)
@@ -383,34 +433,25 @@ class AniList(BaseCog):
     @anilist.command(aliases=["auth"])
     async def login(self, ctx: Context):
         query = "SELECT expires_in FROM anilist_codes WHERE user_id = $1"
-        expiry: datetime.datetime = await self.bot.pool.fetchval(query, ctx.author.id)
-        if expiry:
-            if expiry > datetime.datetime.now():
-                embed = SuccessEmbed(description="You are already logged in. Log out and back in to re-new session.")
-                embed.set_footer(text=f"Run `{ctx.clean_prefix}anilist logout` to log out.")
-                return await ctx.send(embed=embed)
+        expiry: datetime.datetime = await self.bot.pool.fetchval(
+            query,
+            ctx.author.id,
+        )
 
-        view = LoginView(ctx.author)
+        if expiry and expiry > datetime.datetime.now():
+            embed = SuccessEmbed(description="You are already logged in. Log out and back in to re-new session.")
+            embed.set_footer(text=f"Run `{ctx.clean_prefix}anilist logout` to log out.")
+            return await ctx.send(embed=embed)
+
         embed = PrimaryEmbed(
             title="Authorise with Anilist",
             description="Copy the code from the link below, and then press the green button for the next step.",
         )
-        message = await ctx.send(embed=embed, view=view)
 
-        await view.wait()  # FIXME: Fix structure of callbacks, and try to remove View.wait() (s)
-        if view.code is None:
-            return
-
-        resp = await self.client.oauth.get_access_token(view.code)
-        if resp is None:
-            return await message.edit(embed=ErrorEmbed(description="Invalid code, try again."))
-
-        token, expires_in = resp
-
-        query = "INSERT INTO anilist_codes VALUES ($1, $2, $3)"
-        await self.bot.pool.execute(query, ctx.author.id, token, expires_in)
-
-        await message.edit(embed=SuccessEmbed(description="Successfully logged you in."))
+        await ctx.send(
+            embed=embed,
+            view=LoginView(ctx.bot, ctx.author, self.client),
+        )
 
     @anilist.command()
     async def logout(self, ctx: Context):
@@ -423,4 +464,6 @@ class AniList(BaseCog):
         query = "DELETE FROM anilist_codes WHERE user_id = $1"
         await self.bot.pool.execute(query, ctx.author.id)
 
-        await ctx.send(embed=PrimaryEmbed(description="Successfully logged you out."))
+        await ctx.send(
+            embed=SuccessEmbed(description="Successfully logged you out."),
+        )

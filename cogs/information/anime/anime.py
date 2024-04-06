@@ -1,26 +1,9 @@
-# TODO: Check if Media is NSFW, and refer to use the command in an NSFW-channel.
 # TODO: Add docstrings to all(?) class properties
 from __future__ import annotations
 
 import discord
-import discord
 import datetime
 import re
-
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self
-
-from .types import (
-    Edge,
-    FuzzyDate,
-    MediaCoverImage,
-    MediaList,
-    MediaSeason,
-    MediaStatus,
-    MediaTitle,
-    MediaType,
-    Studio,
-)
-
 
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self
 
@@ -56,6 +39,7 @@ SEARCH_QUERY = """
     query ($search: String, $type: MediaType) {
         Media (search: $search, type: $type) {
             id
+            isAdult
             idMal
             type
             description(asHtml: false)
@@ -137,6 +121,7 @@ FETCH_QUERY = """
     query ($id: Int) {
         Media (id: $id) {
             id
+            isAdult
             idMal
             type
             description(asHtml: false)
@@ -220,6 +205,7 @@ class Media:
         self,
         id: int,
         id_mal: int,
+        isAdult: bool,
         type: MediaType,
         title: MediaTitle,
         description: Optional[str],
@@ -243,6 +229,7 @@ class Media:
     ) -> None:
         self.id = id
         self.id_mal = id_mal
+        self.isAdult = isAdult
         self.type = type
         self.title = title
         self._description = description
@@ -286,6 +273,7 @@ class Media:
         return cls(
             data["id"],
             data["idMal"],
+            data["isAdult"],
             type_,
             title,
             data["description"],

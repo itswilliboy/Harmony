@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Self, TypedDict
+
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    NamedTuple,
+    Self,
+    TypedDict,
+    Literal,
+)
 
 from config import ANILIST_ID, ANILIST_SECRET
 
@@ -147,8 +156,51 @@ USER_QUERY = """
 """
 
 
+def parse_dict_or_str(
+    item: str | dict[str, str],
+    key: str,
+) -> str:
+    if isinstance(item, str):
+        return item
+
+    return item[key]
+
+
+def parse_nodes(
+    node: dict[str, str | dict[str, str]],
+) -> PartialNode:
+    name = None
+    if node.get("title"):
+        name = parse_dict_or_str(node["title"], "userPreferred")
+    elif node.get("name"):
+        name = parse_dict_or_str(node["name"], "userPreferred")
+    else:
+        raise ValueError(f"Invalid node: {node}")
+
+    return PartialNode(
+        name=name,
+        site_url=node["siteUrl"],  # pyright: ignore[reportArgumentType]
+    )
+
+
+def parse_favourites(
+    node: Any,
+) -> Favourites:
+    items = map(parse_nodes, node[1]["nodes"])
+
+    return {
+        "_type": node[0],  # pyright: ignore[reportReturnType]
+        "items": list(items),
+    }
+
+
+class Favourites(TypedDict):
+    _type: Literal["anime", "manga", "characters", "staff", "studios"]
+    items: list[PartialNode]
+
+
 class UserStatistics(NamedTuple):
-    count: int
+    count: int  # pyright: ignore[reportIncompatibleMethodOverride]
     mean_score: float
     minutes_watched: int
     episodes_watched: int
@@ -160,14 +212,6 @@ class UserStatistics(NamedTuple):
 class PartialNode(NamedTuple):
     name: str
     site_url: str
-
-
-class Favourites(TypedDict):
-    anime: PartialNode
-    manga: PartialNode
-    characters: PartialNode
-    staff: PartialNode
-    studios: PartialNode
 
 
 class AccessToken(NamedTuple):
@@ -186,7 +230,7 @@ class User:
         created_at: int,
         anime_stats: UserStatistics,
         manga_stats: UserStatistics,
-        favourites: Favourites,
+        favourites: list[Favourites],
     ) -> None:
         self.name = name
         self.about = about
@@ -224,28 +268,7 @@ class User:
             stats["manga"]["volumesRead"],
         )
 
-        favourites: Favourites = {}  # type: ignore
-        for k, v in data["favourites"].items():
-            k: str
-            v: dict[str, Any]
-
-            nodes = v["nodes"]
-            if not nodes:
-                continue
-
-            first = v["nodes"][0]
-
-            it = iter(first)
-            name = next(it)
-            url = next(it)
-
-            name = first[name]
-            url = first[url]
-
-            if isinstance(name, dict):
-                name = name["userPreferred"]
-
-            favourites[k] = PartialNode(name, url)
+        favourites: list[Favourites] = list(map(parse_favourites, data["favourites"].items()))
 
         return cls(
             data["name"],
@@ -293,9 +316,7 @@ class OAuth:
 
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
-        async with self.session.post(
-            "https://anilist.co/api/v2/oauth/token", json=json, headers=headers
-        ) as resp:
+        async with self.session.post("https://anilist.co/api/v2/oauth/token", json=json, headers=headers) as resp:
             json = await resp.json()
             token = json.get("access_token", None)
 
@@ -309,21 +330,16 @@ class OAuth:
     async def get_current_user(self, token: str) -> User:
         """Gets the current user with the Access Token."""
 
-        async with self.session.post(
-            self.URL, headers=self._get_headers(token), json={"query": VIEWER_QUERY}
-        ) as resp:
+        async with self.session.post(self.URL, headers=self.get_headers(token), json={"query": VIEWER_QUERY}) as resp:
             json = await resp.json()
             return User.from_json(json["data"]["Viewer"])
 
     async def get_user(self, username: str) -> User | None:
         """Gets a user by their username."""
 
-        async with self.session.post(
-            self.URL, json={"query": USER_QUERY, "variables": {"name": username}}
-        ) as resp:
+        async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": {"name": username}}) as resp:
             json = await resp.json()
             try:
                 return User.from_json(json["data"]["User"])
-
             except:
                 raise
