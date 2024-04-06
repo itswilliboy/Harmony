@@ -37,7 +37,8 @@ if __name__ == "__main__":
         loop.run_until_complete(run())
 
     except KeyboardInterrupt:
-        bot.log.critical("KeyboardInterrupt: Closing")
+        if hasattr(bot, "log"):
+            bot.log.critical("KeyboardInterrupt: Closing")
 
     except Exception:
         asyncio.run(bot.close())
