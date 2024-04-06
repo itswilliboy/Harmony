@@ -652,13 +652,13 @@ class RelationView(discord.ui.View):
                 value = f"{edge.title[:100-len(value)]}\u200b{edge.id}"  # Shorten value to 100 characters, but keep ID
 
             if edge.type == MediaRelation.SOURCE:
-                self.add_item(RelationButton(self.cog, edge, "Source", "\N{OPEN BOOK}", row=0))
+                self.add_item(RelationButton(self.cog, edge, "Source", "\N{OPEN BOOK}"))
 
             elif edge.type == MediaRelation.PREQUEL:
-                self.add_item(RelationButton(self.cog, edge, "Prequel", "\N{LEFTWARDS BLACK ARROW}", row=0))
+                self.add_item(RelationButton(self.cog, edge, "Prequel", "\N{LEFTWARDS BLACK ARROW}"))
 
             elif edge.type == MediaRelation.SEQUEL:
-                self.add_item(RelationButton(self.cog, edge, "Sequel", "\N{BLACK RIGHTWARDS ARROW}", row=0))
+                self.add_item(RelationButton(self.cog, edge, "Sequel", "\N{BLACK RIGHTWARDS ARROW}"))
 
             elif edge.type == MediaRelation.ADAPTATION:
                 adaptation_options.append(
