@@ -234,21 +234,21 @@ class Media:
         description: str | None,
         start_date: FuzzyDate,
         end_date: FuzzyDate,
-        season: MediaSeason | None,
-        season_year: int | None,
-        mean_score: int | None,
+        season: Optional[MediaSeason],
+        season_year: Optional[int],
+        mean_score: Optional[int],
         status: MediaStatus,
         cover_image: MediaCoverImage,
         banner_image: str,
         hashtags: str,
-        studio: Studio | None,
+        studio: Optional[Studio],
         episodes: int,
         duration: int,
         chapters: int,
         volumes: int,
         genres: list[str],
         relations: list[Edge],
-        list_entry: MediaList | None,
+        list_entry: Optional[MediaList],
     ) -> None:
         self.id = id
         self.id_mal = id_mal
@@ -499,11 +499,10 @@ class Media:
 
 
 class AniListClient:
+class AniListClient:
     URL: ClassVar[str] = "https://graphql.anilist.co"
 
     def __init__(self, bot: Harmony):
-        self.bot = bot
-        self.oauth = OAuth(bot.session)
         self.bot = bot
         self.oauth = OAuth(bot.session)
 
