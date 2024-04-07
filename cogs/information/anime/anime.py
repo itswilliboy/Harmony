@@ -1,14 +1,18 @@
 # TODO: Add docstrings to all(?) class properties
 from __future__ import annotations
 
-import discord
 import datetime
 import re
-
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
+import discord
+
+from utils import progress_bar
+
+from .oauth import AccessToken, OAuth
 from .types import (
     Edge,
+    FollowingStatus,
     FuzzyDate,
     MediaCoverImage,
     MediaList,
@@ -16,16 +20,8 @@ from .types import (
     MediaStatus,
     MediaTitle,
     MediaType,
-    FollowingStatus,
     Object,
 )
-
-
-from utils import (
-    progress_bar,
-)
-
-from .oauth import AccessToken, OAuth
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -209,7 +205,7 @@ FOLLOWING_QUERY = """
                 progress
                 repeat
                 media {
-	        		episodes
+                    episodes
                     chapters
                 }
                 user {

@@ -1,6 +1,5 @@
 from enum import StrEnum
-
-from typing import NamedTuple, Optional, TypedDict, Literal
+from typing import Literal, NamedTuple, Optional, TypedDict
 
 
 class MediaType(StrEnum):

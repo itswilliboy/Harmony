@@ -1,20 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    NamedTuple,
-    Self,
-    TypedDict,
-    Literal,
-)
-
-from utils import GenericError
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, Self, TypedDict
 
 from config import ANILIST_ID, ANILIST_SECRET
+from utils import GenericError
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession

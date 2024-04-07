@@ -1,30 +1,19 @@
 from __future__ import annotations
+
 import datetime
+from typing import Any, Self
 
 import discord
-
 from discord import ui
 from discord.ext import commands
 
+from bot import Harmony
+from config import ANILIST_URL
+from utils import BaseCog, Context, ErrorEmbed, GenericError, PrimaryEmbed, SuccessEmbed
 from utils.utils import progress_bar
 
-from .types import Edge, MediaRelation, MediaType
 from .anime import AniListClient, Media
-
-from typing import Any, Self
-
-from bot import Harmony
-
-from config import ANILIST_URL
-
-from utils import (
-    BaseCog,
-    Context,
-    ErrorEmbed,
-    GenericError,
-    PrimaryEmbed,
-    SuccessEmbed,
-)
+from .types import Edge, MediaRelation, MediaType
 
 
 async def callback(cog: AniList, id: int, interaction: discord.Interaction):
