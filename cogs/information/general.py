@@ -165,7 +165,7 @@ class General(BaseCog):
                 return f"```diff\n- {ping} ms\n```"
 
         start = time.perf_counter()
-        await self.bot.pool.fetch("SELECT 1")
+        await ctx.pool.fetch("SELECT 1")
         end = time.perf_counter()
         db_latency = int((end - start) * 1000)
 
@@ -215,7 +215,7 @@ class General(BaseCog):
         """
         embed.add_field(name="Process Information", value=dedent(value))
 
-        command_runs: int = await self.bot.pool.fetchval("SELECT SUM(command_runs) FROM statistics")
+        command_runs: int = await ctx.pool.fetchval("SELECT SUM(command_runs) FROM statistics")
         embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
 
         version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"
@@ -248,7 +248,7 @@ class General(BaseCog):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"  # noqa: E501
         }
 
-        async with self.bot.session.get("https://clients5.google.com/translate_a/t", params=query_, headers=headers) as resp:
+        async with ctx.session.get("https://clients5.google.com/translate_a/t", params=query_, headers=headers) as resp:
             json: list[Any] = (await resp.json())[0]
             data = TranslatorResponse(json[0], json[1])
 
@@ -300,7 +300,7 @@ class General(BaseCog):
 
         await ctx.typing()
 
-        async with self.bot.session.get("https://api.jeyy.xyz/v2/discord/spotify", params=params, headers=headers) as resp:
+        async with ctx.session.get("https://api.jeyy.xyz/v2/discord/spotify", params=params, headers=headers) as resp:
             buffer = BytesIO(await resp.read())
 
         colour = await self.get_image_colour(buffer)

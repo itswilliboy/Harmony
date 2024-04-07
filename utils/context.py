@@ -35,11 +35,11 @@ class Context(commands.Context["Harmony"]):
 
     @property
     def session(self) -> ClientSession:
-        return self.bot.session
+        return self.session
 
     @property
     def pool(self) -> Pool[Record]:
-        return self.bot.pool
+        return self.pool
 
     def is_blacklisted(self) -> bool:
         """Checks if the guild or author is blacklisted."""

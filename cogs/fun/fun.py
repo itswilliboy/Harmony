@@ -67,7 +67,7 @@ class Fun(BaseCog):
     async def fox(self, ctx: Context):
         """Sends a random picture of a fox."""
         await ctx.typing()
-        async with self.bot.session.get("https://randomfox.ca/floof") as resp:
+        async with ctx.session.get("https://randomfox.ca/floof") as resp:
             json = await resp.json()
 
         embed = PrimaryEmbed().set_image(url=json["image"])
@@ -77,7 +77,7 @@ class Fun(BaseCog):
     async def dog(self, ctx: Context):
         """Sends a random picture of a dog."""
         await ctx.typing()
-        async with self.bot.session.get("https://random.dog/woof.json") as resp:
+        async with ctx.session.get("https://random.dog/woof.json") as resp:
             json = await resp.json()
 
         embed = PrimaryEmbed().set_image(url=json["url"])
@@ -87,7 +87,7 @@ class Fun(BaseCog):
     async def cat(self, ctx: Context):
         """Sends a random picture of a cat"""
         await ctx.typing()
-        async with self.bot.session.get("https://cataas.com/cat?json=true") as resp:
+        async with ctx.session.get("https://cataas.com/cat?json=true") as resp:
             json = await resp.json()
 
         url = f"https://cataas.com/cat/{json['_id']}"
@@ -98,7 +98,7 @@ class Fun(BaseCog):
     async def meme(self, ctx: Context):
         """Sends a meme."""
         await ctx.typing()
-        meme = await self.fetch_meme(self.bot.session)
+        meme = await self.fetch_meme(ctx.session)
 
         if meme is None:
             raise GenericError("Couldn't fetch a meme right now, please try again later.")
@@ -112,7 +112,7 @@ class Fun(BaseCog):
     async def urban(self, ctx: Context, *, query: str):
         """Get a defnition of a phrase from the Urban Dictionary."""
         url = "http://api.urbandictionary.com/v0/define"
-        async with self.bot.session.get(url, params={"term": query}) as resp:
+        async with ctx.session.get(url, params={"term": query}) as resp:
             json = await resp.json()
             data = json.get("list")
 

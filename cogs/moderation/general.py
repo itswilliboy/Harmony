@@ -155,7 +155,7 @@ class General(BaseCog):
     @commands.command()
     async def snipe(self, ctx: Context):
         """Views (snipes) the most recently deleted message in the current channel."""
-        exists = await self.bot.pool.fetchval("SELECT EXISTS(SELECT 1 FROM snipe_optout WHERE user_id = $1)", ctx.author.id)
+        exists = await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM snipe_optout WHERE user_id = $1)", ctx.author.id)
         if exists is True:
             raise GenericError("You are opted out from snipes.")
 
@@ -176,14 +176,14 @@ class General(BaseCog):
     @commands.command()
     async def snipe_opt_out(self, ctx: Context):
         """Toggles opt-out from snipes."""
-        exists = await self.bot.pool.fetchval("SELECT EXISTS(SELECT 1 FROM snipe_optout WHERE user_id = $1)", ctx.author.id)
+        exists = await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM snipe_optout WHERE user_id = $1)", ctx.author.id)
 
         if exists is True:
-            await self.bot.pool.execute("DELETE FROM snipe_optout WHERE user_id = $1", ctx.author.id)
+            await ctx.pool.execute("DELETE FROM snipe_optout WHERE user_id = $1", ctx.author.id)
             await ctx.send("Successfully opted you in.")
 
         else:
-            await self.bot.pool.execute("INSERT INTO snipe_optout VALUES ($1)", ctx.author.id)
+            await ctx.pool.execute("INSERT INTO snipe_optout VALUES ($1)", ctx.author.id)
             await ctx.send("Successfully opted you out.")
 
     @commands.bot_has_permissions(manage_messages=True, read_message_history=True)
