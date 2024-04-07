@@ -181,7 +181,7 @@ def parse_favourites(
     items = map(parse_nodes, node[1]["nodes"])
 
     return {
-        "_type": node[0],  # pyright: ignore[reportReturnType]
+        "_type": node[0],
         "items": list(items),
     }
 
@@ -192,7 +192,7 @@ class Favourites(TypedDict):
 
 
 class UserStatistics(NamedTuple):
-    count: int  # pyright: ignore[reportIncompatibleMethodOverride]
+    count: int
     mean_score: float
     minutes_watched: int
     episodes_watched: int

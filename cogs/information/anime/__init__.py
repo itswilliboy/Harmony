@@ -305,7 +305,10 @@ class AniList(BaseCog):
             or ctx.channel.is_nsfw()
         ):
             raise GenericError(
-                f"This {search_type.value.lower()} was flagged as NSFW. Please try searching in an NSFW channel or in my DMs."
+               (
+                    f"This {search_type.value.lower()} was flagged as NSFW. "
+                    "Please try searching in an NSFW channel or in my DMs."
+               )
             )
 
         view = discord.utils.MISSING
