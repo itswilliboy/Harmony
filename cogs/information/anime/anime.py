@@ -25,6 +25,7 @@ from .types import (
 
 if TYPE_CHECKING:
     from bot import Harmony
+    from .oauth import User
 
     Interaction = discord.Interaction[Harmony]
 
@@ -196,12 +197,13 @@ FETCH_QUERY = """
     }
 """
 
+# FIXME: Fix so the authenticated user doesn't appear on the following embed.
 FOLLOWING_QUERY = """
     query ($id: Int, $page: Int, $perPage: Int) {
         Page(page: $page, perPage: $perPage) {
             mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
                 status
-                score
+                score(format: POINT_10)
                 progress
                 repeat
                 media {
@@ -211,6 +213,7 @@ FOLLOWING_QUERY = """
                 user {
                     siteUrl
                     name
+                    id
                 }
             }
         }
@@ -492,45 +495,39 @@ class Media:
                 desc.append(f"↪ Started / Completed: **{started_at} ⟶ {completed_at}**")
 
         desc = [i for i in desc if i != ""]
-        embed = discord.Embed(colour=self.colour, description="\n".join(desc))
+        embed = discord.Embed(title="Your Status", colour=self.colour, description="\n".join(desc))
 
         if entry["updatedAt"] and not self.following_statuses:
             embed.set_footer(text="Last Updated").timestamp = datetime.datetime.fromtimestamp(entry["updatedAt"])
 
         return embed
 
-    @property
-    def following_status(self) -> discord.Embed | None:
-        fl_st = self.following_statuses
-        if not fl_st:
+    def following_status_embed(self, user: User | None = None) -> discord.Embed | None:
+        status_ = self.following_statuses
+        if not status_:
             return
 
-        FULL_WIDTH_INVIS = " "
+        information: list[str] = []
+        for status in status_:
+            user_: Any = status["user"]
 
-        progress: list[str] = []
-        for status in fl_st:
-            user = status["user"]
+            if user is not None:
+                if user_["id"] == user.id:
+                    continue
+
             TOTAL_PROGRESS = status["media"]["episodes"] or status["media"]["chapters"]
 
             desc = (
-                f"↪ [{user['name']}]({user['siteUrl']}) - "
-                "**"
-                f"\U00002b50 {status['score']}\n"
-                f"{FULL_WIDTH_INVIS * 2} ↪ {status['progress']}/{TOTAL_PROGRESS} "
-                f"({status['status'].title()})"
-                "**"
+                f"↪ **[{user_['name']}]({user_['siteUrl']}) - "
+                f"{status['score']} / 10**\n"
+                f"╰ `{status['status'].title()}:` "
+                f"{status['progress']} / {TOTAL_PROGRESS} "
+                f"{'chapter(s)' if self.type == MediaType.MANGA else 'episode(s)'}"
             )
 
-            progress.append(desc)
+            information.append(desc)
 
-        embed = discord.Embed(colour=self.colour, description="\n".join(progress))
-
-        if self.list_entry and self.list_entry["updatedAt"]:
-            embed.set_footer(text="Last Updated").timestamp = datetime.datetime.fromtimestamp(
-                self.list_entry["updatedAt"],
-            )
-
-        return embed
+        return discord.Embed(title="People you are following", colour=self.colour, description="\n".join(information))
 
 
 class AniListClient:
@@ -539,10 +536,10 @@ class AniListClient:
     def __init__(self, bot: Harmony):
         self.bot = bot
         self.oauth = OAuth(bot.session)
-        self.bot = bot
-        self.oauth = OAuth(bot.session)
 
-    async def search_media(self, search: str, *, type: MediaType, user_id: int | None = None) -> Media | None:
+    async def search_media(
+        self, search: str, *, type: MediaType, user_id: int | None = None
+    ) -> tuple[Media, User | None] | tuple[None, None]:
         """Searchs and returns a media via a search query."""
 
         variables = {"search": search, "type": type}
@@ -559,10 +556,10 @@ class AniListClient:
                 data_ = json["data"]
                 data = data_["Media"]
             except KeyError:
-                return None
+                return (None, None)
 
             if data is None:
-                return None
+                return (None, None)
 
         following_status = {}
         if user_id:
@@ -572,7 +569,11 @@ class AniListClient:
                 headers=headers,
             )
 
-        return Media.from_json(data, following_status or {})
+        user: User | None = None
+        if headers:
+            user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
+
+        return (Media.from_json(data, following_status or {}), user)
 
     async def fetch_media(self, id: int, *, user_id: int | None = None) -> Media | None:
         """Fetches and returns a media via an ID."""
@@ -613,7 +614,7 @@ class AniListClient:
         *,
         headers: dict[str, str] | None = None,
         page: int = 1,
-        per_page: int = 4,
+        per_page: int = 5,
     ) -> dict[str, Any] | None:
         """Fetches all the ratings of the followed users."""
 
@@ -631,7 +632,7 @@ class AniListClient:
             },
             headers=headers,
         ) as req:
-            if req.status == 200:
+            if req.status != 124131:
                 data = await req.json()
                 return data
 

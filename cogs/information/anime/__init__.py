@@ -9,8 +9,15 @@ from discord.ext import commands
 
 from bot import Harmony
 from config import ANILIST_URL
-from utils import BaseCog, Context, ErrorEmbed, GenericError, PrimaryEmbed, SuccessEmbed
-from utils.utils import progress_bar
+from utils import (
+    BaseCog,
+    Context,
+    ErrorEmbed,
+    GenericError,
+    PrimaryEmbed,
+    SuccessEmbed,
+    progress_bar,
+)
 
 from .anime import AniListClient, Media
 from .types import Edge, MediaRelation, MediaType
@@ -288,16 +295,16 @@ class AniList(BaseCog):
     ):
         assert not isinstance(ctx.channel, discord.PartialMessageable | discord.GroupChannel)
 
-        item = await self.client.search_media(
+        media, user = await self.client.search_media(
             search,
             type=search_type,
             user_id=ctx.author.id,
         )
 
-        if item is None:
+        if media is None:
             raise GenericError(f"Couldn't find any {search_type.value.lower()} with that name.")
 
-        if item.is_adult and not (
+        if media.is_adult and not (
             isinstance(
                 ctx.channel,
                 discord.DMChannel,
@@ -313,15 +320,29 @@ class AniList(BaseCog):
 
         view = discord.utils.MISSING
 
-        if item.relations:
-            view = RelationView(self, item)
+        if media.relations:
+            view = RelationView(self, media)
 
-        embeds = [item.embed]
-        if em := item.list_embed:
+        embeds: list[discord.Embed] = []
+
+        PIXEL_LINE_URL = "https://i.imgur.com/IfBmnOp.png"  # For making the embeds the same width
+
+        if not media.embed.image:
+            em = media.embed.copy()
+            em.set_image(url=PIXEL_LINE_URL)
             embeds.append(em)
 
-        if em := item.following_status:
-            embeds.append(item.following_status)
+        else:
+            embeds.append(media.embed)
+
+        if em := media.list_embed:
+            em.set_image(url=PIXEL_LINE_URL)
+            em.set_thumbnail(url=ctx.author.display_avatar.url)
+            embeds.append(em)
+
+        if em := media.following_status_embed(user):
+            em.set_image(url=PIXEL_LINE_URL)
+            embeds.append(em)
 
         await ctx.send(embeds=embeds, view=view)
 
@@ -352,6 +373,9 @@ class AniList(BaseCog):
             user = await self.client.oauth.get_current_user(token.token)
         else:
             user = await self.client.oauth.get_user(username)
+
+            if user is None:
+                raise GenericError("Couldn't find any user with that name.")
 
         embed = PrimaryEmbed(
             title=user.name,
@@ -425,7 +449,7 @@ class AniList(BaseCog):
     @anilist.command(aliases=["auth"])
     async def login(self, ctx: Context):
         query = "SELECT expires_in FROM anilist_codes WHERE user_id = $1"
-        expiry: datetime.datetime = await self.bot.pool.fetchval(
+        expiry: datetime.datetime | None = await self.bot.pool.fetchval(
             query,
             ctx.author.id,
         )

@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Literal, NamedTuple, Optional, TypedDict
+from typing import NamedTuple, Optional, TypedDict
 
 
 class MediaType(StrEnum):
@@ -94,7 +94,7 @@ class PartialMedia(TypedDict):
 
 
 class FollowingStatus(TypedDict):
-    status: Literal["CURRENT", "PLANNING", "COMPLETED", "DROPPED", "PAUSED", "REPEATING"]
+    status: MediaListStatus
     score: int
     progress: int
     media: PartialMedia

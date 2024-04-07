@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, Self, TypedDict
 
 from config import ANILIST_ID, ANILIST_SECRET
-from utils import GenericError
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -13,6 +12,7 @@ VIEWER_QUERY = """
     query {
         Viewer {
             name,
+            id,
             about,
             avatar {
                 large
@@ -82,6 +82,7 @@ USER_QUERY = """
     query ($name: String) {
         User (name: $name) {
             name,
+            id,
             about,
             avatar {
                 large
@@ -215,6 +216,7 @@ class User:
     def __init__(
         self,
         name: str,
+        id: int,
         about: str | None,
         avatar_url: str | None,
         banner_url: str | None,
@@ -225,6 +227,7 @@ class User:
         favourites: list[Favourites],
     ) -> None:
         self.name = name
+        self.id = id
         self.about = about
         self.avatar_url = avatar_url
         self.banner_url = banner_url
@@ -264,6 +267,7 @@ class User:
 
         return cls(
             data["name"],
+            data["id"],
             data["about"],
             avatar_url,
             data["bannerImage"],
@@ -326,7 +330,7 @@ class OAuth:
             json = await resp.json()
             return User.from_json(json["data"]["Viewer"])
 
-    async def get_user(self, username: str) -> User:
+    async def get_user(self, username: str) -> User | None:
         """Gets a user by their username."""
 
         async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": {"name": username}}) as resp:
@@ -334,4 +338,4 @@ class OAuth:
             try:
                 return User.from_json(json["data"]["User"])
             except Exception:
-                raise GenericError("Couldn't find a user with that name.")
+                return None
