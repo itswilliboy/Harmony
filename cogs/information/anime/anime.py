@@ -412,8 +412,8 @@ class Media:
         info = [
             f"↪ Native Title: **{self.title['native']}**" if self.title["native"] else "",
             f"↪ Studio: **[{self.studio['name']}]({self.studio['siteUrl']})**" if self.studio else "",
-            f"↪ Episodes: **{self.episodes} \
-            {f' | {(self.episodes*self.duration)/60:.1f} hours' if self.duration else ''}**"
+            f"↪ Episodes: **{self.episodes}"
+            f"{f' | {(self.episodes*self.duration)/60:.1f} hours' if self.duration else ''}**"
             if self.episodes
             else "",
             f"↪ Volumes: **{self.volumes}**" if self.volumes else "",
