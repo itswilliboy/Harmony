@@ -527,7 +527,10 @@ class Media:
 
             information.append(desc)
 
-        return discord.Embed(title="People you are following", colour=self.colour, description="\n".join(information))
+        if not information:
+            return None
+
+        return discord.Embed(title="Followed Users", colour=self.colour, description="\n".join(information))
 
 
 class AniListClient:
