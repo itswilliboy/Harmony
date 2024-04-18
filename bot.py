@@ -8,10 +8,13 @@ from typing import TYPE_CHECKING, Any
 
 import discord
 from aiohttp import ClientSession
-from asyncache import cachedmethod  # type: ignore
+
+from asyncache import cachedmethod  # pyright: ignore[reportMissingTypeStubs]
 from asyncpg import Pool, Record, create_pool
 from discord.ext import commands, ipc
-from discord.ext.commands.core import _CaseInsensitiveDict  # type: ignore
+from discord.ext.commands.core import (  # pyright: ignore[reportMissingTypeStubs]
+    _CaseInsensitiveDict,
+)
 
 from config import DEFAULT_PREFIX, POSTGRES_CREDENTIALS
 from utils import Context
@@ -25,7 +28,7 @@ class Harmony(commands.Bot):
 
     session: ClientSession
     log: logging.Logger
-    ipc: ipc.Server  # type: ignore
+    ipc: ipc.Server  # pyright: ignore[reportPrivateImportUsage]
 
     if TYPE_CHECKING:
         pool: Pool[Record]

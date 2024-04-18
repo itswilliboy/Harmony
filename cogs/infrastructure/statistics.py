@@ -37,7 +37,7 @@ class Statistics(BaseCog):
         if ctx.guild is None:  # type: ignore
             return
 
-        await self.bot.pool.execute(
+        await ctx.pool.execute(
             """
             UPDATE statistics
             SET command_runs = command_runs + 1

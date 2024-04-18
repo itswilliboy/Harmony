@@ -8,7 +8,6 @@ from config import TOKEN
 
 os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 
-# fmt: off
 initial_extensions = [
     "jishaku",
     "cogs.infrastructure",
@@ -16,9 +15,8 @@ initial_extensions = [
     "cogs.miscellaneous",
     "cogs.information",
     "cogs.moderation",
-    "cogs.fun"
+    "cogs.fun",
 ]
-# fmt: on
 
 intents = Intents.all()
 bot = Harmony(intents=intents, initial_extensions=initial_extensions)

@@ -64,6 +64,7 @@ class HelpCommand(commands.HelpCommand):
         embed.description = command.short_doc
 
         embed.add_field(name="Usage", value=f"```\n{get_command_signature((self.context.clean_prefix, command))}\n```")
+        embed.set_footer(text="< > = required | [ ] = optional")
         if aliases := command.aliases:
             embed.add_field(name="Aliases", value=", ".join([f"`{alias}`" for alias in aliases]), inline=False)
 
@@ -85,6 +86,7 @@ class HelpCommand(commands.HelpCommand):
 
         nl = "\n"
         embed.add_field(name="Commands", value=f"```\n{nl.join(formatted)}\n```")
+        embed.set_footer(text="< > = required | [ ] = optional")
 
         await self.get_destination().send(embed=embed)
 

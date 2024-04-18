@@ -115,6 +115,11 @@ class ErrorHandler(BaseCog):
         elif isinstance(error, commands.DisabledCommand):
             embed = ErrorEmbed(description="This command is currently disabled.")
 
+        elif isinstance(error, commands.TooManyArguments):
+            usage = get_command_signature(ctx)
+            embed = ErrorEmbed(title="Too many arguments", description=f"Correct usage:\n```\n{usage}\n```")
+            embed.set_footer(text="< > = required | [ ] = optional")
+
         else:
             embed = ErrorEmbed(description="An unknown error occurred")
             self.bot.log.error("In %s: %s", ctx.command, error, exc_info=error)

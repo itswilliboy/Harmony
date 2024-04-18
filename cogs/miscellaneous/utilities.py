@@ -60,7 +60,7 @@ class Utilities(BaseCog):
 
         else:
             try:
-                async with self.bot.session.get(emoji) as resp:
+                async with ctx.session.get(emoji) as resp:
                     if not resp.ok:
                         raise GenericError(
                             "Something went wrong when trying to download the image, make sure it exists.", True
@@ -121,7 +121,7 @@ class Utilities(BaseCog):
         """Downloads a watermark-free TikTok video via a URL."""
         async with ctx.typing():
             URL = "http://itswilliboy.com/api/tiktok?q="
-            async with self.bot.session.get(URL + link) as resp:
+            async with ctx.session.get(URL + link) as resp:
                 if resp.content_type == "application/json":
                     json = await resp.json()
                     raise GenericError(json["message"])

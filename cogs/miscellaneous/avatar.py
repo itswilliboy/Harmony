@@ -40,7 +40,7 @@ class Avatar(BaseCog):
             WHERE user_id = $1
             ORDER BY timestamp
         """
-        resp = await self.bot.pool.fetch(query, member.id)
+        resp = await ctx.pool.fetch(query, member.id)
 
         if not resp:
             raise GenericError(f"There are no avatars stored for {member.mention}.")
