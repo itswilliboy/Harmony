@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Mapping, NamedTuple
 
-from discord import Embed
+from discord import Embed, utils
 from discord.ext import commands
 
 from utils import (
@@ -10,7 +10,6 @@ from utils import (
     ErrorEmbed,
     Paginator,
     PrimaryEmbed,
-    chunk,
     get_command_signature,
 )
 
@@ -93,7 +92,7 @@ class HelpCommand(commands.HelpCommand):
     async def send_cog_help(self, cog: Cog) -> None:
         embeds: list[Embed] = []
 
-        for chnk in chunk(cog.get_commands(), 5):
+        for chnk in utils.as_chunks(cog.get_commands(), 5):
             embed = PrimaryEmbed(title=cog.qualified_name.title())
             for cmd in chnk:
                 if cmd.hidden:
