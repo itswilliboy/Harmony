@@ -36,6 +36,6 @@ class General(BaseCog):
 
         except Exception as exc:
             await ctx.message.add_reaction("\N{CROSS MARK}")
-            self.bot.log.error(f"Something went wrong when trying to reload {ext or extension}: ", exc_info=exc)
+            return self.bot.log.error(f"Something went wrong when trying to reload {ext or extension}: ", exc_info=exc)
 
         await ctx.message.add_reaction("\N{OK HAND SIGN}")
