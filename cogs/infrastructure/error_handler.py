@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING, Any
 
 import discord
@@ -119,6 +120,13 @@ class ErrorHandler(BaseCog):
             usage = get_command_signature(ctx)
             embed = ErrorEmbed(title="Too many arguments", description=f"Correct usage:\n```\n{usage}\n```")
             embed.set_footer(text="< > = required | [ ] = optional")
+
+        elif isinstance(error, commands.CommandOnCooldown):
+            avail = datetime.datetime.now() + datetime.timedelta(seconds=error.retry_after)
+            formatted = discord.utils.format_dt(avail, "R")
+            embed = ErrorEmbed(
+                description=f"This command is on cooldown, please try again in {formatted}."
+            )
 
         else:
             embed = ErrorEmbed(description="An unknown error occurred")
