@@ -18,18 +18,7 @@ initial_extensions = [
     "cogs.fun",
 ]
 
-intents = Intents.none()
-intents.message_content = True
-intents.members = True
-intents.messages = True
-intents.guilds = True
-intents.emojis = True
-intents.guild_messages = True
-intents.guild_reactions = True
-intents.bans = True
-intents.reactions = True
-intents.moderation = True
-
+intents = Intents.all()
 
 bot = Harmony(intents=intents, initial_extensions=initial_extensions)
 
