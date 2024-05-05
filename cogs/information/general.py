@@ -5,7 +5,7 @@ from io import BytesIO
 from os import getpid
 from sys import version_info
 from textwrap import dedent
-from typing import TYPE_CHECKING, Any, NamedTuple, Self
+from typing import TYPE_CHECKING, Any, NamedTuple, Self, cast
 
 import aiohttp
 import asyncpg
@@ -273,7 +273,7 @@ class General(BaseCog):
 
         with Image.open(buffer) as image:
             pixels = image.load()
-            colour = pixels[255, 0]
+            colour = cast(tuple[int, int], pixels[255, 0])
             colour = list(colour)
             del colour[3]  # Delete the alpha value
 
