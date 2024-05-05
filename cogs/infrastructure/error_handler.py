@@ -96,7 +96,7 @@ class ErrorHandler(BaseCog):
                 embed.description += f"\n`{msgs[0]}`"  # type: ignore
 
         elif isinstance(error, commands.NotOwner):
-            embed = ErrorEmbed(title="Owner Only", description="Only bot developers can use this command.")
+            embed = ErrorEmbed(description="Only bot developers can use this command.")
 
         elif isinstance(error, GenericError):
             embed = ErrorEmbed(description=f"{error!s}")

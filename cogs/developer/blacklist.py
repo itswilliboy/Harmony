@@ -193,7 +193,7 @@ class Blacklist(BaseCog):
         await self.bot.pool.execute(query, guild.id)
         self.bot.guild_blacklist.pop(guild.id, None)
 
-    @commands.group(name="blacklist", hidden=True)
+    @commands.group(name="blacklist", hidden=True, aliases=["bl"])
     async def blacklist_(self, ctx: Context) -> None:
         if not ctx.invoked_subcommand:
             raise GenericError("Invoke a valid subcommand.")

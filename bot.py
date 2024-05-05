@@ -114,6 +114,10 @@ class Harmony(commands.Bot):
     async def on_ready(self) -> None:
         self.log.info("Logged in as %s on discord.py version %s", self.user, discord.__version__)
 
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        if before.content != after.content:
+            return await self.process_commands(after)
+
     async def close(self) -> None:
         await self.pool.close()
         await self.session.close()

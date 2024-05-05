@@ -18,13 +18,13 @@ CREATE TABLE IF NOT EXISTS blacklist(
     guild_ids BIGINT[],
     global boolean NOT NULL,
     reason TEXT,
-    timestamp TIMESTAMP NOT NULL
+    timestamp TIMESTAMP DEFAULT current_timestamp
 );
 
 CREATE TABLE IF NOT EXISTS guild_blacklist(
     guild_id BIGINT PRIMARY KEY,
     reason TEXT,
-    timestamp TIMESTAMP NOT NULL
+    timestamp TIMESTAMP DEFAULT current_timestamp
 );
 
 CREATE TABLE IF NOT EXISTS snipe_optout(
@@ -42,6 +42,17 @@ CREATE TABLE IF NOT EXISTS anilist_codes(
     user_id BIGINT PRIMARY KEY,
     access_token TEXT NOT NULL,
     expires_in TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS logging_config(
+    guild_id BIGINT PRIMARY KEY,
+    enabled BOOLEAN NOT NULL,
+    channel_id BIGINT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS logging_events(
+    guild_id BIGINT REFERENCES logging_config(guild_id),
+    message_delete BOOLEAN DEFAULT false
 );
 
 COMMIT;

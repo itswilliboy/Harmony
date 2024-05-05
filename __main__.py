@@ -16,6 +16,7 @@ initial_extensions = [
     "cogs.information",
     "cogs.moderation",
     "cogs.fun",
+    "cogs.logging",
 ]
 
 intents = Intents.all()

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Mapping, NamedTuple, Optional
+from typing import TYPE_CHECKING, Any, Mapping, NamedTuple, cast, Optional
 
 from discord import Embed, utils
 from discord.ext import commands
 
-from utils import BaseCog, ErrorEmbed, Paginator, PrimaryEmbed, get_command_signature
+from utils import BaseCog, ErrorEmbed, Paginator, PrimaryEmbed, get_command_signature, BaseCogMeta
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -55,6 +55,11 @@ class HelpCommand(commands.HelpCommand):
     async def send_command_help(self, command: Command) -> None:
         embed = PrimaryEmbed(title=command.name.title())
         embed.description = command.short_doc
+
+        cog = cast(BaseCogMeta, command.cog)
+        ctx = self.context
+        if cog.owner_only and not await ctx.bot.is_owner(ctx.author):
+            return await self.context.message.add_reaction("\N{CROSS MARK}")
 
         embed.add_field(name="Usage", value=f"```\n{get_command_signature((self.context.clean_prefix, command))}\n```")
         embed.set_footer(text="< > = required | [ ] = optional")
