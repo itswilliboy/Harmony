@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 class Context(commands.Context["Harmony"]):
     """Custom bot context."""
+    
     guild: discord.Guild
     command: Command
 
@@ -37,16 +38,18 @@ class Context(commands.Context["Harmony"]):
     @property
     def session(self) -> ClientSession:
         """Returns the bot's client session."""
+        
         return self.bot.session
 
     @property
     def pool(self) -> Pool[Record]:
         """Returns the bot's database connection pool."""
+        
         return self.bot.pool
 
     def is_blacklisted(self) -> bool:
         """Checks if the guild or author is blacklisted."""
-
+        
         blacklist = self.bot.blacklist
 
         if self.guild is not None:  # type: ignore

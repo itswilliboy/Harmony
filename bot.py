@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import discord
 from aiohttp import ClientSession
+
 from asyncache import cachedmethod  # pyright: ignore[reportMissingTypeStubs]
 from asyncpg import Pool, Record, create_pool
 from discord.ext import commands, ipc
@@ -38,8 +39,8 @@ class Harmony(commands.Bot):
     guild_blacklist: dict[int, GuildBlacklistItem]
 
     def __init__(self, intents: discord.Intents, initial_extensions: list[str], *args: Any, **kwargs: Any) -> None:
-        super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, *args, **kwargs)  # pyright: ignore[reportArgumentType]
-        self._BotBase__cogs = _CaseInsensitiveDict()  # Hacky way to allow lowercase cog arguments in help command
+        super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, *args, **kwargs)  # type: ignore
+        self._BotBase__cogs = _CaseInsensitiveDict()  # Hacky way to allow  lowercase cog arguments in help command
 
         self.initial_extensions = initial_extensions
         self.started_at = datetime.now()

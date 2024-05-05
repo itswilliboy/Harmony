@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Self, TypedDict
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, Self, TypedDict
 
 from config import ANILIST_ID, ANILIST_SECRET
 
@@ -12,6 +12,7 @@ VIEWER_QUERY = """
     query {
         Viewer {
             name,
+            id,
             about,
             avatar {
                 large
@@ -81,6 +82,7 @@ USER_QUERY = """
     query ($name: String) {
         User (name: $name) {
             name,
+            id,
             about,
             avatar {
                 large
@@ -147,6 +149,49 @@ USER_QUERY = """
 """
 
 
+def parse_dict_or_str(
+    item: str | dict[str, str],
+    key: str,
+) -> str:
+    if isinstance(item, str):
+        return item
+
+    return item[key]
+
+
+def parse_nodes(
+    node: dict[str, str | dict[str, str]],
+) -> PartialNode:
+    name = None
+    if node.get("title"):
+        name = parse_dict_or_str(node["title"], "userPreferred")
+    elif node.get("name"):
+        name = parse_dict_or_str(node["name"], "userPreferred")
+    else:
+        raise ValueError(f"Invalid node: {node}")
+
+    return PartialNode(
+        name=name,
+        site_url=node["siteUrl"],  # pyright: ignore[reportArgumentType]
+    )
+
+
+def parse_favourites(
+    node: Any,
+) -> Favourites:
+    items = map(parse_nodes, node[1]["nodes"])
+
+    return {
+        "_type": node[0],
+        "items": list(items),
+    }
+
+
+class Favourites(TypedDict):
+    _type: Literal["anime", "manga", "characters", "staff", "studios"]
+    items: list[PartialNode]
+
+
 class UserStatistics(NamedTuple):
     count: int
     mean_score: float
@@ -162,14 +207,6 @@ class PartialNode(NamedTuple):
     site_url: str
 
 
-class Favourites(TypedDict):
-    anime: PartialNode
-    manga: PartialNode
-    characters: PartialNode
-    staff: PartialNode
-    studios: PartialNode
-
-
 class AccessToken(NamedTuple):
     token: str
     expiry: datetime
@@ -179,6 +216,7 @@ class User:
     def __init__(
         self,
         name: str,
+        id: int,
         about: str | None,
         avatar_url: str | None,
         banner_url: str | None,
@@ -186,9 +224,10 @@ class User:
         created_at: int,
         anime_stats: UserStatistics,
         manga_stats: UserStatistics,
-        favourites: Favourites,
+        favourites: list[Favourites],
     ) -> None:
         self.name = name
+        self.id = id
         self.about = about
         self.avatar_url = avatar_url
         self.banner_url = banner_url
@@ -224,31 +263,11 @@ class User:
             stats["manga"]["volumesRead"],
         )
 
-        favourites: Favourites = {}  # type: ignore
-        for k, v in data["favourites"].items():
-            k: str
-            v: dict[str, Any]
-
-            nodes = v["nodes"]
-            if not nodes:
-                continue
-
-            first = v["nodes"][0]
-
-            it = iter(first)
-            name = next(it)
-            url = next(it)
-
-            name = first[name]
-            url = first[url]
-
-            if isinstance(name, dict):
-                name = name["userPreferred"]
-
-            favourites[k] = PartialNode(name, url)
+        favourites: list[Favourites] = list(map(parse_favourites, data["favourites"].items()))
 
         return cls(
             data["name"],
+            data["id"],
             data["about"],
             avatar_url,
             data["bannerImage"],
@@ -271,8 +290,12 @@ class OAuth:
         self.session = session
 
     @staticmethod
-    def _get_headers(token: str) -> dict[str, str]:
-        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"}
+    def get_headers(token: str) -> dict[str, str]:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
         return headers
 
@@ -303,7 +326,7 @@ class OAuth:
     async def get_current_user(self, token: str) -> User:
         """Gets the current user with the Access Token."""
 
-        async with self.session.post(self.URL, headers=self._get_headers(token), json={"query": VIEWER_QUERY}) as resp:
+        async with self.session.post(self.URL, headers=self.get_headers(token), json={"query": VIEWER_QUERY}) as resp:
             json = await resp.json()
             return User.from_json(json["data"]["Viewer"])
 
@@ -314,6 +337,5 @@ class OAuth:
             json = await resp.json()
             try:
                 return User.from_json(json["data"]["User"])
-
-            except:
-                raise
+            except Exception:
+                return None
