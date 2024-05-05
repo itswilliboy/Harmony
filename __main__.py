@@ -19,6 +19,7 @@ initial_extensions = [
 ]
 
 intents = Intents.all()
+
 bot = Harmony(intents=intents, initial_extensions=initial_extensions)
 
 

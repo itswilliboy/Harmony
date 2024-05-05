@@ -2,7 +2,6 @@ from types import NoneType
 
 import discord
 from discord.ext import commands
-from discord.utils import as_chunks as chunk  # type: ignore # noqa: F401
 
 from . import Context
 
