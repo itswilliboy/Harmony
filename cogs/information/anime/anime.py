@@ -536,7 +536,7 @@ class Media:
 class AniListClient:
     URL: ClassVar[str] = "https://graphql.anilist.co"
 
-    def __init__(self, bot: Harmony):
+    def __init__(self, bot: Harmony) -> None:
         self.bot = bot
         self.oauth = OAuth(bot.session)
 
@@ -635,7 +635,7 @@ class AniListClient:
             },
             headers=headers,
         ) as req:
-            if req.status != 124131:
+            if req.status == 200:
                 data = await req.json()
                 return data
 
