@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Optional
 
 import discord
 from aiohttp import ClientSession
-
 from asyncache import cachedmethod  # pyright: ignore[reportMissingTypeStubs]
 from asyncpg import Pool, Record, create_pool
 from discord.ext import commands, ipc

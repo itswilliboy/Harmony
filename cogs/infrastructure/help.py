@@ -5,13 +5,7 @@ from typing import TYPE_CHECKING, Any, Mapping, NamedTuple, Optional
 from discord import Embed, utils
 from discord.ext import commands
 
-from utils import (
-    BaseCog,
-    ErrorEmbed,
-    Paginator,
-    PrimaryEmbed,
-    get_command_signature,
-)
+from utils import BaseCog, ErrorEmbed, Paginator, PrimaryEmbed, get_command_signature
 
 if TYPE_CHECKING:
     from bot import Harmony

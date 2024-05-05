@@ -221,7 +221,7 @@ class Blacklist(BaseCog):
 
     @blacklist_.command()
     async def remove(self, ctx: Context, user: discord.User, *, flags: Flags):
-        guild: Optional[discord.Guild]  = flags and flags.guild
+        guild: Optional[discord.Guild] = flags and flags.guild
 
         item = self.bot.blacklist.get(user.id, None)
         if item is None:

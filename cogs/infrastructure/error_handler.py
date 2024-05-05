@@ -123,9 +123,7 @@ class ErrorHandler(BaseCog):
         elif isinstance(error, commands.CommandOnCooldown):
             avail = datetime.datetime.now() + datetime.timedelta(seconds=error.retry_after)
             formatted = discord.utils.format_dt(avail, "R")
-            embed = ErrorEmbed(
-                description=f"This command is on cooldown, please try again in {formatted}."
-            )
+            embed = ErrorEmbed(description=f"This command is on cooldown, please try again in {formatted}.")
 
         else:
             embed = ErrorEmbed(description="An unknown error occurred")

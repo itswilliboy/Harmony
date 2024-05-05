@@ -312,10 +312,10 @@ class AniList(BaseCog):
             or ctx.channel.is_nsfw()
         ):
             raise GenericError(
-               (
+                (
                     f"This {search_type.value.lower()} was flagged as NSFW. "
                     "Please try searching in an NSFW channel or in my DMs."
-               )
+                )
             )
 
         view = discord.utils.MISSING
@@ -449,7 +449,7 @@ class AniList(BaseCog):
     @anilist.command(aliases=["auth"])
     async def login(self, ctx: Context):
         query = "SELECT expires_in FROM anilist_codes WHERE user_id = $1"
-        expiry: Optional[datetime.datetime]  = await self.bot.pool.fetchval(
+        expiry: Optional[datetime.datetime] = await self.bot.pool.fetchval(
             query,
             ctx.author.id,
         )

@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Self
 
 import discord
-from discord.ui import TextInput
 from discord.interactions import Interaction
+from discord.ui import TextInput
 
 if TYPE_CHECKING:
     from bot import Harmony

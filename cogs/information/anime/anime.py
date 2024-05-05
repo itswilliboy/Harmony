@@ -25,6 +25,7 @@ from .types import (
 
 if TYPE_CHECKING:
     from bot import Harmony
+
     from .oauth import User
 
     Interaction = discord.Interaction[Harmony]
@@ -412,10 +413,12 @@ class Media:
         info = [
             f"↪ Native Title: **{self.title['native']}**" if self.title["native"] else "",
             f"↪ Studio: **[{self.studio['name']}]({self.studio['siteUrl']})**" if self.studio else "",
-            f"↪ Episodes: **{self.episodes}"
-            f"{f' | {(self.episodes*self.duration)/60:.1f} hours' if self.duration else ''}**"
-            if self.episodes
-            else "",
+            (
+                f"↪ Episodes: **{self.episodes}"
+                f"{f' | {(self.episodes*self.duration)/60:.1f} hours' if self.duration else ''}**"
+                if self.episodes
+                else ""
+            ),
             f"↪ Volumes: **{self.volumes}**" if self.volumes else "",
             f"↪ Chapters: **{self.chapters}**" if self.chapters else "",
             f"↪ Year: **{self.season_year}{f' | {(self.season or str()).title()}'}**" if self.season_year else "",
