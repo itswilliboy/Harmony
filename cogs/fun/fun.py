@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from random import randint
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 import discord
 from aiohttp import ClientSession
@@ -54,7 +54,7 @@ class Fun(BaseCog):
         super().__init__(bot)
 
     @staticmethod
-    async def fetch_meme(session: ClientSession) -> dict[str, Any] | None:
+    async def fetch_meme(session: ClientSession) -> Optional[dict[str, Any]]:
         is_nsfw: bool = True
         while is_nsfw:
             async with session.get("https://meme-api.com/gimme") as resp:

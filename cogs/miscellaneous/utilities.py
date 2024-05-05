@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from urllib.parse import urljoin, urlparse
 
 import discord
@@ -22,7 +22,7 @@ class Utilities(BaseCog):
 
     @commands.command(aliases=["steal", "stealemoji"])
     async def addemoji(
-        self, ctx: Context, emoji: discord.PartialEmoji | str, name: str | None = None, server_id: int | None = None
+        self, ctx: Context, emoji: discord.PartialEmoji | str, name: Optional[str] = None, server_id: Optional[int] = None
     ):
         """Add an emoji via an image URL or steal one from another server :^)"""
         if name and len(name) < 2:

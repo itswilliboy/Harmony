@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Mapping, NamedTuple
+from typing import TYPE_CHECKING, Any, Mapping, NamedTuple, Optional
 
 from discord import Embed, utils
 from discord.ext import commands
@@ -34,7 +34,7 @@ class HelpCommand(commands.HelpCommand):
         super().__init__(verify_checks=False, *args, **kwargs)
         self.verify_checks = False
 
-    async def send_bot_help(self, mapping: Mapping[BaseCog | None, list[Command]]) -> None:
+    async def send_bot_help(self, mapping: Mapping[Optional[BaseCog], list[Command]]) -> None:
         embed = PrimaryEmbed(title="Help")
         embed.description = (
             f"Use `{self.context.clean_prefix}help [command]` for more information on a command.\n"

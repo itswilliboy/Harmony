@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Optional, Self
 
 import discord
 from discord.ui import TextInput
@@ -150,10 +150,10 @@ class Paginator:
     def __init__(
         self,
         embeds: list[discord.Embed],
-        author: discord.User | discord.Member | None = None,
+        author: Optional[discord.User | discord.Member] = None,
         *,
         page: int = 1,
-        files: list[discord.File] | None = None,
+        files: Optional[list[discord.File]] = None,
         reversed: bool = False,
     ) -> None:
         self.embeds = embeds.copy()
@@ -196,7 +196,7 @@ class Paginator:
         self._current_page = embed
 
     @property
-    def current_file(self) -> discord.File | None:
+    def current_file(self) -> Optional[discord.File]:
         if self.files:
             return self.files[self.index]
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, Self, TypedDict
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, Optional, Self, TypedDict
 
 from config import ANILIST_ID, ANILIST_SECRET
 
@@ -217,9 +217,9 @@ class User:
         self,
         name: str,
         id: int,
-        about: str | None,
-        avatar_url: str | None,
-        banner_url: str | None,
+        about: Optional[str],
+        avatar_url: Optional[str],
+        banner_url: Optional[str],
         url: str,
         created_at: int,
         anime_stats: UserStatistics,
@@ -299,7 +299,7 @@ class OAuth:
 
         return headers
 
-    async def get_access_token(self, auth_code: str) -> AccessToken | None:
+    async def get_access_token(self, auth_code: str) -> Optional[AccessToken]:
         """Converts a Authorization Code to an Access Token"""
 
         json = {
@@ -330,7 +330,7 @@ class OAuth:
             json = await resp.json()
             return User.from_json(json["data"]["Viewer"])
 
-    async def get_user(self, username: str) -> User | None:
+    async def get_user(self, username: str) -> Optional[User]:
         """Gets a user by their username."""
 
         async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": {"name": username}}) as resp:

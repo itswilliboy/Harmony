@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any, Self
+from typing import Any, Optional, Self
 
 import discord
 from discord import ui
@@ -45,7 +45,7 @@ class RelationButton(ui.Button["RelationView"]):
         edge: Edge,
         text: str,
         emoji: str,
-        row: int | None = None,
+        row: Optional[int] = None,
     ) -> None:
         label = f"{text}: {edge.title}"
         if len(label) > 80:
@@ -236,7 +236,7 @@ class LoginView(ui.View):
 
     async def check_login(
         self,
-        code: str | None,
+        code: Optional[str],
     ) -> bool:
         if code is None:
             return False
@@ -357,7 +357,7 @@ class AniList(BaseCog):
         await self.search(ctx, search, MediaType.MANGA)
 
     @commands.group(invoke_without_command=True)
-    async def anilist(self, ctx: Context, username: str | None = None):
+    async def anilist(self, ctx: Context, username: Optional[str] = None):
         if username is None:
             token = await self.client.get_token(ctx.author.id)
             if token is None:
@@ -449,7 +449,7 @@ class AniList(BaseCog):
     @anilist.command(aliases=["auth"])
     async def login(self, ctx: Context):
         query = "SELECT expires_in FROM anilist_codes WHERE user_id = $1"
-        expiry: datetime.datetime | None = await self.bot.pool.fetchval(
+        expiry: Optional[datetime.datetime]  = await self.bot.pool.fetchval(
             query,
             ctx.author.id,
         )

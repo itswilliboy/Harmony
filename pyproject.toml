@@ -12,9 +12,10 @@ profile = "black"
 [tool.pyright]
 pythonVersion = "3.11"
 reportIncompatibleMethodOverride = "none"
-reportPrivateUsage = "none"
 reportIncompatibleVariableOverride = "none"
+reportPrivateUsage = "none"
 reportUnnecessaryTypeIgnoreComment = "warning"
 reportMissingTypeStubs = "warning"
+reportFunctionMemberAccess = "none"
 
 stubPath = "./typings"

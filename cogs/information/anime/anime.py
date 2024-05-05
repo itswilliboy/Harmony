@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self
 
 import discord
 
@@ -229,17 +229,17 @@ class Media:
         is_adult: bool,
         type: MediaType,
         title: MediaTitle,
-        description: str | None,
+        description: Optional[str],
         start_date: FuzzyDate,
         end_date: FuzzyDate,
-        season: MediaSeason | None,
-        season_year: int | None,
-        mean_score: int | None,
+        season: Optional[MediaSeason],
+        season_year: Optional[int],
+        mean_score: Optional[int],
         status: MediaStatus,
         cover_image: MediaCoverImage,
         banner_image: str,
         hashtags: str,
-        studio: Object | None,
+        studio: Optional[Object],
         episodes: int,
         duration: int,
         chapters: int,
@@ -247,7 +247,7 @@ class Media:
         genres: list[str],
         following_statuses: list[FollowingStatus],
         relations: list[Edge],
-        list_entry: MediaList | None,
+        list_entry: Optional[MediaList],
     ) -> None:
         self.id = id
         self.id_mal = id_mal
@@ -326,7 +326,7 @@ class Media:
         )
 
     @staticmethod
-    def _to_datetime(date: FuzzyDate) -> datetime.datetime | None:
+    def _to_datetime(date: FuzzyDate) -> Optional[datetime.datetime]:
         """Converts the date-type given by the API to a `datetime.datetime` object."""
         try:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
@@ -336,12 +336,12 @@ class Media:
             return None
 
     @property
-    def start_date(self) -> datetime.datetime | None:
+    def start_date(self) -> Optional[datetime.datetime]:
         """Returns the date when the media started."""
         return self._to_datetime(self._start_date)
 
     @property
-    def end_date(self) -> datetime.datetime | None:
+    def end_date(self) -> Optional[datetime.datetime]:
         """Returns the date when the media ended."""
         return self._to_datetime(self._end_date)
 
@@ -453,7 +453,7 @@ class Media:
         return embed
 
     @property
-    def list_embed(self) -> discord.Embed | None:
+    def list_embed(self) -> Optional[discord.Embed]:
         entry = self.list_entry
         if entry is None:
             return None
@@ -502,7 +502,7 @@ class Media:
 
         return embed
 
-    def following_status_embed(self, user: User | None = None) -> discord.Embed | None:
+    def following_status_embed(self, user: Optional[User] = None) -> Optional[discord.Embed]:
         status_ = self.following_statuses
         if not status_:
             return
@@ -541,8 +541,8 @@ class AniListClient:
         self.oauth = OAuth(bot.session)
 
     async def search_media(
-        self, search: str, *, type: MediaType, user_id: int | None = None
-    ) -> tuple[Media, User | None] | tuple[None, None]:
+        self, search: str, *, type: MediaType, user_id: Optional[int] = None
+    ) -> tuple[Media, Optional[User]] | tuple[None, None]:
         """Searchs and returns a media via a search query."""
 
         variables = {"search": search, "type": type}
@@ -572,13 +572,13 @@ class AniListClient:
                 headers=headers,
             )
 
-        user: User | None = None
+        user: Optional[User] = None
         if headers:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
         return (Media.from_json(data, following_status or {}), user)
 
-    async def fetch_media(self, id: int, *, user_id: int | None = None) -> Media | None:
+    async def fetch_media(self, id: int, *, user_id: Optional[int] = None) -> Optional[Media]:
         """Fetches and returns a media via an ID."""
 
         variables = {"id": id}
@@ -615,10 +615,10 @@ class AniListClient:
         media_id: int,
         user_id: int,
         *,
-        headers: dict[str, str] | None = None,
+        headers: Optional[dict[str, str]] = None,
         page: int = 1,
         per_page: int = 5,
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Fetches all the ratings of the followed users."""
 
         variables = {"id": media_id, "page": page, "perPage": per_page}
@@ -639,7 +639,7 @@ class AniListClient:
                 data = await req.json()
                 return data
 
-    async def get_token(self, user_id: int) -> AccessToken | None:
+    async def get_token(self, user_id: int) -> Optional[AccessToken]:
         query = "SELECT * FROM anilist_codes WHERE user_id = $1"
         resp = await self.bot.pool.fetchrow(query, user_id)
 

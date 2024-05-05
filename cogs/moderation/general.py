@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 import discord
 from discord.ext import commands
@@ -39,7 +39,7 @@ class General(BaseCog):
         super().__init__(bot)
         bot.loop.create_task(self.init_dict())
 
-        self.snipes: dict[int, dict[int, tuple[discord.Message | None, datetime.datetime | None]]]
+        self.snipes: dict[int, dict[int, tuple[Optional[discord.Message], Optional[datetime.datetime]]]]
 
     async def init_dict(self):
         await self.bot.wait_until_ready()
@@ -64,7 +64,7 @@ class General(BaseCog):
     @commands.bot_has_guild_permissions(kick_members=True)
     @commands.guild_only()
     @commands.command()
-    async def kick(self, ctx: Context, member: discord.Member, *, reason: str | None = None):
+    async def kick(self, ctx: Context, member: discord.Member, *, reason: Optional[str] = None):
         """Kicks a user."""
 
         assert isinstance(ctx.author, discord.Member)
@@ -89,7 +89,7 @@ class General(BaseCog):
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.guild_only()
     @commands.command()
-    async def ban(self, ctx: Context, member: discord.Member | int, *, reason: str | None = None):
+    async def ban(self, ctx: Context, member: discord.Member | int, *, reason: Optional[str] = None):
         """Bans a user that is either in the server or not."""
         to_ban: discord.abc.Snowflake
         if isinstance(member, int) and ctx.guild.get_member(member) is None:
@@ -120,7 +120,7 @@ class General(BaseCog):
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.guild_only()
     @commands.command()
-    async def unban(self, ctx: Context, user: discord.BanEntry | BannedMember, *, reason: str | None = None):
+    async def unban(self, ctx: Context, user: discord.BanEntry | BannedMember, *, reason: Optional[str] = None):
         """Unbans a banned user."""
         try:
             to_unban: discord.abc.Snowflake

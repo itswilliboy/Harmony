@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Optional, Self
 
 import discord
 from asyncpg import Record
@@ -20,7 +20,7 @@ class BlacklistItem:
     def __init__(self, cog: Blacklist, record: Record) -> None:
         self.cog = cog
         self._global: bool = record["global"]
-        self._guild_ids: list[int] | None = record.get("guild_ids")
+        self._guild_ids: Optional[list[int]] = record.get("guild_ids")
         self._user_id: int = record["user_id"]
         self._reason: str = record["reason"]
 
@@ -112,8 +112,8 @@ class GuildBlacklistItem:
 
 
 class Flags(commands.FlagConverter, prefix="--", delimiter=" "):
-    guild: discord.Guild | None = None
-    reason: str | None = None
+    guild: Optional[discord.Guild] = None
+    reason: Optional[str] = None
 
 
 class Blacklist(BaseCog):
@@ -138,7 +138,7 @@ class Blacklist(BaseCog):
             self.bot.guild_blacklist[record["guild_id"]] = GuildBlacklistItem(record)
 
     async def add_blacklist(
-        self, user: discord.User, *, guild: discord.Guild | None = None, reason: str | None = None
+        self, user: discord.User, *, guild: Optional[discord.Guild] = None, reason: Optional[str] = None
     ) -> BlacklistItem:
         """Create a blacklist for a user, optionally in a specific guild."""
         if guild:
@@ -200,8 +200,8 @@ class Blacklist(BaseCog):
 
     @blacklist_.command()
     async def add(self, ctx: Context, user: discord.User, *, flags: Flags):
-        guild: discord.Guild | None = flags and flags.guild
-        reason: str | None = flags and flags.reason
+        guild: Optional[discord.Guild] = flags and flags.guild
+        reason: Optional[str] = flags and flags.reason
 
         if item := self.bot.blacklist.get(user.id):
             if item.is_global:
@@ -221,7 +221,7 @@ class Blacklist(BaseCog):
 
     @blacklist_.command()
     async def remove(self, ctx: Context, user: discord.User, *, flags: Flags):
-        guild: discord.Guild | None = flags and flags.guild
+        guild: Optional[discord.Guild]  = flags and flags.guild
 
         item = self.bot.blacklist.get(user.id, None)
         if item is None:

@@ -56,16 +56,16 @@ class MediaTitle(TypedDict):
     """The official titles of the media in various languages."""
 
     romaji: str
-    english: str | None
-    native: str | None
+    english: Optional[str]
+    native: Optional[str]
 
 
 class FuzzyDate(TypedDict):
     """Construct of dates provided by the API."""
 
-    year: int | None
-    month: int | None
-    day: int | None
+    year: Optional[int]
+    month: Optional[int]
+    day: Optional[int]
 
 
 class MediaCoverImage(TypedDict):
@@ -89,8 +89,8 @@ class Object(TypedDict):
 
 
 class PartialMedia(TypedDict):
-    episodes: int | None
-    chapters: int | None
+    episodes: Optional[int]
+    chapters: Optional[int]
 
 
 class FollowingStatus(TypedDict):

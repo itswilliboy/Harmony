@@ -4,7 +4,7 @@ import logging
 import re
 import traceback
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 import discord
 from aiohttp import ClientSession
@@ -88,7 +88,7 @@ class Harmony(commands.Bot):
         logging.getLogger("discord.gateway").setLevel(logging.WARNING)
 
         credentials: dict[str, Any] = POSTGRES_CREDENTIALS
-        pool: Pool[Record] | None = await create_pool(**credentials)
+        pool: Optional[Pool[Record]] = await create_pool(**credentials)
         if not pool or pool and pool._closed:
             raise RuntimeError("Pool is closed")
 

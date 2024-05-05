@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from discord.ext import commands
 from jishaku.codeblocks import codeblock_converter as CodeblockConverter
@@ -21,7 +21,7 @@ class General(BaseCog):
         await ctx.invoke(self.bot.get_command("jishaku python"), argument=code)  # type: ignore
 
     @commands.command(aliases=["r"])
-    async def reload(self, ctx: Context, extension: str | None = None):
+    async def reload(self, ctx: Context, extension: Optional[str] = None):
         """Reloads one or more extensions."""
         ext = None
         try:
