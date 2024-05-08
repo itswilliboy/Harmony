@@ -10,7 +10,7 @@ import discord
 from aiohttp import ClientSession
 from asyncache import cachedmethod  # pyright: ignore[reportMissingTypeStubs]
 from asyncpg import Pool, Record, create_pool
-from discord.ext import commands, ipc
+from discord.ext import commands
 from discord.ext.commands.core import (  # pyright: ignore[reportMissingTypeStubs]
     _CaseInsensitiveDict,
 )
@@ -27,7 +27,6 @@ class Harmony(commands.Bot):
 
     session: ClientSession
     log: logging.Logger
-    ipc: ipc.Server  # pyright: ignore[reportPrivateImportUsage]
 
     if TYPE_CHECKING:
         pool: Pool[Record]
