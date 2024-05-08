@@ -135,7 +135,7 @@ class General(BaseCog):
             await ctx.send(embed=embed)
 
         except discord.HTTPException:
-            GenericError("Something went wrong when trying to unban that user.")
+            raise GenericError("Something went wrong when trying to unban that user.")
 
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_guild_permissions(manage_messages=True)
