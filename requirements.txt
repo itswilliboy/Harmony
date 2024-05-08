@@ -4,6 +4,8 @@ asyncpg-stubs
 jishaku
 psutil
 asyncache
+Pillow
+types-Pillow
 
 langcodes[data]
 cutlet
