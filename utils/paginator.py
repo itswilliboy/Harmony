@@ -170,11 +170,7 @@ class PageView(ui.View):
         await interaction.response.send_modal(PageModal(self.paginator, 1, self.paginator.length))
 
     @discord.ui.button(label="2", style=discord.ButtonStyle.blurple)
-    async def next(
-        self,
-        interaction: Interaction,
-        _,
-    ):
+    async def next(self, interaction: Interaction, _):
         self.paginator.page += 1
         await self.update_message(interaction)
 
