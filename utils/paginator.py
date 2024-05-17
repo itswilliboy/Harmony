@@ -141,7 +141,7 @@ class PageView(ui.View):
             self.first.disabled = True
             self.prev.disabled = True
 
-        if p.page + 1 >= p.length:
+        if p.page + 1 >= len(p):
             self.last.disabled = True
             self.next.disabled = True
 
@@ -150,7 +150,7 @@ class PageView(ui.View):
         if p.page > 0:
             self.prev.label = str(p.page)
 
-        if p.page + 1 < p.length:
+        if p.page + 1 < len(p):
             self.next.label = str(p.page + 2)
 
         await p.update(interaction)
@@ -167,7 +167,7 @@ class PageView(ui.View):
 
     @discord.ui.button(label="1", style=discord.ButtonStyle.green)
     async def curr(self, interaction: Interaction, _):
-        await interaction.response.send_modal(PageModal(self.paginator, 1, self.paginator.length))
+        await interaction.response.send_modal(PageModal(self.paginator, 1, len(self.paginator)))
 
     @discord.ui.button(label="2", style=discord.ButtonStyle.blurple)
     async def next(self, interaction: Interaction, _):
@@ -176,5 +176,10 @@ class PageView(ui.View):
 
     @discord.ui.button(label=">>")
     async def last(self, interaction: Interaction, _):
-        self.paginator.page = self.paginator.length - 1
+        self.paginator.page = len(self.paginator) - 1
         await self.update_message(interaction)
+
+    @discord.ui.button(label="Quit", style=discord.ButtonStyle.red)
+    async def quit(self, interaction: Interaction, _):
+        await interaction.response.edit_message()
+        await interaction.delete_original_response()
