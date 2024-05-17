@@ -228,7 +228,7 @@ class General(BaseCog):
         embed.add_field(name="Version Information", value=dedent(value), inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(usage="<text or message reply>")
+    @commands.command()
     async def translate(
         self,
         ctx: Context,

@@ -21,12 +21,12 @@ class BaseCogMeta(commands.CogMeta):
         if hidden:
             kwargs["command_attrs"] = dict(hidden=True)
 
-        inst = super().__new__(cls, *args, **kwargs)  # type: ignore
+        inst: Any = super().__new__(cls, *args, **kwargs)
 
         inst.hidden = hidden
         inst.owner_only = owner_only
 
-        return inst  # type: ignore
+        return inst
 
 
 class BaseCog(commands.Cog, metaclass=BaseCogMeta):

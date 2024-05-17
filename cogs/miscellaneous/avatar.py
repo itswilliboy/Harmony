@@ -7,6 +7,7 @@ import discord
 from discord.ext import commands
 
 from utils import BaseCog, GenericError, Paginator, PrimaryEmbed
+from utils.paginator import Page
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -45,8 +46,7 @@ class Avatar(BaseCog):
         if not resp:
             raise GenericError(f"There are no avatars stored for {member.mention}.")
 
-        embeds: list[discord.Embed] = []
-        files: list[discord.File] = []
+        pages: list[Page] = []
         for record in resp:
             embed = PrimaryEmbed(title=f"Avatar History for {member}", timestamp=record["timestamp"])
             embed.set_footer(text=f"ID: {record['id']}")
@@ -54,7 +54,6 @@ class Avatar(BaseCog):
             file = discord.File(BytesIO(record["image_data"]), filename="avatar.png")
             embed.set_image(url="attachment://avatar.png")
 
-            embeds.append(embed)
-            files.append(file)
+            pages.append(Page(embed=embed, file=file))
 
-        await Paginator(embeds, ctx.author, files=files, reversed=True).start(ctx)
+        await Paginator(pages).start(ctx)
