@@ -39,7 +39,7 @@ class PageModal(ui.Modal, title="Hop to page"):
 
     async def on_submit(self, interaction: Interaction) -> None:
         val = self.page.value
-        if not val.isnumeric() or int(val) not in range(self.min, self.max):
+        if not val.isnumeric() or int(val) not in range(self.min, self.max + 1):
             return await interaction.response.send_message(
                 f"The page number needs to be between {self.min} and {self.max}, not {val}.", ephemeral=True
             )
