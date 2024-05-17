@@ -17,7 +17,7 @@ from langcodes import Language
 from PIL import Image
 from psutil import Process, cpu_percent, virtual_memory
 
-from config import JEYY_API
+from config import JEYY_API, OWNER_IDS
 from utils import BaseCog, GenericError, PrimaryEmbed, argument_or_reference
 
 if TYPE_CHECKING:
@@ -185,14 +185,13 @@ class General(BaseCog):
     @commands.command(aliases=["bot", "about", "abt"])
     async def botinfo(self, ctx: Context):
         """Displays information about the bot."""
-        app_info = self.bot.application
 
         embed = PrimaryEmbed(title="Bot Information")
         embed.set_footer(text=f"Check out `{ctx.clean_prefix}ping` for more latency information.")
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
-        if app := app_info:
-            owner = app.team and app.team.owner or app.owner
-            embed.set_author(name=f"@{owner.name}", icon_url=app.owner.display_avatar.url)
+
+        if user := self.bot.get_user(OWNER_IDS[0]):
+            embed.set_author(name=f"@{user.name}", icon_url={user.display_avatar.url})
 
         embed.add_field(name="Started", value=discord.utils.format_dt(self.bot.started_at, "R"))
         embed.add_field(name="Servers", value=len(self.bot.guilds))
