@@ -122,6 +122,8 @@ class PageView(ui.View):
         self.user = user
         self.paginator = paginator
 
+        self.last.label = f"{len(paginator)}"
+
     async def interaction_check(self, interaction: Interaction) -> bool:
         if self.user is not None:
             return self.user == interaction.user
@@ -136,6 +138,7 @@ class PageView(ui.View):
         self.last.disabled = False
 
         self.prev.label = self.next.label = "..."
+        self.first.label = self.last.label = "..."
 
         if p.page <= 0:
             self.first.disabled = True
@@ -148,14 +151,16 @@ class PageView(ui.View):
         self.curr.label = str(p.page + 1)
 
         if p.page > 0:
+            self.first.label = "1"
             self.prev.label = str(p.page)
 
         if p.page + 1 < len(p):
+            self.last.label = f"{len(self.paginator)}"
             self.next.label = str(p.page + 2)
 
         await p.update(interaction)
 
-    @discord.ui.button(disabled=True, label="<<")
+    @discord.ui.button(disabled=True, label="...")
     async def first(self, interaction: Interaction, _):
         self.paginator.page = 0
         await self.update_message(interaction)
