@@ -190,8 +190,9 @@ class General(BaseCog):
         embed = PrimaryEmbed(title="Bot Information")
         embed.set_footer(text=f"Check out `{ctx.clean_prefix}ping` for more latency information.")
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
-        if app_info:
-            embed.set_author(name=f"@{app_info.owner.name}", icon_url=app_info.owner.display_avatar.url)
+        if app := app_info:
+            owner = app.team and app.team.owner or app.owner
+            embed.set_author(name=f"@{owner.name}", icon_url=app.owner.display_avatar.url)
 
         embed.add_field(name="Started", value=discord.utils.format_dt(self.bot.started_at, "R"))
         embed.add_field(name="Servers", value=len(self.bot.guilds))
