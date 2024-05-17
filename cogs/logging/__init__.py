@@ -28,10 +28,13 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
-class Events(Logging, name="Logging ", hidden=True):  # Extra blankspace to make help command catch the 'logging' group rather than this cog
+class Events(
+    Logging, name="Logging ", hidden=True
+):  # Extra blankspace to make help command catch the 'logging' group rather than this cog
     @staticmethod
     def is_setup(func: Callable[Concatenate[Any, P], Awaitable[R]]):
         """A decorator to check if a guild has set-up logging."""
+
         @wraps(func)
         async def decorator(self: Self, *args: P.args, **kwargs: P.kwargs) -> None:
             if hasattr(args[0], "guild"):

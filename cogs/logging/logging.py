@@ -100,7 +100,11 @@ class Logging(BaseCog):
             raise GenericError(f"This server is not set-up, use `{cp}logging setup` to set-up the server.")
 
         await conf.set_enabled(not conf.enabled)
-        await ctx.send(embed=SuccessEmbed(description=f"Successfully **{'enabled' if conf.enabled else 'disabled'}** logging in this server."))
+        await ctx.send(
+            embed=SuccessEmbed(
+                description=f"Successfully **{'enabled' if conf.enabled else 'disabled'}** logging in this server."
+            )
+        )
 
     @logging.command()
     async def test(self, ctx: Context, *, content: str):

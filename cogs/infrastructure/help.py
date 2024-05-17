@@ -1,11 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Mapping, NamedTuple, cast, Optional
+from typing import TYPE_CHECKING, Any, Mapping, NamedTuple, Optional, cast
 
 from discord import Embed, utils
 from discord.ext import commands
 
-from utils import BaseCog, ErrorEmbed, Paginator, PrimaryEmbed, get_command_signature, BaseCogMeta
+from utils import (
+    BaseCog,
+    BaseCogMeta,
+    ErrorEmbed,
+    Paginator,
+    PrimaryEmbed,
+    get_command_signature,
+)
 
 if TYPE_CHECKING:
     from bot import Harmony
