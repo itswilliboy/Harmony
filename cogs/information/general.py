@@ -191,7 +191,7 @@ class General(BaseCog):
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
 
         if user := self.bot.get_user(OWNER_IDS[0]):
-            embed.set_author(name=f"@{user.name}", icon_url={user.display_avatar.url})
+            embed.set_author(name=f"@{user.name}", icon_url=user.display_avatar.url)
 
         embed.add_field(name="Started", value=discord.utils.format_dt(self.bot.started_at, "R"))
         embed.add_field(name="Servers", value=len(self.bot.guilds))
