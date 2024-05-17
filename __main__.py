@@ -19,7 +19,9 @@ initial_extensions = [
     "cogs.logging",
 ]
 
-intents = Intents.all()
+intents = Intents.default()
+intents.message_content = True
+intents.members = True
 
 bot = Harmony(intents=intents, initial_extensions=initial_extensions)
 
