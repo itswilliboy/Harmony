@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Awaitable, Optional, Self
+from typing import Any, Optional, Self
 
 import discord
 from asyncpg import Record
@@ -56,12 +56,12 @@ class Logging(BaseCog):
         if res is not None:
             return LoggingConfig.from_record(self, res)
 
-    async def send(self, content: str = "", *, embed: Optional[discord.Embed] = None) -> dict[str, Any]:
+    def send(self, content: str = "", *, embed: Optional[discord.Embed] = None) -> dict[str, Any]:
         """Returns a `dict` of arguments to use whilst sending a logging message."""
 
         return {"content": content, "embed": embed}
 
-    async def log(self, guild: discord.abc.Snowflake, send: Awaitable[dict[str, Any]]) -> None:
+    async def log(self, guild: discord.abc.Snowflake, args: dict[str, Any]) -> None:
         """Logs to a guild's logging channel, if found."""
 
         config = await self.get_guild_config(guild)
@@ -73,7 +73,7 @@ class Logging(BaseCog):
             channel = guild_.get_channel(config.channel_id)
             if channel is not None:
                 assert isinstance(channel, discord.TextChannel)
-                await channel.send(**await send)
+                await channel.send(**args)
 
     @commands.group(invoke_without_command=True)
     async def logging(self, ctx: Context):
