@@ -124,7 +124,7 @@ class General(BaseCog):
     @commands.command()
     async def invite(self, ctx: Context):
         """Invite the bot."""
-        permissions = discord.Permissions(1377622682822)
+        permissions = discord.Permissions(10170482945222)
         invite = discord.utils.oauth_url(
             client_id=self.bot.user.id,
             permissions=permissions,
