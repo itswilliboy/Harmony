@@ -15,7 +15,7 @@ from discord.ext.commands.core import (  # pyright: ignore[reportMissingTypeStub
     _CaseInsensitiveDict,
 )
 
-from config import DEFAULT_PREFIX, POSTGRES_CREDENTIALS
+from config import DEFAULT_PREFIX, OWNER_IDS, POSTGRES_CREDENTIALS
 from utils import Context
 
 if TYPE_CHECKING:
@@ -116,6 +116,11 @@ class Harmony(commands.Bot):
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if before.content != after.content:
             return await self.process_commands(after)
+
+    async def is_owner(self, user: discord.abc.User) -> bool:
+        if user.id in OWNER_IDS:
+            return True
+        return await super().is_owner(user)
 
     async def close(self) -> None:
         await self.pool.close()
