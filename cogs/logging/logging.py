@@ -6,7 +6,7 @@ import discord
 from asyncpg import Record
 from discord.ext import commands
 
-from utils import BaseCog, Context, GenericError
+from utils import BaseCog, Context, GenericError, SuccessEmbed
 
 
 class LoggingConfig:
@@ -21,6 +21,8 @@ class LoggingConfig:
         return cls(cog, record["guild_id"], record["enabled"], record["channel_id"])
 
     async def set_enabled(self, enabled: bool) -> None:
+        """Sets the enabled-state of the logging config."""
+
         query = """
             UPDATE logging_config
                 SET enabled = $1
@@ -35,7 +37,10 @@ class LoggingConfig:
 
 
 class Logging(BaseCog):
+
     async def create_guild_config(self, guild: discord.abc.Snowflake, channel: discord.TextChannel) -> LoggingConfig:
+        """Creates a new logging config for a guild."""
+
         query = "INSERT INTO logging_config VALUES ($1, $2, $3) RETURNING *"
         res = await self.bot.pool.fetchrow(query, guild.id, True, channel.id)
 
@@ -43,6 +48,8 @@ class Logging(BaseCog):
         return LoggingConfig.from_record(self, res)
 
     async def get_guild_config(self, guild: discord.abc.Snowflake) -> Optional[LoggingConfig]:
+        """Returns the guild's logging config, if any."""
+
         query = "SELECT * FROM logging_config WHERE guild_id = $1"
         res = await self.bot.pool.fetchrow(query, guild.id)
 
@@ -50,9 +57,13 @@ class Logging(BaseCog):
             return LoggingConfig.from_record(self, res)
 
     async def send(self, content: str = "", *, embed: Optional[discord.Embed] = None) -> dict[str, Any]:
+        """Returns a `dict` of arguments to use whilst sending a logging message."""
+
         return {"content": content, "embed": embed}
 
-    async def log(self, guild: discord.abc.Snowflake, send: Awaitable[Any]) -> None:
+    async def log(self, guild: discord.abc.Snowflake, send: Awaitable[dict[str, Any]]) -> None:
+        """Logs to a guild's logging channel, if found."""
+
         config = await self.get_guild_config(guild)
 
         if config is not None:
@@ -83,7 +94,13 @@ class Logging(BaseCog):
 
     @logging.command()
     async def toggle(self, ctx: Context):
-        pass
+        conf = await self.get_guild_config(ctx.guild)
+        if conf is None:
+            cp = ctx.clean_prefix
+            raise GenericError(f"This server is not set-up, use `{cp}logging setup` to set-up the server.")
+
+        await conf.set_enabled(not conf.enabled)
+        await ctx.send(embed=SuccessEmbed(description=f"Successfully **{'enabled' if conf.enabled else 'disabled'}** logging in this server."))
 
     @logging.command()
     async def test(self, ctx: Context, *, content: str):

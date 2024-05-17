@@ -28,7 +28,7 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
-class Events(Logging, name="Logging"):
+class Events(Logging, name="Logging ", hidden=True):  # Extra blankspace to make help command catch the 'logging' group rather than this cog
     @staticmethod
     def is_setup(func: Callable[Concatenate[Any, P], Awaitable[R]]):
         """A decorator to check if a guild has set-up logging."""
@@ -37,9 +37,10 @@ class Events(Logging, name="Logging"):
             if hasattr(args[0], "guild"):
                 first = cast(Any, args[0])
 
-                config = await self.get_guild_config(first.guild)
-                if config:
-                    await func(self, *args, **kwargs)
+                if first.guild:
+                    config = await self.get_guild_config(first.guild)
+                    if config and config.enabled:
+                        await func(self, *args, **kwargs)
 
         return decorator
 
@@ -59,7 +60,7 @@ class Events(Logging, name="Logging"):
 
         assert isinstance(message.channel, discord.TextChannel)
         embed.description = (
-            f"Channel: {message.channel.mention}\n" f"Content:\n`{discord.utils.remove_markdown(message.content)}`"
+            f"Channel: {message.channel.mention}\nContent: `{discord.utils.remove_markdown(message.content)}`"
         )
         embed.timestamp = discord.utils.utcnow()
 
@@ -73,8 +74,25 @@ class Events(Logging, name="Logging"):
         if before.author.bot:
             return
 
-        if not before.content or not after.content:
+        if not before.content and not after.content:
             return
+
+        if before.content == after.content:
+            return
+
+        embed = discord.Embed(title="Message edited", colour=discord.Colour.yellow())
+        embed.set_author(name=before.author.name, icon_url=before.author.display_avatar.url)
+
+        assert isinstance(before.channel, discord.TextChannel)
+        embed.description = (
+            f"Channel: {before.channel.mention}\n"
+            f"Message: {before.jump_url}\n\n"
+            f"Before: `{discord.utils.remove_markdown(before.content)}`\n"
+            f"After: `{discord.utils.remove_markdown(after.content)}`"
+        )
+        embed.timestamp = discord.utils.utcnow()
+
+        await self.log(before.guild, self.send(embed=embed))
 
 
 async def setup(bot: Harmony) -> None:
