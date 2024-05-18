@@ -68,14 +68,15 @@ class General(BaseCog):
         embed.add_field(name="Username", value=str(member))
         embed.add_field(name=f"User ID {'<:bot:1110964599349579926>' if member.bot else ''}", value=member.id, inline=False)
 
-        statuses = {
+        # This doesn't work without the presence intent
+        """ statuses = {
             discord.Status.online: "<:online:884494020443779122> Online",
             discord.Status.idle: "<:idle:884494020049518623> Idle",
             discord.Status.dnd: "<:dnd:884494020397658152> Do Not Disturb",
             discord.Status.offline: "<:offline:884494020401844325> Offline",
         }
 
-        embed.add_field(name="Status", value=statuses.get(member.status, "N/A"), inline=False)
+        embed.add_field(name="Status", value=statuses.get(member.status, "N/A"), inline=False) """
         embed.add_field(name="Activity", value=activity, inline=False)
         embed.add_field(name="Created Account", value=created_at)
 
@@ -280,7 +281,7 @@ class General(BaseCog):
         buffer.seek(0)
         return discord.Colour.from_rgb(*colour)
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def spotify(self, ctx: Context, user: discord.Member = commands.Author):
         """Shows the current Spotify status of a user."""
 
