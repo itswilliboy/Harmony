@@ -1,17 +1,64 @@
 from __future__ import annotations
 
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Self, Sequence
 
 import discord
+from asyncpg import Pool, Record
 from discord.ext import commands
 
-from utils import BaseCog, GenericError, Paginator, PrimaryEmbed
+from utils import BaseCog, DynamicPaginator, GenericError, PrimaryEmbed
 from utils.paginator import Page
 
 if TYPE_CHECKING:
     from bot import Harmony
     from utils import Context
+
+
+class AvatarPage(Page):
+    bytes: BytesIO
+
+    @classmethod
+    def from_record(cls, record: Record, user: discord.abc.User) -> Self:
+        embed = PrimaryEmbed(title=f"Avatar History for {user}", timestamp=record["timestamp"])
+        embed.set_footer(text=f"ID: {record['id']}")
+
+        bytes = BytesIO(record["image_data"])
+        embed.set_image(url="attachment://av.png")
+
+        inst = cls(embed=embed)
+        inst.bytes = bytes
+
+        return inst
+
+    @property
+    def file(self) -> discord.File:
+        return discord.File(self.bytes, filename="av.png")
+
+    @file.setter
+    def file(self, *_): ...
+
+class AvatarPaginator(DynamicPaginator[Page]):
+    user: discord.abc.User
+
+    @classmethod
+    async def populate(cls, pool: Pool[Record], count: int, user: discord.abc.User, *args: Any, **kwargs: Any) -> Self:
+        inst = cls(*args, **kwargs)
+        inst.user = user
+        inst = await super().populate(pool, count, user=user, *args, **kwargs)
+        return inst
+
+    async def fetch_chunk(self, chunk: int) -> Sequence[Page]:
+        query = """
+            SELECT * FROM avatar_history
+                WHERE user_id = $1
+            ORDER BY
+                timestamp ASC
+            LIMIT $2 OFFSET $3
+        """
+        res = await self.pool.fetch(query, self.kwargs["user"].id, self.PER_CHUNK, chunk)
+
+        return [AvatarPage.from_record(rec, self.kwargs["user"]) for rec in res]
 
 
 class Avatar(BaseCog):
@@ -35,25 +82,10 @@ class Avatar(BaseCog):
 
     @commands.command(aliases=["ah", "history", "pfps"])
     async def avatar_history(self, ctx: Context, member: discord.Member = commands.Author):
-        await ctx.typing()
-        query = """
-            SELECT id, image_data, timestamp FROM avatar_history
-            WHERE user_id = $1
-            ORDER BY timestamp
-        """
-        resp = await ctx.pool.fetch(query, member.id)
+        count = await ctx.pool.fetchval("SELECT COUNT(*) FROM avatar_history WHERE user_id = $1", member.id)
 
-        if not resp:
+        if not count:
             raise GenericError(f"There are no avatars stored for {member.mention}.")
 
-        pages: list[Page] = []
-        for record in resp:
-            embed = PrimaryEmbed(title=f"Avatar History for {member}", timestamp=record["timestamp"])
-            embed.set_footer(text=f"ID: {record['id']}")
-
-            file = discord.File(BytesIO(record["image_data"]), filename="avatar.png")
-            embed.set_image(url="attachment://avatar.png")
-
-            pages.append(Page(embed=embed, file=file))
-
-        await Paginator(pages).start(ctx)
+        async with ctx.typing():
+            await (await AvatarPaginator.populate(ctx.pool, count, member)).start(ctx)
