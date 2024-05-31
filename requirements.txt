@@ -6,6 +6,7 @@ psutil
 asyncache
 Pillow
 types-Pillow
+pyjwt
 
 langcodes[data]
 cutlet

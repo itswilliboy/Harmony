@@ -6,6 +6,7 @@ from typing import Any, Optional, Self
 import discord
 from discord import ui
 from discord.ext import commands
+from jwt import decode
 
 from bot import Harmony
 from config import ANILIST_URL
@@ -21,6 +22,21 @@ from utils import (
 
 from .anime import AniListClient, Media
 from .types import Edge, MediaRelation, MediaType
+
+
+class AniUser(commands.UserConverter):
+    async def convert(self, ctx: Context, argument: str) -> Optional[str | int]:
+        try:
+            user = await super().convert(ctx, argument)
+
+            if jwt := await ctx.pool.fetchval("SELECT access_token FROM anilist_codes WHERE user_id = $1", user.id):
+                uid = decode(jwt, options={"verify_signature": False})["sub"]
+                return int(uid)
+
+        except commands.BadArgument:
+            pass
+
+        return argument
 
 
 async def callback(cog: AniList, id: int, interaction: discord.Interaction):
@@ -357,8 +373,10 @@ class AniList(BaseCog):
         await self.search(ctx, search, MediaType.MANGA)
 
     @commands.group(invoke_without_command=True)
-    async def anilist(self, ctx: Context, username: Optional[str] = None):
-        if username is None:
+    async def anilist(self, ctx: Context, user: Optional[str | int] = commands.parameter(converter=AniUser, default=None)):
+        print(user, type(user))
+
+        if user is None:
             token = await self.client.get_token(ctx.author.id)
             if token is None:
                 cp = ctx.clean_prefix
@@ -370,30 +388,32 @@ class AniList(BaseCog):
                     f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login.",
                 )
 
-            user = await self.client.oauth.get_current_user(token.token)
+            user_ = await self.client.oauth.get_current_user(token.token)
         else:
-            user = await self.client.oauth.get_user(username)
+            if isinstance(user, str) and user.isnumeric():
+                user = int(user)
+            user_ = await self.client.oauth.get_user(user)
 
-            if user is None:
+            if user_ is None:
                 raise GenericError("Couldn't find any user with that name.")
 
         embed = PrimaryEmbed(
-            title=user.name,
-            url=user.url,
-            description=user.about + "\n\u200b" if user.about else "",
+            title=user_.name,
+            url=user_.url,
+            description=user_.about + "\n\u200b" if user_.about else "",
         )
 
         embed.set_footer(text="Account Created")
-        embed.timestamp = user.created_at
+        embed.timestamp = user_.created_at
 
-        if url := user.banner_url:
+        if url := user_.banner_url:
             embed.set_image(url=url)
 
-        if url := user.avatar_url:
+        if url := user_.avatar_url:
             embed.set_thumbnail(url=url)
 
-        if user.anime_stats.episodes_watched:
-            s = user.anime_stats
+        if user_.anime_stats.episodes_watched:
+            s = user_.anime_stats
             embed.add_field(
                 name="Anime Statistics",
                 value=(
@@ -411,8 +431,8 @@ class AniList(BaseCog):
                     inline=False,
                 )
 
-        if user.manga_stats.chapters_read:
-            s = user.manga_stats
+        if user_.manga_stats.chapters_read:
+            s = user_.manga_stats
             embed.add_field(
                 name="Manga Statistics",
                 value=(
@@ -431,7 +451,7 @@ class AniList(BaseCog):
                 )
 
         values: list[str] = []
-        for node in user.favourites:
+        for node in user_.favourites:
             name = node["_type"].title()
 
             if name.endswith("s"):
