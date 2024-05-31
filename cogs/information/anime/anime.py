@@ -432,7 +432,7 @@ class Media:
 
         info = [i for i in info if i != ""]
 
-        embed.add_field(name="Basic Information", value="\n".join(info))
+        embed.add_field(name="Information", value="\n".join(info))
 
         if self.genres:
             embed.add_field(
@@ -461,6 +461,7 @@ class Media:
         if entry is None:
             return None
 
+        # Don't wanna expose their secrets :^)
         if entry["private"] is True:
             return None
 

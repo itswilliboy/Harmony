@@ -157,6 +157,76 @@ USER_QUERY = """
     }
 """
 
+USER_ID_QUERY = """
+    query ($id: Int) {
+        User (id: $id) {
+            name,
+            id,
+            about,
+            avatar {
+                large
+            },
+            bannerImage,
+            siteUrl,
+            createdAt,
+            statistics {
+                anime {
+                    count,
+                    meanScore,
+                    minutesWatched,
+                    episodesWatched
+                }
+                manga {
+                    count,
+                    meanScore,
+                    chaptersRead,
+                    volumesRead
+                }
+            }
+            favourites {
+                anime {
+                    nodes {
+                        title {
+                            userPreferred
+                        },
+                        siteUrl
+                    }
+                }
+                manga {
+                    nodes {
+                        title {
+                            userPreferred
+                        },
+                        siteUrl
+                    }
+                }
+                characters {
+                    nodes {
+                        name {
+                            userPreferred
+                        },
+                        siteUrl
+                    }
+                }
+                staff {
+                    nodes {
+                        name {
+                            userPreferred
+                        },
+                        siteUrl
+                    }
+                }
+                studios {
+                    nodes {
+                        name,
+                        siteUrl
+                    }
+                }
+            }
+        }
+    }
+"""
+
 
 def parse_dict_or_str(
     item: str | dict[str, str],
@@ -339,10 +409,18 @@ class OAuth:
             json = await resp.json()
             return User.from_json(json["data"]["Viewer"])
 
-    async def get_user(self, username: str) -> Optional[User]:
-        """Gets a user by their username."""
+    async def get_user(self, user: str | int) -> Optional[User]:
+        """Gets a user by their username or AniList iD."""
 
-        async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": {"name": username}}) as resp:
+        if isinstance(user, str):
+            variables = {"name": user}
+            query = USER_QUERY
+
+        else:
+            variables = {"id": user}
+            query = USER_ID_QUERY
+
+        async with self.session.post(self.URL, json={"query": query, "variables": variables}) as resp:
             json = await resp.json()
             try:
                 return User.from_json(json["data"]["User"])
