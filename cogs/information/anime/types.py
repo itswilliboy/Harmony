@@ -17,6 +17,21 @@ class MediaStatus(StrEnum):
     HIATUS = "HIATUS"
 
 
+class MediaFormat(StrEnum):
+    """The publishing format of the media."""
+
+    TV = "TV"
+    TV_SHORT = "TV_SHORT"
+    MOVIE = "MOVIE"
+    SPECIAL = "SPECIAL"
+    OVA = "OVA"
+    ONA = "ONA"
+    MUSIC = "MUSIC"
+    MANGA = "MANGA"
+    NOVEL = "NOVEL"
+    ONE_SHOT = "ONE_SHOT"
+
+
 class MediaRelation(StrEnum):
     """The type of relation."""
 
@@ -50,6 +65,14 @@ class MediaListStatus(StrEnum):
     DROPPED = "DROPPED"
     PAUSED = "PAUSED"
     REPEATING = "REPEATING"
+
+
+class FavouriteTypes(StrEnum):
+    ANIME = "anime"
+    MANGA = "manga"
+    CHARACTERS = "characters"
+    STAFF = "staff"
+    STUDIOS = "studios"
 
 
 class MediaTitle(TypedDict):

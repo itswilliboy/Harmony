@@ -267,11 +267,15 @@ class Blacklist(BaseCog):
         if not ctx.invoked_subcommand:
             raise GenericError("Invoke a valid subcommand.")
 
+    @staticmethod
+    def guild_id(ctx: Context) -> int:
+        return ctx.guild.id
+
     @guild_blacklist_.command(name="add")
     async def g_add(
         self,
         ctx: Context,
-        guild_id: int = commands.param(default=lambda ctx: ctx.guild.id),  # type: ignore
+        guild_id: int = commands.param(default=guild_id),
         *,
         reason: str = "No reason given.",
     ):

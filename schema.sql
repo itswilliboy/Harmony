@@ -55,4 +55,8 @@ CREATE TABLE IF NOT EXISTS logging_events(
     message_delete BOOLEAN DEFAULT false
 );
 
+CREATE TABLE IF NOT EXISTS inline_search_optout(
+    user_id BIGINT
+);
+
 COMMIT;
