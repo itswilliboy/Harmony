@@ -38,6 +38,7 @@ class AvatarPage(Page):
     @file.setter
     def file(self, *_): ...
 
+
 class AvatarPaginator(DynamicPaginator[Page]):
     user: discord.abc.User
 

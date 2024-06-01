@@ -67,7 +67,9 @@ class Delete(discord.ui.DynamicItem[discord.ui.Button[discord.ui.View]], templat
         return True
 
     @classmethod
-    async def from_custom_id(cls, interaction: discord.Interaction[Harmony], item: discord.ui.Item[Any], match: re.Match[str]) -> Self:
+    async def from_custom_id(
+        cls, interaction: discord.Interaction[Harmony], item: discord.ui.Item[Any], match: re.Match[str]
+    ) -> Self:
         return cls(int(match.group("USER_ID")))
 
     @classmethod
