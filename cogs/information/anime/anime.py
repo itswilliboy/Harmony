@@ -56,6 +56,10 @@ MINIFIED_SEARCH_QUERY = """
             seasonYear
             meanScore
             format
+            coverImage {
+                extraLarge
+                color
+            }
         }
     }
 """
@@ -262,6 +266,7 @@ class MinifiedMedia:
         volumes: int,
         genres: list[str],
         format: MediaFormat,
+        cover: MediaCoverImage,
     ) -> None:
         self.id = id
         self.id_mal = id_mal
@@ -277,6 +282,7 @@ class MinifiedMedia:
         self.volumes = volumes
         self.genres = genres
         self.format = format
+        self.cover = cover
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, type(self)) and other.id == self.id
@@ -287,6 +293,7 @@ class MinifiedMedia:
         title = MediaTitle(data["title"])
         season = MediaSeason(data["season"]) if data["season"] else None
         format = MediaFormat(data["format"])
+        cover = MediaCoverImage(data["coverImage"])
 
         return cls(
             data["id"],
@@ -303,6 +310,7 @@ class MinifiedMedia:
             data["volumes"],
             data["genres"],
             format,
+            cover,
         )
 
     @property

@@ -37,7 +37,7 @@ def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteTypes, max
 
     if favourites and favourites["items"]:
         value = ""
-        for favourite in favourites["items"]:
+        for favourite in favourites["items"][:5]:
             fmt = f"\n- **[{favourite.name}]({favourite.site_url})**"
             if len(value + fmt) > maxlen:
                 break
@@ -67,9 +67,7 @@ class Delete(discord.ui.DynamicItem[discord.ui.Button[discord.ui.View]], templat
         return True
 
     @classmethod
-    async def from_custom_id(
-        cls, interaction: discord.Interaction[Harmony], item: ui.Item[Any], match: re.Match[str]
-    ) -> Self:
+    async def from_custom_id(cls, *_, match: re.Match[str]) -> Self:
         return cls(int(match.group("USER_ID")))
 
     @classmethod
@@ -385,7 +383,7 @@ class AniList(BaseCog):
         found: list[MinifiedMedia] = []
 
         async with message.channel.typing():
-            embed = discord.Embed()
+            embed = PrimaryEmbed()
 
             for name in anime:
                 media = await self.client.search_minified_media(name, type=MediaType.ANIME)
@@ -412,7 +410,13 @@ class AniList(BaseCog):
         prefix = next(iter(sorted(prefixes, key=len)), "ht;")
 
         embed.set_footer(text=f'{{anime}} \N{EM DASH} [manga] \N{EM DASH} Run "{prefix}optout" to disable this.')
-        embed.color = PrimaryEmbed().color
+
+        if len(embed.fields) == 1:
+            media = found[0]
+            embed.set_thumbnail(url=media.cover["extraLarge"])
+
+            if media.cover["color"]:
+                embed.color = discord.Colour.from_str(media.cover["color"])
 
         await message.channel.send(embed=embed, view=Delete.view(message.author))
 
@@ -477,7 +481,7 @@ class AniList(BaseCog):
 
     @commands.command()
     async def optout(self, ctx: Context):
-        """Opts you out (or back in) of the inline search."""
+        """Opts you out (or back in) of inline search."""
         if await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM inline_search_optout WHERE user_id = $1)", ctx.author.id):
             await ctx.pool.execute("DELETE FROM inline_search_optout WHERE user_id = $1", ctx.author.id)
             await ctx.send("Opted back into inline search.")
@@ -541,7 +545,7 @@ class AniList(BaseCog):
                 value=(
                     f"Anime Watched: **`{s.count:,}`**\n"
                     f"Episodes Watched: **`{s.episodes_watched:,}`**\n"
-                    f"Minutes Watched: **`{s.minutes_watched:,}` (`{(s.minutes_watched / 1440):.1f} days`)**"
+                    f"Hours Watched: **`{(s.minutes_watched / 60):.1f}` (`{(s.minutes_watched / 1440):.1f} days`)**"
                 ),
                 inline=True,
             )
@@ -593,7 +597,7 @@ class AniList(BaseCog):
         )
 
         if expiry and expiry > datetime.datetime.now():
-            embed = SuccessEmbed(description="You are already logged in. Log out and back in to re-new session.")
+            embed = SuccessEmbed(description="You are already logged in. Log out and back in to re-new the session.")
             embed.set_footer(text=f"Run `{ctx.clean_prefix}anilist logout` to log out.")
             return await ctx.send(embed=embed)
 
