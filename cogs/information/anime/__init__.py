@@ -479,7 +479,7 @@ class AniList(BaseCog):
 
         await ctx.send(embeds=embeds, view=view)
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def optout(self, ctx: Context):
         """Opts you out (or back in) of inline search."""
         if await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM inline_search_optout WHERE user_id = $1)", ctx.author.id):
