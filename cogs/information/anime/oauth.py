@@ -1,18 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    Literal,
-    NamedTuple,
-    Optional,
-    Self,
-    TypedDict,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Optional, Self, TypedDict
 
 from config import ANILIST_ID, ANILIST_SECRET
+
+from .types import FavouriteTypes
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -267,7 +260,7 @@ def parse_favourites(
 
 
 class Favourites(TypedDict):
-    _type: Literal["anime", "manga", "characters", "staff", "studios"]
+    _type: FavouriteTypes
     items: list[PartialNode]
 
 

@@ -14,7 +14,7 @@ def _check(ctx: Context) -> str:
     return ""
 
 
-argument_or_reference = commands.parameter(default=lambda ctx: _check(ctx), displayed_name="argument or message reply")  # type: ignore
+argument_or_reference = commands.parameter(default=_check, displayed_name="argument or message reply")
 
 
 def progress_bar(percentage: float, *, length: int = 10) -> str:

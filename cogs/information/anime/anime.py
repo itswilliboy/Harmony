@@ -15,6 +15,7 @@ from .types import (
     FollowingStatus,
     FuzzyDate,
     MediaCoverImage,
+    MediaFormat,
     MediaList,
     MediaSeason,
     MediaStatus,
@@ -34,6 +35,31 @@ if TYPE_CHECKING:
 TAG_REGEX = re.compile(r"</?\w+/?>")
 SOURCE_REGEX = re.compile(r"\(Source: .+\)")
 
+MINIFIED_SEARCH_QUERY = """
+    query ($search: String, $type: MediaType) {
+        Media (search: $search, type: $type, sort: POPULARITY_DESC) {
+            id
+            isAdult
+            idMal
+            type
+            episodes
+            status
+            chapters
+            volumes
+            genres
+            title {
+                romaji
+                english
+                native
+            }
+            season
+            seasonYear
+            meanScore
+            format
+        }
+    }
+"""
+
 SEARCH_QUERY = """
     query ($search: String, $type: MediaType) {
         Media (search: $search, type: $type) {
@@ -46,7 +72,6 @@ SEARCH_QUERY = """
             hashtag
             status
             bannerImage
-            episodes
             duration
             chapters
             volumes
@@ -128,7 +153,6 @@ FETCH_QUERY = """
             hashtag
             status
             bannerImage
-            episodes
             duration
             chapters
             volumes
@@ -198,7 +222,6 @@ FETCH_QUERY = """
     }
 """
 
-# FIXME: Fix so the authenticated user doesn't appear on the following embed.
 FOLLOWING_QUERY = """
     query ($id: Int, $page: Int, $perPage: Int) {
         Page(page: $page, perPage: $perPage) {
@@ -220,6 +243,105 @@ FOLLOWING_QUERY = """
         }
     }
 """
+
+
+class MinifiedMedia:
+    def __init__(
+        self,
+        id: int,
+        id_mal: int,
+        is_adult: bool,
+        type: MediaType,
+        title: MediaTitle,
+        season: Optional[MediaSeason],
+        season_year: Optional[int],
+        mean_score: Optional[int],
+        status: MediaStatus,
+        episodes: int,
+        chapters: int,
+        volumes: int,
+        genres: list[str],
+        format: MediaFormat,
+    ) -> None:
+        self.id = id
+        self.id_mal = id_mal
+        self.is_adult = is_adult
+        self.type = type
+        self.title = title
+        self.season = season
+        self.season_year = season_year
+        self.mean_score = mean_score
+        self.status = status
+        self.episodes = episodes
+        self.chapters = chapters
+        self.volumes = volumes
+        self.genres = genres
+        self.format = format
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, type(self)) and other.id == self.id
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> Self:
+        type_ = MediaType(data["type"])
+        title = MediaTitle(data["title"])
+        season = MediaSeason(data["season"]) if data["season"] else None
+        format = MediaFormat(data["format"])
+
+        return cls(
+            data["id"],
+            data["idMal"],
+            data["isAdult"],
+            type_,
+            title,
+            season,
+            data["seasonYear"],
+            data["meanScore"],
+            data["status"],
+            data["episodes"],
+            data["chapters"],
+            data["volumes"],
+            data["genres"],
+            format,
+        )
+
+    @property
+    def name(self):
+        if self.is_adult:
+            return f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {self.title['romaji']}"
+        else:
+            return self.title["romaji"]
+
+    @property
+    def small_info(self):
+        fmt: list[str] = []
+
+        if self.format:
+            fmt.append(f"{str(self.format).replace('_', ' ').title()}")
+
+        if self.season and self.season_year:
+            fmt.append(f"{str(self.season).title()} {self.season_year}")
+
+        if self.status:
+            fmt.append(str(self.status).title())
+
+        if self.episodes:
+            fmt.append(f"{self.episodes} episode{'' if self.episodes == 1 else 's'}")
+
+        if self.chapters and self.volumes:
+            fmt.append(
+                f"{self.volumes} volume{'' if self.volumes == 1 else 's'} ({self.chapters} chapter{'' if self.chapters == 1 else 's'})"
+            )
+
+        fmt.append(f"[AL](<https://anilist.co/{self.type.lower()}/{self.id}>)")
+        fmt.append(f"[MAL](<https://myanimelist.net/{self.type.lower()}/{self.id_mal}>)")
+
+        if self.genres:
+            genres = f"\nGenre{'' if len(self.genres) == 1 else 's'}: " + (", ".join(self.genres))
+        else:
+            genres = ""
+
+        return " \N{EM DASH} ".join(fmt) + genres
 
 
 class Media:
@@ -581,6 +703,31 @@ class AniListClient:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
         return (Media.from_json(data, following_status or {}), user)
+
+    async def search_minified_media(self, search: str, *, type: MediaType) -> Optional[MinifiedMedia]:
+        """Searchs and returns a "minified" media via a search query."""
+
+        variables = {"search": search, "type": type}
+
+        async with self.bot.session.post(
+            self.URL,
+            json={"query": MINIFIED_SEARCH_QUERY, "variables": variables},
+        ) as resp:
+            json = await resp.json()
+
+            if not json:
+                return None
+
+            try:
+                data_ = json["data"]
+                data = data_["Media"]
+            except KeyError:
+                return None
+
+            if data is None:
+                return None
+
+        return MinifiedMedia.from_json(data)
 
     async def fetch_media(self, id: int, *, user_id: Optional[int] = None) -> Optional[Media]:
         """Fetches and returns a media via an ID."""

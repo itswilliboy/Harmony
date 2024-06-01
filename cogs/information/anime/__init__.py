@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
+import re
 from typing import Any, Optional, Self
 
 import discord
@@ -20,8 +22,61 @@ from utils import (
     progress_bar,
 )
 
-from .anime import AniListClient, Media
-from .types import Edge, MediaRelation, MediaType
+from .anime import AniListClient, Media, MinifiedMedia
+from .oauth import User
+from .types import Edge, FavouriteTypes, MediaRelation, MediaType
+
+ANIME_REGEX = re.compile(r"\{(.*?)\}")
+MANGA_REGEX = re.compile(r"\[(.*?)\]")
+INLINE_CB_REGEX = re.compile(r"(?P<CB>(`{1,2})[^`^\n]+?\2)(?:$|[^`])")
+CB_REGEX = re.compile(r"```[\S\s]+?```")
+
+
+def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteTypes, maxlen: int = 1024, empty: bool = False):
+    favourites = discord.utils.find(lambda f: f["_type"] == type, user.favourites)
+
+    if favourites and favourites["items"]:
+        value = ""
+        for favourite in favourites["items"]:
+            fmt = f"\n- **[{favourite.name}]({favourite.site_url})**"
+            if len(value + fmt) > maxlen:
+                break
+            value += fmt
+    elif empty:
+        value = "No Favourites Found..."
+    else:
+        return
+
+    embed.add_field(name=f"Favourite {type.title()}", value=value, inline=False)
+
+
+class Delete(discord.ui.DynamicItem[discord.ui.Button[discord.ui.View]], template=r"DELETE:(?P<USER_ID>\d+)"):
+    def __init__(self, user_id: int):
+        self.user_id = user_id
+        super().__init__(discord.ui.Button(emoji="\N{WASTEBASKET}", custom_id=f"DELETE:{user_id}"))
+
+    async def callback(self, interaction: discord.Interaction[Harmony]) -> Any:
+        if not interaction.message:
+            return interaction.response.defer()
+        await interaction.message.delete()
+
+    async def interaction_check(self, interaction: discord.Interaction[Harmony]) -> bool:
+        if interaction.user.id != self.user_id:
+            await interaction.response.defer()
+            return False
+        return True
+
+    @classmethod
+    async def from_custom_id(
+        cls, interaction: discord.Interaction[Harmony], item: ui.Item[Any], match: re.Match[str]
+    ) -> Self:
+        return cls(int(match.group("USER_ID")))
+
+    @classmethod
+    def view(cls, user: discord.abc.Snowflake) -> discord.ui.View:
+        view = discord.ui.View(timeout=None)
+        view.add_item(cls(user.id))
+        return view
 
 
 class AniUser(commands.UserConverter):
@@ -303,12 +358,70 @@ class AniList(BaseCog):
 
         self.client = AniListClient(bot)
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        if await self.bot.pool.fetchval(
+            "SELECT EXISTS(SELECT 1 FROM inline_search_optout WHERE user_id = $1)", message.author.id
+        ):
+            return
+
+        content = message.content
+
+        for match in reversed(list(INLINE_CB_REGEX.finditer(content))):
+            start, end = match.span("CB")
+            content = content[:start] + content[end:]
+
+        content = CB_REGEX.sub(" ", content)
+
+        anime = list(set(ANIME_REGEX.findall(content)))
+        manga = list(set(MANGA_REGEX.findall(content)))
+
+        if not anime and not manga:
+            return
+
+        found: list[MinifiedMedia] = []
+
+        async with message.channel.typing():
+            embed = discord.Embed()
+
+            for name in anime:
+                media = await self.client.search_minified_media(name, type=MediaType.ANIME)
+                if media and media not in found:
+                    found.append(media)
+                    embed.add_field(name=f"**__{media.name}__**", value=media.small_info, inline=False)
+
+            for name in manga:
+                media = await self.client.search_minified_media(name, type=MediaType.MANGA)
+                if media and media not in found:
+                    found.append(media)
+                    embed.add_field(name=f"**__{media.name}__**", value=media.small_info, inline=False)
+
+        if not embed:
+            try:
+                await message.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
+                await asyncio.sleep(3)
+                await message.remove_reaction("\N{BLACK QUESTION MARK ORNAMENT}", self.bot.user)
+            except discord.HTTPException:
+                pass
+            return
+
+        prefixes = await self.bot.get_prefix(message)
+        prefix = next(iter(sorted(prefixes, key=len)), "ht;")
+
+        embed.set_footer(text=f'{{anime}} \N{EM DASH} [manga] \N{EM DASH} Run "{prefix}optout" to disable this.')
+        embed.color = PrimaryEmbed().color
+
+        await message.channel.send(embed=embed, view=Delete.view(message.author))
+
     async def search(
         self,
         ctx: Context,
         search: str,
         search_type: MediaType,
-    ):
+    ) -> None:
         assert not isinstance(ctx.channel, discord.PartialMessageable | discord.GroupChannel)
 
         media, user = await self.client.search_media(
@@ -363,6 +476,16 @@ class AniList(BaseCog):
         await ctx.send(embeds=embeds, view=view)
 
     @commands.command()
+    async def optout(self, ctx: Context):
+        """Opts you out (or back in) of the inline search."""
+        if await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM inline_search_optout WHERE user_id = $1)", ctx.author.id):
+            await ctx.pool.execute("DELETE FROM inline_search_optout WHERE user_id = $1", ctx.author.id)
+            await ctx.send("Opted back into inline search.")
+        else:
+            await ctx.pool.execute("INSERT INTO inline_search_optout (user_id) VALUES ($1)", ctx.author.id)
+            await ctx.send("Opted out of inline search.")
+
+    @commands.command()
     async def anime(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific anime."""
         await self.search(ctx, search, MediaType.ANIME)
@@ -374,7 +497,6 @@ class AniList(BaseCog):
 
     @commands.group(invoke_without_command=True)
     async def anilist(self, ctx: Context, user: Optional[str | int] = commands.parameter(converter=AniUser, default=None)):
-        print(user, type(user))
 
         if user is None:
             token = await self.client.get_token(ctx.author.id)
@@ -428,10 +550,12 @@ class AniList(BaseCog):
                 embed.add_field(
                     name="Average Anime Score",
                     value=f"**{s.mean_score} // 100**\n{progress_bar(s.mean_score)}",
-                    inline=False,
+                    inline=True,
                 )
 
         if user_.manga_stats.chapters_read:
+            add_favourite(embed, user=user_, type=FavouriteTypes.ANIME, empty=True)
+
             s = user_.manga_stats
             embed.add_field(
                 name="Manga Statistics",
@@ -447,22 +571,16 @@ class AniList(BaseCog):
                 embed.add_field(
                     name="Average Manga Score",
                     value=f"**{s.mean_score} // 100**\n{progress_bar(s.mean_score)}",
-                    inline=False,
+                    inline=True,
                 )
 
-        values: list[str] = []
-        for node in user_.favourites:
-            name = node["_type"].title()
+        else:
+            add_favourite(embed, user=user_, type=FavouriteTypes.ANIME)
 
-            if name.endswith("s"):
-                name = name[:-1]
-
-            for item in node["items"]:
-                values.append(f"{name}: **[{item.name}]({item.site_url})**")
-                break
-
-        if values:
-            embed.add_field(name="Favourites", value="\n".join(values), inline=False)
+        add_favourite(embed, user=user_, type=FavouriteTypes.MANGA)
+        add_favourite(embed, user=user_, type=FavouriteTypes.CHARACTERS)
+        add_favourite(embed, user=user_, type=FavouriteTypes.STAFF)
+        add_favourite(embed, user=user_, type=FavouriteTypes.STUDIOS)
 
         await ctx.send(embed=embed)
 
