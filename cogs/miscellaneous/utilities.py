@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from io import BytesIO
+from inspect import getsource
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urljoin, urlparse
@@ -117,16 +117,12 @@ class Utilities(BaseCog):
         await ctx.send(f"```\n{escaped}\n```")
 
     @commands.command()
-    async def tiktok(self, ctx: Context, link: str):
-        """Downloads a watermark-free TikTok video via a URL."""
-        async with ctx.typing():
-            URL = "http://itswilliboy.com/api/tiktok?q="
-            async with ctx.session.get(URL + link) as resp:
-                if resp.content_type == "application/json":
-                    json = await resp.json()
-                    raise GenericError(json["message"])
+    async def source(self, ctx: Context, *, command: str):
+        if cmd := self.bot.get_command(command):
+            obj = cmd.callback
 
-                buffer = BytesIO(await resp.content.read())
+        else:
+            raise GenericError("Couldn't find that command.")
 
-            file = discord.File(fp=buffer, filename="video.mp4")
-            await ctx.send("Here is your video:", file=file)
+        formatted = getsource(obj).replace("`", "\u200b`")
+        await ctx.send(f"```py\n{formatted}\n```")
