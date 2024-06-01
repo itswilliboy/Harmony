@@ -118,6 +118,8 @@ class Utilities(BaseCog):
 
     @commands.command()
     async def source(self, ctx: Context, *, command: str):
+        """Gets the source code of a specific command."""
+
         if cmd := self.bot.get_command(command):
             obj = cmd.callback
 
