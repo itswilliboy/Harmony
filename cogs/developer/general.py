@@ -27,7 +27,7 @@ class General(BaseCog):
         try:
             if extension is None:
                 for ext in list(self.bot.extensions).copy():
-                    if ext in ("cogs.infrastructure", "jishaku"):
+                    if ext in ("jishaku",):
                         continue
                     await self.bot.reload_extension(ext)
 
