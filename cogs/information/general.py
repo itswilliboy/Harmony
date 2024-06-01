@@ -236,7 +236,7 @@ class General(BaseCog):
         *,
         text: str = argument_or_reference,
     ):
-        """Translate a piece of text into English."""
+        """Translate a piece of text into English via Google Translate."""
 
         if not text:
             raise commands.MissingRequiredArgument(ctx.command.params["text"])
