@@ -37,8 +37,15 @@ class Harmony(commands.Bot):
     guild_blacklist: dict[int, GuildBlacklistItem]
 
     def __init__(self, intents: discord.Intents, initial_extensions: list[str], *args: Any, **kwargs: Any) -> None:
-        super().__init__(command_prefix=self.get_prefix, intents=intents, help_command=None, *args, **kwargs)  # type: ignore
-        self._BotBase__cogs = _CaseInsensitiveDict()  # Hacky way to allow  lowercase cog arguments in help command
+        super().__init__(
+            command_prefix=self.get_prefix,  # type: ignore
+            intents=intents,
+            help_command=None,
+            activity=discord.CustomActivity(f"{DEFAULT_PREFIX}help"),
+            *args,
+            **kwargs,
+        )
+        self._BotBase__cogs = _CaseInsensitiveDict()  # Hacky way to allow lowercase cog arguments in help command
 
         self.initial_extensions = initial_extensions
         self.started_at = datetime.now()
