@@ -17,6 +17,7 @@ from .types import (
     MediaCoverImage,
     MediaFormat,
     MediaList,
+    MediaListStatus,
     MediaSeason,
     MediaStatus,
     MediaTitle,
@@ -66,7 +67,7 @@ MINIFIED_SEARCH_QUERY = """
 
 SEARCH_QUERY = """
     query ($search: String, $type: MediaType) {
-        Media (search: $search, type: $type) {
+        Media (search: $search, type: $type, sort: POPULARITY_DESC) {
             id
             isAdult
             idMal
@@ -126,6 +127,7 @@ SEARCH_QUERY = """
                 status
                 progress
                 progressVolumes
+                repeat
                 private
                 startedAt {
                     year
@@ -207,6 +209,7 @@ FETCH_QUERY = """
                 status
                 progress
                 progressVolumes
+                repeat
                 private
                 startedAt {
                     year
@@ -591,12 +594,15 @@ class Media:
         if entry is None:
             return None
 
-        # Don't wanna expose their secrets :^)
+        # Don't wanna expose any secrets :^)
         if entry["private"] is True:
             return None
 
+        status = entry["status"]
+        if status == MediaListStatus.CURRENT:
+            status = "watching"
         desc = [
-            f"↪ Status: **{entry['status'].title()}**",
+            f"↪ Status: **{status.title()}**",
             f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**" if self.type == MediaType.MANGA else "",
             f"↪ Progress: **{entry['progress']}"
             + " / "
@@ -627,6 +633,9 @@ class Media:
                 desc.append(f"↪ Completed at: **{completed_at}**")
             elif started_at and completed_at:
                 desc.append(f"↪ Started / Completed: **{started_at} ⟶ {completed_at}**")
+
+            if entry["repeat"]:
+                desc.append(f"↪ Rewatches: **{entry['repeat']}**")
 
         desc = [i for i in desc if i != ""]
         embed = discord.Embed(title="Your Status", colour=self.colour, description="\n".join(desc))
@@ -710,7 +719,7 @@ class AniListClient:
         if headers:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
-        return (Media.from_json(data, following_status or {}), user)
+        return Media.from_json(data, following_status or {}), user
 
     async def search_minified_media(self, search: str, *, type: MediaType) -> Optional[MinifiedMedia]:
         """Searchs and returns a "minified" media via a search query."""

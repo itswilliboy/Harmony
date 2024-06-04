@@ -281,6 +281,7 @@ class General(BaseCog):
         buffer.seek(0)
         return discord.Colour.from_rgb(*colour)
 
+    # Doesn't work without presence intent
     @commands.command(hidden=True)
     async def spotify(self, ctx: Context, user: discord.Member = commands.Author):
         """Shows the current Spotify status of a user."""

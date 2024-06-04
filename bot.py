@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Optional
 
 import discord
@@ -121,7 +121,7 @@ class Harmony(commands.Bot):
         self.log.info("Logged in as %s on discord.py version %s", self.user, discord.__version__)
 
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        if before.content != after.content:
+        if before.content != after.content and before.created_at + timedelta(seconds=10) > discord.utils.utcnow():
             return await self.process_commands(after)
 
     async def is_owner(self, user: discord.abc.User) -> bool:

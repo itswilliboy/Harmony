@@ -129,6 +129,7 @@ class MediaList(TypedDict):
     status: MediaListStatus
     progress: int
     progressVolumes: int
+    repeat: int
     private: bool
     startedAt: FuzzyDate
     completedAt: FuzzyDate
