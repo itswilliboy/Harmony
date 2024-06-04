@@ -30,6 +30,7 @@ ANIME_REGEX = re.compile(r"\{(.*?)\}")
 MANGA_REGEX = re.compile(r"\[(.*?)\]")
 INLINE_CB_REGEX = re.compile(r"(?P<CB>(`{1,2})[^`^\n]+?\2)(?:$|[^`])")
 CB_REGEX = re.compile(r"```[\S\s]+?```")
+HL_REGEX = re.compile(r"\[.*?\]\(.*?\)")
 
 
 def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteTypes, maxlen: int = 1024, empty: bool = False):
@@ -375,6 +376,7 @@ class AniList(BaseCog):
             content = content[:start] + content[end:]
 
         content = CB_REGEX.sub(" ", content)
+        content = HL_REGEX.sub(" ", content)
 
         anime = list(set(ANIME_REGEX.findall(content)))
         manga = list(set(MANGA_REGEX.findall(content)))
@@ -399,7 +401,7 @@ class AniList(BaseCog):
                     found.append(media)
                     embed.add_field(name=f"**__{media.name}__**", value=media.small_info, inline=False)
 
-        if not embed:
+        if not embed.fields:
             try:
                 await message.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
                 await asyncio.sleep(3)
