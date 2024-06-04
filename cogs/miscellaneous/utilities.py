@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from inspect import getsource
+from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 from urllib.parse import urljoin, urlparse
@@ -116,15 +117,17 @@ class Utilities(BaseCog):
         escaped = text.replace("```", "``\u200b`")
         await ctx.send(f"```\n{escaped}\n```")
 
-    @commands.command()
+    @commands.command(aliases=["src"])
     async def source(self, ctx: Context, *, command: str):
         """Gets the source code of a specific command."""
 
-        if cmd := self.bot.get_command(command):
-            obj = cmd.callback
-
-        else:
+        cmd = self.bot.get_command(command)
+        if not cmd or cmd.hidden:
             raise GenericError("Couldn't find that command.")
 
-        formatted = getsource(obj).replace("`", "\u200b`")
+        formatted = getsource(cmd.callback).replace("`", "\u200b`")
+        if len(formatted) > 2000:
+            buffer = BytesIO(formatted.encode("utf-8"))
+            return await ctx.send("Content was too long:", file=discord.File(fp=buffer, filename="src.py"))
+
         await ctx.send(f"```py\n{formatted}\n```")
