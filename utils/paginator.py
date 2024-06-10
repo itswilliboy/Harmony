@@ -63,7 +63,6 @@ class PageModal(ui.Modal, title="Hop to page"):
 
 
 class Paginator(ui.View, Generic[T]):
-    pool: Pool[Record]
     items: Sequence[T]
     count: int
     page: int
@@ -72,8 +71,9 @@ class Paginator(ui.View, Generic[T]):
 
     args: Any
     kwargs: Any
+    message: discord.Message
 
-    def __init__(self, items: Sequence[T], user: Optional[discord.abc.User] = None) -> None:
+    def __init__(self, items: Sequence[T], user: Optional[discord.abc.Snowflake] = None) -> None:
         super().__init__()
 
         self.items = items
@@ -87,6 +87,15 @@ class Paginator(ui.View, Generic[T]):
 
     def __len__(self) -> int:
         return len(self.items)
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        if self.user and self.user.id == interaction.user.id:
+            return True
+        return False
+
+    async def on_timeout(self) -> None:
+        self.stop()
+        await self.message.edit(view=None)
 
     async def go_to(self, interaction: Interaction, page: int) -> None:
         """Goes to a specific page."""
@@ -104,7 +113,7 @@ class Paginator(ui.View, Generic[T]):
         """Starts the paginator."""
 
         if isinstance(self.current, Page):
-            await destination.send(
+            msg = await destination.send(
                 content=self.current.content,
                 embed=self.current.embed or MISSING,
                 file=self.current.file or MISSING,
@@ -112,10 +121,12 @@ class Paginator(ui.View, Generic[T]):
             )
 
         elif isinstance(self.current, discord.Embed):
-            await destination.send(embed=self.current, view=self)
+            msg = await destination.send(embed=self.current, view=self)
 
         else:
-            await destination.send(self.current, view=self)
+            msg = await destination.send(self.current, view=self)
+
+        self.message = msg
 
     async def update(self, interaction: Interaction) -> None:
         if isinstance(self.current, Page):
@@ -205,9 +216,19 @@ class DynamicPaginator(ui.View, Generic[T]):
 
     args: Any
     kwargs: Any
+    message: discord.Message
 
     def __len__(self) -> int:
         return len(self.items)
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        if self.user == interaction.user:
+            return True
+        return False
+
+    async def on_timeout(self) -> None:
+        self.stop()
+        await self.message.edit(view=None)
 
     @classmethod
     async def populate(
@@ -254,7 +275,7 @@ class DynamicPaginator(ui.View, Generic[T]):
         """Starts the paginator."""
 
         if isinstance(self.current, Page):
-            await destination.send(
+            msg = await destination.send(
                 content=self.current.content,
                 embed=self.current.embed or MISSING,
                 file=self.current.file or MISSING,
@@ -262,10 +283,12 @@ class DynamicPaginator(ui.View, Generic[T]):
             )
 
         elif isinstance(self.current, discord.Embed):
-            await destination.send(embed=self.current, view=self)
+            msg = await destination.send(embed=self.current, view=self)
 
         else:
-            await destination.send(self.current, view=self)
+            msg = await destination.send(self.current, view=self)
+
+        self.message = msg
 
     async def update(self, interaction: Interaction) -> None:
         if isinstance(self.current, Page):

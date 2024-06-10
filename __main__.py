@@ -13,6 +13,7 @@ initial_extensions = [
     "cogs.infrastructure",
     "cogs.developer",
     "cogs.miscellaneous",
+    "cogs.anime",
     "cogs.information",
     "cogs.moderation",
     "cogs.fun",
@@ -26,7 +27,7 @@ intents.members = True
 bot = Harmony(intents=intents, initial_extensions=initial_extensions)
 
 
-async def run():
+async def run() -> None:
     print("Starting bot")
     await bot.start(TOKEN)
 
