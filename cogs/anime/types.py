@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import StrEnum
 from typing import NamedTuple, Optional, TypedDict
 
@@ -104,6 +106,7 @@ class Edge(NamedTuple):
     id: int
     title: str
     type: MediaRelation
+    list_entry: Optional[MediaList]
 
 
 class Object(TypedDict):
@@ -111,7 +114,7 @@ class Object(TypedDict):
     siteUrl: str
 
 
-class PartialMedia(TypedDict):
+class TResponse(TypedDict):
     episodes: Optional[int]
     chapters: Optional[int]
 
@@ -120,7 +123,7 @@ class FollowingStatus(TypedDict):
     status: MediaListStatus
     score: int
     progress: int
-    media: PartialMedia
+    media: TResponse
     user: Object
 
 
@@ -136,3 +139,59 @@ class MediaList(TypedDict):
     updatedAt: int
     createdAt: int
     repeat: int
+
+
+class _Media(TypedDict):
+    id: int
+    idMal: Optional[int]
+    type: MediaType
+    description: str
+    episodes: int
+    hashtag: str
+    status: MediaStatus
+    bannerImage: str
+    duration: int
+    chapters: Optional[int]
+    volumes: Optional[int]
+    genres: list[str]
+    title: MediaTitle
+    startDate: FuzzyDate
+    endDate: FuzzyDate
+    season: MediaSeason
+    seasonYear: int
+    meanScore: int
+    coverImage: MediaCoverImage
+    studios: dict[str, list[dict[str, str]]]
+
+
+class MediaListEntry(TypedDict):
+    score: int
+    status: MediaListStatus
+    progress: int
+    progressVolumes: Optional[int]
+    repeat: int
+    private: bool
+    startedAt: FuzzyDate
+    completedat: FuzzyDate
+    updatedAt: int  # timestamp
+    createdAt: int  # timestamp
+    media: _Media
+
+
+class _MediaList(TypedDict):
+    entries: list[MediaListEntry]
+    name: str
+    isCustomList: bool
+    isSplitCompletedList: bool
+    status: MediaListStatus
+
+
+class PartialUser(TypedDict):
+    name: str
+    id: int
+
+
+class MediaListCollection(TypedDict):
+    lists: list[_MediaList]
+    user: PartialUser
+    hasNextChunk: bool

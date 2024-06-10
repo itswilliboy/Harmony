@@ -10,6 +10,7 @@ import discord
 from aiohttp import ClientConnectionError, InvalidURL
 from discord.ext import commands
 
+from config import OWNER_IDS
 from utils import BaseCog, ErrorEmbed, GenericError, SuccessEmbed, argument_or_reference
 
 if TYPE_CHECKING:
@@ -122,7 +123,7 @@ class Utilities(BaseCog):
         """Gets the source code of a specific command."""
 
         cmd = self.bot.get_command(command)
-        if not cmd or cmd.hidden:
+        if not cmd or (cmd.hidden and ctx.author.id not in OWNER_IDS):
             raise GenericError("Couldn't find that command.")
 
         formatted = getsource(cmd.callback).replace("`", "\u200b`")

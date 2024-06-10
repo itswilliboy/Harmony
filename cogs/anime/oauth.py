@@ -10,215 +10,97 @@ from .types import FavouriteTypes
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-VIEWER_QUERY = """
-    query {
-        Viewer {
-            name,
-            id,
-            about,
-            avatar {
-                large
-            },
-            bannerImage,
-            siteUrl,
-            createdAt,
-            statistics {
-                anime {
-                    count,
-                    meanScore,
-                    minutesWatched,
-                    episodesWatched
-                }
-                manga {
-                    count,
-                    meanScore,
-                    chaptersRead,
-                    volumesRead
+USER_FRAGMENT = """
+    fragment userFragment on User {
+        name,
+        id,
+        about,
+        avatar {
+            large
+        },
+        bannerImage,
+        siteUrl,
+        createdAt,
+        statistics {
+            anime {
+                count,
+                meanScore,
+                minutesWatched,
+                episodesWatched
+            }
+            manga {
+                count,
+                meanScore,
+                chaptersRead,
+                volumesRead
+            }
+        }
+        favourites {
+            anime {
+                nodes {
+                    title {
+                        userPreferred
+                    },
+                    siteUrl
                 }
             }
-            favourites {
-                anime {
-                    nodes {
-                        title {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
+            manga {
+                nodes {
+                    title {
+                        userPreferred
+                    },
+                    siteUrl
                 }
-                manga {
-                    nodes {
-                        title {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
+            }
+            characters {
+                nodes {
+                    name {
+                        userPreferred
+                    },
+                    siteUrl
                 }
-                characters {
-                    nodes {
-                        name {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
+            }
+            staff {
+                nodes {
+                    name {
+                        userPreferred
+                    },
+                    siteUrl
                 }
-                staff {
-                    nodes {
-                        name {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                studios {
-                    nodes {
-                        name,
-                        siteUrl
-                    }
+            }
+            studios {
+                nodes {
+                    name,
+                    siteUrl
                 }
             }
         }
     }
 """
+
+VIEWER_QUERY = """
+    query {{
+        Viewer {{
+            ...userFragment
+        }}
+    }}
+
+    {}
+""".format(
+    USER_FRAGMENT
+)
 
 USER_QUERY = """
-    query ($name: String) {
-        User (name: $name) {
-            name,
-            id,
-            about,
-            avatar {
-                large
-            },
-            bannerImage,
-            siteUrl,
-            createdAt,
-            statistics {
-                anime {
-                    count,
-                    meanScore,
-                    minutesWatched,
-                    episodesWatched
-                }
-                manga {
-                    count,
-                    meanScore,
-                    chaptersRead,
-                    volumesRead
-                }
-            }
-            favourites {
-                anime {
-                    nodes {
-                        title {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                manga {
-                    nodes {
-                        title {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                characters {
-                    nodes {
-                        name {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                staff {
-                    nodes {
-                        name {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                studios {
-                    nodes {
-                        name,
-                        siteUrl
-                    }
-                }
-            }
-        }
-    }
-"""
+    query ($name: String, $id: Int) {{
+        User (name: $name, id: $id) {{
+            ...userFragment
+        }}
+    }}
 
-USER_ID_QUERY = """
-    query ($id: Int) {
-        User (id: $id) {
-            name,
-            id,
-            about,
-            avatar {
-                large
-            },
-            bannerImage,
-            siteUrl,
-            createdAt,
-            statistics {
-                anime {
-                    count,
-                    meanScore,
-                    minutesWatched,
-                    episodesWatched
-                }
-                manga {
-                    count,
-                    meanScore,
-                    chaptersRead,
-                    volumesRead
-                }
-            }
-            favourites {
-                anime {
-                    nodes {
-                        title {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                manga {
-                    nodes {
-                        title {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                characters {
-                    nodes {
-                        name {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                staff {
-                    nodes {
-                        name {
-                            userPreferred
-                        },
-                        siteUrl
-                    }
-                }
-                studios {
-                    nodes {
-                        name,
-                        siteUrl
-                    }
-                }
-            }
-        }
-    }
-"""
+    {}
+""".format(
+    USER_FRAGMENT
+)
 
 
 def parse_dict_or_str(
@@ -372,7 +254,7 @@ class OAuth:
         return headers
 
     async def get_access_token(self, auth_code: str) -> Optional[AccessToken]:
-        """Converts a Authorization Code to an Access Token"""
+        """Converts an Authorization Code to an Access Token"""
 
         json = {
             "grant_type": "authorization_code",
@@ -403,17 +285,15 @@ class OAuth:
             return User.from_json(json["data"]["Viewer"])
 
     async def get_user(self, user: str | int) -> Optional[User]:
-        """Gets a user by their username or AniList iD."""
+        """Gets a user by their username or AniList ID."""
 
         if isinstance(user, str):
             variables = {"name": user}
-            query = USER_QUERY
 
         else:
             variables = {"id": user}
-            query = USER_ID_QUERY
 
-        async with self.session.post(self.URL, json={"query": query, "variables": variables}) as resp:
+        async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": variables}) as resp:
             json = await resp.json()
             try:
                 return User.from_json(json["data"]["User"])

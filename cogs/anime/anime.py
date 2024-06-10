@@ -3,13 +3,12 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self
+from typing import TYPE_CHECKING, Any, Optional, Self
 
 import discord
 
 from utils import progress_bar
 
-from .oauth import AccessToken, OAuth
 from .types import (
     Edge,
     FollowingStatus,
@@ -32,224 +31,8 @@ if TYPE_CHECKING:
 
     Interaction = discord.Interaction[Harmony]
 
-
 TAG_REGEX = re.compile(r"</?\w+/?>")
 SOURCE_REGEX = re.compile(r"\(Source: .+\)")
-
-MINIFIED_SEARCH_QUERY = """
-    query ($search: String, $type: MediaType) {
-        Media (search: $search, type: $type, sort: POPULARITY_DESC) {
-            id
-            isAdult
-            idMal
-            type
-            episodes
-            status
-            chapters
-            volumes
-            genres
-            title {
-                romaji
-                english
-                native
-            }
-            season
-            seasonYear
-            meanScore
-            format
-            coverImage {
-                extraLarge
-                color
-            }
-        }
-    }
-"""
-
-SEARCH_QUERY = """
-    query ($search: String, $type: MediaType) {
-        Media (search: $search, type: $type, sort: POPULARITY_DESC) {
-            id
-            isAdult
-            idMal
-            type
-            description(asHtml: false)
-            episodes
-            hashtag
-            status
-            bannerImage
-            duration
-            chapters
-            volumes
-            genres
-            title {
-                romaji
-                english
-                native
-            }
-            startDate {
-                year
-                month
-                day
-            }
-            endDate {
-                year
-                month
-                day
-            }
-            season
-            seasonYear
-            meanScore
-            coverImage {
-                extraLarge
-                large
-                medium
-                color
-            }
-            studios(isMain: true) {
-                nodes {
-                    name
-                    siteUrl
-                }
-            }
-            relations {
-                edges {
-                    node {
-                        id
-                        title {
-                            romaji
-                        }
-                    }
-                    relationType(version: 2)
-                }
-            }
-            mediaListEntry {
-                score(format: POINT_10)
-                status
-                progress
-                progressVolumes
-                repeat
-                private
-                startedAt {
-                    year
-                    month
-                    day
-                }
-                completedAt {
-                    year
-                    month
-                    day
-                }
-                updatedAt
-                createdAt
-                repeat
-            }
-        }
-    }
-"""
-
-FETCH_QUERY = """
-    query ($id: Int) {
-        Media (id: $id) {
-            id
-            isAdult
-            idMal
-            type
-            description(asHtml: false)
-            episodes
-            hashtag
-            status
-            bannerImage
-            duration
-            chapters
-            volumes
-            genres
-            title {
-                romaji
-                english
-                native
-            }
-            startDate {
-                year
-                month
-                day
-            }
-            endDate {
-                year
-                month
-                day
-            }
-            season
-            seasonYear
-            meanScore
-            coverImage {
-                extraLarge
-                large
-                medium
-                color
-            }
-            studios(isMain: true) {
-                nodes {
-                    name
-                    siteUrl
-                }
-            }
-            relations {
-                edges {
-                    node {
-                        id
-                        title {
-                            romaji
-                        }
-                    }
-                    relationType(version: 2)
-                }
-            }
-            mediaListEntry {
-                score(format: POINT_10)
-                status
-                progress
-                progressVolumes
-                repeat
-                private
-                startedAt {
-                    year
-                    month
-                    day
-                }
-                completedAt {
-                    year
-                    month
-                    day
-                }
-                updatedAt
-                createdAt
-                repeat
-            }
-        }
-    }
-"""
-
-FOLLOWING_QUERY = """
-    query ($id: Int, $page: Int, $perPage: Int) {
-        Page(page: $page, perPage: $perPage) {
-            mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
-                status
-                score(format: POINT_10)
-                progress
-                repeat
-                media {
-                    episodes
-                    chapters
-                }
-                user {
-                    siteUrl
-                    name
-                    id
-                }
-            }
-        }
-    }
-"""
 
 
 class MinifiedMedia:
@@ -345,7 +128,8 @@ class MinifiedMedia:
             )
 
         fmt.append(f"[AL](<https://anilist.co/{self.type.lower()}/{self.id}>)")
-        fmt.append(f"[MAL](<https://myanimelist.net/{self.type.lower()}/{self.id_mal}>)")
+        if self.id_mal:
+            fmt.append(f"[MAL](<https://myanimelist.net/{self.type.lower()}/{self.id_mal}>)")
 
         if self.genres:
             genres = f"\nGenre{'' if len(self.genres) == 1 else 's'}: " + (", ".join(self.genres))
@@ -428,7 +212,8 @@ class Media:
             for edge in edges:
                 node = edge["node"]
                 title_ = MediaTitle(node["title"])
-                relations.append(Edge(node["id"], title_["romaji"], edge["relationType"]))
+                list_entry_ = MediaList(node["mediaListEntry"]) if node["mediaListEntry"] else None
+                relations.append(Edge(node["id"], title_["romaji"], edge["relationType"], list_entry_))
 
         list_entry = MediaList(data["mediaListEntry"]) if data["mediaListEntry"] else None
 
@@ -528,10 +313,7 @@ class Media:
 
     @property
     def embed(self) -> discord.Embed:
-        if self.type == MediaType.MANGA:
-            url = f"https://anilist.co/manga/{self.id}"
-        else:
-            url = f"https://anilist.co/anime/{self.id}"
+        url = f"https://anilist.co/{str(self.type.lower())}/{self.id}"
 
         title = self.title.get("english") or self.title.get("romaji") or self.title.get("native")
 
@@ -586,6 +368,11 @@ class Media:
                 value=f"**{self.mean_score} // 100**\n{progress_bar(self.mean_score)}",
             )
 
+        if not self.list_entry:
+            embed.set_footer(
+                text="Tip: Log in with `anilist login` to see your own- and your friends' progress on this show."
+            )
+
         return embed
 
     @property
@@ -594,13 +381,13 @@ class Media:
         if entry is None:
             return None
 
-        # Don't wanna expose any secrets :^)
         if entry["private"] is True:
             return None
 
         status = entry["status"]
         if status == MediaListStatus.CURRENT:
             status = "watching"
+
         desc = [
             f"↪ Status: **{status.title()}**",
             f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**" if self.type == MediaType.MANGA else "",
@@ -674,154 +461,3 @@ class Media:
             return None
 
         return discord.Embed(title="Followed Users", colour=self.colour, description="\n".join(information))
-
-
-class AniListClient:
-    URL: ClassVar[str] = "https://graphql.anilist.co"
-
-    def __init__(self, bot: Harmony) -> None:
-        self.bot = bot
-        self.oauth = OAuth(bot.session)
-
-    async def search_media(
-        self, search: str, *, type: MediaType, user_id: Optional[int] = None
-    ) -> tuple[Media, Optional[User]] | tuple[None, None]:
-        """Searchs and returns a media via a search query."""
-
-        variables = {"search": search, "type": type}
-        headers = await self.get_headers(user_id) if user_id else {}
-
-        async with self.bot.session.post(
-            self.URL,
-            json={"query": SEARCH_QUERY, "variables": variables},
-            headers=headers,
-        ) as resp:
-            json = await resp.json()
-
-            try:
-                data_ = json["data"]
-                data = data_["Media"]
-            except KeyError:
-                return (None, None)
-
-            if data is None:
-                return (None, None)
-
-        following_status = {}
-        if user_id:
-            following_status = await self.fetch_following_status(
-                data["id"],
-                user_id,
-                headers=headers,
-            )
-
-        user: Optional[User] = None
-        if headers:
-            user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
-
-        return Media.from_json(data, following_status or {}), user
-
-    async def search_minified_media(self, search: str, *, type: MediaType) -> Optional[MinifiedMedia]:
-        """Searchs and returns a "minified" media via a search query."""
-
-        variables = {"search": search, "type": type}
-
-        async with self.bot.session.post(
-            self.URL,
-            json={"query": MINIFIED_SEARCH_QUERY, "variables": variables},
-        ) as resp:
-            json = await resp.json()
-
-            if not json:
-                return None
-
-            try:
-                data_ = json["data"]
-                data = data_["Media"]
-            except KeyError:
-                return None
-
-            if data is None:
-                return None
-
-        return MinifiedMedia.from_json(data)
-
-    async def fetch_media(self, id: int, *, user_id: Optional[int] = None) -> Optional[Media]:
-        """Fetches and returns a media via an ID."""
-
-        variables = {"id": id}
-        headers = await self.get_headers(user_id) if user_id else {}
-
-        async with self.bot.session.post(
-            self.URL,
-            json={"query": FETCH_QUERY, "variables": variables},
-            headers=headers,
-        ) as resp:
-            json = await resp.json()
-
-            try:
-                data_ = json["data"]
-                data = data_["Media"]
-            except KeyError:
-                return None
-
-            if data is None:
-                return None
-
-        following_status = {}
-        if user_id:
-            following_status = await self.fetch_following_status(
-                id,
-                user_id,
-                headers=headers,
-            )
-
-        return Media.from_json(data, following_status or {})
-
-    async def fetch_following_status(
-        self,
-        media_id: int,
-        user_id: int,
-        *,
-        headers: Optional[dict[str, str]] = None,
-        page: int = 1,
-        per_page: int = 5,
-    ) -> Optional[dict[str, Any]]:
-        """Fetches all the ratings of the followed users."""
-
-        variables = {"id": media_id, "page": page, "perPage": per_page}
-        headers = headers or await self.get_headers(user_id)
-
-        if not headers:
-            return
-
-        async with self.bot.session.post(
-            self.URL,
-            json={
-                "query": FOLLOWING_QUERY,
-                "variables": variables,
-            },
-            headers=headers,
-        ) as req:
-            if req.status == 200:
-                data = await req.json()
-                return data
-
-    async def get_token(self, user_id: int) -> Optional[AccessToken]:
-        query = "SELECT * FROM anilist_codes WHERE user_id = $1"
-        resp = await self.bot.pool.fetchrow(query, user_id)
-
-        if not resp:
-            return None
-
-        return AccessToken(
-            resp["access_token"],
-            resp["expires_in"],
-        )
-
-    async def get_headers(self, user_id: int) -> dict[str, str]:
-        token = await self.get_token(user_id)
-        if token is not None:
-            return self.oauth.get_headers(token.token)
-
-        return {}

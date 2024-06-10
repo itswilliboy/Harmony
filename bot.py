@@ -42,6 +42,7 @@ class Harmony(commands.Bot):
             intents=intents,
             help_command=None,
             activity=discord.CustomActivity(f"{DEFAULT_PREFIX}help"),
+            allowed_mentions=discord.AllowedMentions.none(),
             *args,
             **kwargs,
         )
@@ -121,7 +122,7 @@ class Harmony(commands.Bot):
         self.log.info("Logged in as %s on discord.py version %s", self.user, discord.__version__)
 
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        if before.content != after.content and before.created_at + timedelta(seconds=10) > discord.utils.utcnow():
+        if before.content != after.content and before.created_at + timedelta(minutes=5) > discord.utils.utcnow():
             return await self.process_commands(after)
 
     async def is_owner(self, user: discord.abc.User) -> bool:
