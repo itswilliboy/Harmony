@@ -32,7 +32,7 @@ async def callback(cog: AniList, id: int, interaction: discord.Interaction, user
 
     view = discord.utils.MISSING
     if media.relations:
-        view = RelationView(cog, media, user)
+        view = RelationView(cog, media, user, interaction.user.id)
 
     embeds: list[discord.Embed] = []
 
@@ -130,10 +130,12 @@ class RelationView(ui.View):
         cog: AniList,
         media: Media,
         user: Optional[User] = None,
+        author_id: Optional[int] = None
     ) -> None:
         super().__init__()
         self.media = media
         self.cog = cog
+        self.author_id = author_id
 
         relation_options: list[discord.SelectOption] = []
         adaptation_options: list[discord.SelectOption] = []
@@ -206,7 +208,10 @@ class RelationView(ui.View):
         enums = [enum.value for enum in MediaRelation]
         return enums.index(edge.type)
 
-
+    async def interaction_check(self, interaction: discord.Interaction[Harmony]) -> bool:
+        if self.author_id:
+            return self.author_id == interaction.user.id
+        return False
 class CodeModal(ui.Modal, title="Enter OAuth Code"):
     code: str
     code_input: ui.TextInput[Self] = ui.TextInput(label="OAuth Code", style=discord.TextStyle.short)

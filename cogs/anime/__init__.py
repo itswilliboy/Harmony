@@ -176,7 +176,7 @@ class AniList(BaseCog, name="Anime"):
         view = discord.utils.MISSING
 
         if media.relations:
-            view = RelationView(self, media, user)
+            view = RelationView(self, media, user, ctx.author.id)
 
         embeds: list[discord.Embed] = []
 

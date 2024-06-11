@@ -131,6 +131,10 @@ class Harmony(commands.Bot):
         return await super().is_owner(user)
 
     async def close(self) -> None:
-        await self.pool.close()
-        await self.session.close()
+        if hasattr(self, "pool"):
+            await self.pool.close()
+
+        if hasattr(self, "session"):
+            await self.session.close()
+
         await super().close()
