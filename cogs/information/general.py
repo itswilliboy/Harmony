@@ -216,7 +216,7 @@ class General(BaseCog):
         """
         embed.add_field(name="Process Information", value=dedent(value))
 
-        command_runs: int = await ctx.pool.fetchval("SELECT SUM(command_runs) FROM statistics")
+        command_runs: int = await ctx.pool.fetchval("SELECT SUM(count) FROM command_statistics")
         embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
 
         version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"

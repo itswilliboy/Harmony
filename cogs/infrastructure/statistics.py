@@ -14,25 +14,7 @@ if TYPE_CHECKING:
 class Statistics(BaseCog):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
-        bot.loop.create_task(self.check_statistics())
 
-    async def check_statistics(self) -> None:
-        bot = self.bot
-        await bot.wait_until_ready()
-
-        for guild in bot.guilds:
-            if not await bot.pool.fetch("SELECT guild_id FROM statistics WHERE guild_id = $1", guild.id):
-                await bot.pool.execute("INSERT INTO statistics (guild_id) VALUES ($1)", guild.id)
-
-    @commands.Cog.listener()
-    async def on_guild_join(self, guild: discord.Guild):
-        await self.bot.pool.execute("INSERT INTO statistics (guild_id) VALUES ($1) ON CONFLICT DO NOTHING", guild.id)
-
-    @commands.Cog.listener()
-    async def on_guild_remove(self, guild: discord.Guild):
-        await self.bot.pool.execute("DELETE FROM statistics WHERE guild_id = $1", guild.id)
-
-    # TODO: FIX
     @commands.Cog.listener()
     async def on_command_completion(self, ctx: Context):
         if ctx.guild is None:  # type: ignore
@@ -40,11 +22,16 @@ class Statistics(BaseCog):
 
         await ctx.pool.execute(
             """
-            UPDATE statistics
-            SET command_runs = command_runs + 1
-            WHERE guild_id = $1
+            INSERT INTO command_statistics
+                VALUES ($1, 1)
+            ON CONFLICT (guild_id)
+                DO UPDATE
+                SET count = (
+                    SELECT count FROM command_statistics
+                    WHERE guild_id = $1
+                ) + 1
             """,
-            ctx.guild.id,
+            ctx.guild.id
         )
 
     @commands.Cog.listener("on_message")

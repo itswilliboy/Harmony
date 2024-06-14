@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS prefixes(
 CREATE INDEX IF NOT EXISTS prefixes_guild_id_idx ON prefixes (guild_id);
 CREATE INDEX IF NOT EXISTS prefixes_prefix_idx ON prefixes (prefixes);
 
-CREATE TABLE IF NOT EXISTS statistics(
+CREATE TABLE IF NOT EXISTS command_statistics(
     guild_id BIGINT PRIMARY KEY,
-    command_runs INTEGER DEFAULT 0
+    count INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS message_statistics(
