@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Annotated, Optional
 
 from discord.ext import commands
-from jishaku.codeblocks import codeblock_converter as CodeblockConverter
+from jishaku.codeblocks import codeblock_converter as CodeblockConverter, Codeblock
 
 from utils import BaseCog
 
@@ -17,7 +17,7 @@ class General(BaseCog):
         super().__init__(bot)
 
     @commands.command(aliases=["e"])
-    async def eval(self, ctx: Context, *, code: CodeblockConverter):  # type: ignore
+    async def eval(self, ctx: Context, *, code: Annotated[Codeblock, CodeblockConverter]):
         await ctx.invoke(self.bot.get_command("jishaku python"), argument=code)  # type: ignore
 
     @commands.command(aliases=["r"])

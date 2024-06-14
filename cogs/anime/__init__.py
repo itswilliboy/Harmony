@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import re
-from typing import Any, Optional
+from typing import Any, Optional, Annotated
 
 import discord
 from discord.ext import commands
@@ -244,7 +244,7 @@ class AniList(BaseCog, name="Anime"):
         await self.search(ctx, search, MediaType.MANGA)
 
     @commands.group(invoke_without_command=True)
-    async def anilist(self, ctx: Context, user: Optional[str | int] = commands.parameter(converter=AniUser, default=None)):
+    async def anilist(self, ctx: Context, user: Annotated[Optional[str | int], AniUser] = None):
         user_ = await self.get_user(ctx, user)
 
         embed = PrimaryEmbed(
@@ -313,7 +313,7 @@ class AniList(BaseCog, name="Anime"):
         await ctx.send(embed=embed)
 
     @anilist.command()
-    async def list(self, ctx: Context, user: Optional[str | int] = commands.parameter(converter=AniUser, default=None)):
+    async def list(self, ctx: Context, user: Annotated[Optional[str | int], AniUser] = None):
         user_ = await self.get_user(ctx, user)
 
         async with ctx.typing():

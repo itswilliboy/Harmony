@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS statistics(
     command_runs INTEGER DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS message_statistics(
+    guild_id BIGINT,
+    user_id BIGINT,
+    count INTEGER DEFAULT 0,
+    bot BOOLEAN,
+    PRIMARY KEY (guild_id, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS blacklist(
     user_id BIGINT PRIMARY KEY,
     guild_ids BIGINT[],
@@ -29,13 +37,6 @@ CREATE TABLE IF NOT EXISTS guild_blacklist(
 
 CREATE TABLE IF NOT EXISTS snipe_optout(
     user_id BIGINT PRIMARY KEY
-);
-
-CREATE TABLE IF NOT EXISTS avatar_history(
-    id SERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    image_data BYTEA,
-    timestamp TIMESTAMP DEFAULT current_timestamp
 );
 
 CREATE TABLE IF NOT EXISTS anilist_codes(

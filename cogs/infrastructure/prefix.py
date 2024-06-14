@@ -83,7 +83,7 @@ class Prefix(BaseCog):
         await self.bot.pool.execute("DELETE FROM prefixes WHERE guild_id = $1", guild.id)
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message) -> None:
+    async def prefix_listener(self, message: discord.Message) -> None:
         if match := MENTION_REGEX.fullmatch(message.content):
             if match and match.group(1) == str(self.bot.user.id):
                 ctx = await self.bot.get_context(message)

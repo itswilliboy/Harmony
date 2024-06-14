@@ -65,7 +65,7 @@ class HelpCommand(commands.HelpCommand):
 
         cog = cast(BaseCogMeta, command.cog)
         ctx = self.context
-        if cog.owner_only and not await ctx.bot.is_owner(ctx.author):
+        if (hasattr(cog, "owner_only") and cog.owner_only) and not await ctx.bot.is_owner(ctx.author):
             return await self.context.message.add_reaction("\N{CROSS MARK}")
 
         embed.add_field(name="Usage", value=f"```\n{get_command_signature((self.context.clean_prefix, command))}\n```")
