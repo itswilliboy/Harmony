@@ -125,13 +125,7 @@ class AdaptationSelect(ui.Select["RelationView"]):
 
 
 class RelationView(ui.View):
-    def __init__(
-        self,
-        cog: AniList,
-        media: Media,
-        user: Optional[User] = None,
-        author_id: Optional[int] = None
-    ) -> None:
+    def __init__(self, cog: AniList, media: Media, user: Optional[User] = None, author_id: Optional[int] = None) -> None:
         super().__init__()
         self.media = media
         self.cog = cog
@@ -212,6 +206,8 @@ class RelationView(ui.View):
         if self.author_id:
             return self.author_id == interaction.user.id
         return False
+
+
 class CodeModal(ui.Modal, title="Enter OAuth Code"):
     code: str
     code_input: ui.TextInput[Self] = ui.TextInput(label="OAuth Code", style=discord.TextStyle.short)

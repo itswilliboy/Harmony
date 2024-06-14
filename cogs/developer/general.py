@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Annotated, Optional
 
 from discord.ext import commands
-from jishaku.codeblocks import codeblock_converter as CodeblockConverter, Codeblock
+from jishaku.codeblocks import Codeblock
+from jishaku.codeblocks import codeblock_converter as CodeblockConverter
 
 from utils import BaseCog
 

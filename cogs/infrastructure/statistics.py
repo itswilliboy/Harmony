@@ -31,7 +31,7 @@ class Statistics(BaseCog):
                     WHERE guild_id = $1
                 ) + 1
             """,
-            ctx.guild.id
+            ctx.guild.id,
         )
 
     @commands.Cog.listener("on_message")
@@ -88,13 +88,14 @@ class Statistics(BaseCog):
         embeds: list[discord.Embed] = []
         for chunk in discord.utils.as_chunks(res, 10):
             embed = PrimaryEmbed(title="Message Leaderboard")
+            embed.set_author(name=ctx.guild.name)
 
             for chnk in chunk:
                 member = ctx.guild.get_member(chnk["user_id"])
                 name = None
 
                 if member:
-                    name = member.global_name if member.global_name not in (None, member.name) else None
+                    name = (member.global_name or member.name) if member.global_name != member.display_name else None
 
                 embed.add_field(
                     name=member

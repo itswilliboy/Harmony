@@ -50,7 +50,7 @@ class Prefix(BaseCog):
     async def add_custom_prefix(self, guild: discord.abc.Snowflake, prefix: str) -> None:
         query = """
             UPDATE prefixes
-            SET prefixes = ARRAY_APPEND(prefixes, $1)
+                SET prefixes = ARRAY_APPEND(prefixes, $1)
             WHERE
                 guild_id = $2
         """
@@ -59,7 +59,7 @@ class Prefix(BaseCog):
     async def remove_custom_prefix(self, guild: discord.abc.Snowflake, prefix: str) -> None:
         query = """
             UPDATE prefixes
-            SET prefixes = ARRAY_REMOVE(prefixes, $1)
+                SET prefixes = ARRAY_REMOVE(prefixes, $1)
             WHERE
                 guild_id = $2
         """
@@ -68,7 +68,7 @@ class Prefix(BaseCog):
     async def reset_prefixes(self, guild: discord.abc.Snowflake) -> None:
         query = """
             UPDATE prefixes
-            SET prefixes = $1
+                SET prefixes = $1
             WHERE 
                 guild_id = $2
         """
@@ -151,5 +151,5 @@ class Prefix(BaseCog):
 
         await self.reset_prefixes(ctx.guild)
         ctx.bot.prefix_cache.pop(ctx.guild.id)
-        embed = SuccessEmbed(description="Successfully reset all of the prefixes")
+        embed = SuccessEmbed(description="Successfully reset all of the prefixes.")
         await ctx.send(embed=embed)

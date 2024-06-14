@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import re
-from typing import Any, Optional, Annotated
+from typing import Annotated, Any, Optional
 
 import discord
 from discord.ext import commands
@@ -331,7 +331,7 @@ class AniList(BaseCog, name="Anime"):
         )
 
         if expiry and expiry > datetime.datetime.now():
-            embed = SuccessEmbed(description="You are already logged in. Log out and back in to re-new the session.")
+            embed = SuccessEmbed(description="You are already logged in. Log out and back in to renew the session.")
             embed.set_footer(text=f"Run `{ctx.clean_prefix}anilist logout` to log out.")
             return await ctx.send(embed=embed)
 
