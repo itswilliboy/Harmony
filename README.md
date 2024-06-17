@@ -17,7 +17,10 @@ As well as partial OAuth2 integration and ability to view lists and other social
     `{{frieren}}`\
     ![](images/frieren.png)
 
-    * You can view your own *AniList* profile with the `anilist` command as well as see your own anime- or manga list with `anilist list`.
+    * You can view your someone's *AniList* profile with the `anilist` command as well as see somebody's anime- or manga list with `anilist list`.\
+    To make this (and some other features) handier, you can use `anilist login` to link your *AniList* account, \
+    which means that commands such as the ones listed above default to your own account when invoked without any specific username.\
+    This also means that if you have watched/read a show/manga whilst using the `anime`/`manga` command, it will show your and your followed users' current status and rating on the show.
 
 * Your *standard* moderation commands such as `ban`, `unban`, `kick`, `purge`, etc.
 
