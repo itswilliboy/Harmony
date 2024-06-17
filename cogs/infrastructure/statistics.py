@@ -78,7 +78,7 @@ class Statistics(BaseCog):
         res = await ctx.pool.fetch(
             """
             SELECT user_id, count FROM message_statistics
-                WHERE guild_id = $1 AND bot = $2
+                WHERE guild_id = $1 AND (bot = False OR bot = $2)
             ORDER BY count DESC
             """,
             ctx.guild.id,
