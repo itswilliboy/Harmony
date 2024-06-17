@@ -34,6 +34,3 @@ I'll continue adding- and fixing/improving features as time goes and anyone is f
 ## Inviting
 If you would like to invite my bot you can use the link below and start with `h;help` or by @mentioning the bot.\
 ***[Invite link](https://discord.com/oauth2/authorize?client_id=741592089342640198&scope=bot+applications.commands&permissions=10170482945222)***
-
-## License
-See [License](LICENSE)
