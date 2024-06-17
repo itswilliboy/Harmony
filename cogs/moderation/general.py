@@ -1,37 +1,16 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Annotated, Optional
 
 import discord
 from discord.ext import commands
 
-from utils import BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
+from utils import BannedMember, BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
 
 if TYPE_CHECKING:
     from bot import Harmony
     from utils import Context
-
-
-# The code below below is sourced with small changes from Rapptz's RoboDanny (https://github.com/Rapptz/RoboDanny)
-class BannedMember(commands.Converter[Any]):
-    async def convert(self, ctx: Context, argument: str) -> discord.BanEntry:
-        if argument.isdigit():
-            id = int(argument)
-
-            try:
-                return await ctx.guild.fetch_ban(discord.Object(id))
-
-            except discord.NotFound:
-                raise commands.BadArgument("That member is not banned.")
-
-        user = await discord.utils.find(lambda u: str(u.user) == argument, ctx.guild.bans(limit=None))
-        if user is None:
-            raise commands.BadArgument("That member is not banned.")
-        return user
-
-
-# End
 
 
 class General(BaseCog):
@@ -41,7 +20,7 @@ class General(BaseCog):
 
         self.snipes: dict[int, dict[int, tuple[Optional[discord.Message], Optional[datetime.datetime]]]]
 
-    async def init_dict(self):
+    async def init_dict(self) -> None:
         await self.bot.wait_until_ready()
 
         self.snipes = {}
@@ -80,7 +59,7 @@ class General(BaseCog):
 
         reason = reason or "No reason given."
         await ctx.guild.kick(member, reason=reason)
-        embed = SuccessEmbed(description=f"Sucessfully kicked <@{member.id}>.\nReason: `{reason}`")
+        embed = SuccessEmbed(description=f"Sucessfully kicked {member.mention}.\nReason: `{reason}`")
         embed.set_footer(text=f"ID: {member.id}").timestamp = discord.utils.utcnow()
 
         await ctx.send(embed=embed)
@@ -120,14 +99,20 @@ class General(BaseCog):
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.guild_only()
     @commands.command()
-    async def unban(self, ctx: Context, user: discord.BanEntry | BannedMember, *, reason: Optional[str] = None):
+    async def unban(
+        self,
+        ctx: Context,
+        user: Annotated[discord.abc.Snowflake, discord.BanEntry | BannedMember],
+        *,
+        reason: Optional[str] = None,
+    ):
         """Unbans a banned user."""
         try:
             to_unban: discord.abc.Snowflake
             if isinstance(user, discord.BanEntry):
                 to_unban = user.user
             else:
-                to_unban = user  # type: ignore
+                to_unban = user
 
             reason = reason or "No reason given."
             await ctx.guild.unban(to_unban, reason=reason)

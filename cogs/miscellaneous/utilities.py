@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from inspect import getsource
-from io import BytesIO
+from inspect import getsourcefile, getsourcelines
+from os import path
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, cast
 from urllib.parse import urljoin, urlparse
 
 import discord
 from aiohttp import ClientConnectionError, InvalidURL
 from discord.ext import commands
 
-from config import OWNER_IDS
 from utils import BaseCog, ErrorEmbed, GenericError, SuccessEmbed, argument_or_reference
 
 if TYPE_CHECKING:
@@ -103,7 +102,7 @@ class Utilities(BaseCog):
                     True,
                 )
 
-    @commands.command(usage="<text or message reply>")
+    @commands.command()
     async def raw(
         self,
         ctx: Context,
@@ -118,17 +117,39 @@ class Utilities(BaseCog):
         escaped = text.replace("```", "``\u200b`")
         await ctx.send(f"```\n{escaped}\n```")
 
+    # Some code from https://github.com/Rapptz/RoboDanny
     @commands.command(aliases=["src"])
-    async def source(self, ctx: Context, *, command: str):
+    async def source(self, ctx: Context, *, command: Optional[str] = None):
         """Gets the source code of a specific command."""
 
-        cmd = self.bot.get_command(command)
-        if not cmd or (cmd.hidden and ctx.author.id not in OWNER_IDS):
-            raise GenericError("Couldn't find that command.")
+        REPO_URL = "https://github.com/itswilliboy/Harmony"
+        BRANCH = "master"
 
-        formatted = getsource(cmd.callback).replace("`", "\u200b`")
-        if len(formatted) > 2000:
-            buffer = BytesIO(formatted.encode("utf-8"))
-            return await ctx.send("Content was too long:", file=discord.File(fp=buffer, filename="src.py"))
+        if command is None:
+            return await ctx.send(REPO_URL)
 
-        await ctx.send(f"```py\n{formatted}\n```")
+        if command == "help":
+            source = type(self.bot.help_command)
+            module = source.__module__
+            file = getsourcefile(source)
+            file = cast(str, file)
+
+        else:
+
+            cmd = self.bot.get_command(command)
+            if cmd is None:
+                raise GenericError("Couldn't find that command.")
+
+
+            source = cmd.callback.__code__
+            file = source.co_filename
+            module = cmd.callback.__module__
+
+        if not module.startswith("cogs"):
+            raise GenericError("Coulnd't find the source for that command.")
+
+        lines, first = getsourcelines(source)
+        loc = path.relpath(file).replace("\\", "/")
+
+        url = f"<{REPO_URL}/blob/{BRANCH}/{loc}#L{first}-L{first + len(lines) - 1}>"
+        await ctx.send(url)

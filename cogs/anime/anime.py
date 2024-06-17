@@ -73,6 +73,9 @@ class MinifiedMedia:
     def __eq__(self, other: object) -> bool:
         return isinstance(other, type(self)) and other.id == self.id
 
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
+
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> Self:
         type_ = MediaType(data["type"])

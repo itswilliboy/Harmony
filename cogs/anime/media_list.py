@@ -153,7 +153,7 @@ class MediaList(Paginator[discord.Embed]):
         if self.manga is None:
             self.manga = await self.fetch_manga()
 
-        button.label = f"Manga ({self.get_length(self.manga)})"
+            button.label = f"Manga ({self.get_length(self.manga)})"
 
         self.collection = self.manga
         self.update_collection(self.manga)

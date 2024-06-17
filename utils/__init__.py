@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from .banned_member import *
 from .cog import *
 from .context import *
 from .embed import *
