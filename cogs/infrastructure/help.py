@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Mapping, NamedTuple, Optional, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, NamedTuple, Optional, cast
 
 from discord import Embed, utils
 from discord.ext import commands
@@ -73,7 +74,13 @@ class HelpCommand(commands.HelpCommand):
         if aliases := command.aliases:
             embed.add_field(name="Aliases", value=", ".join([f"`{alias}`" for alias in aliases]), inline=False)
 
-        if perms := command.extras.get("perms"):
+        perms: dict[str, bool] = {}
+        for check in command.checks:
+            if check.__closure__:
+                perms = check.__closure__[0].cell_contents
+                break
+
+        if perms:
             nl = "\n"
             keys = [key.replace("_", " ").title() for key in list(perms.keys())]
             embed.add_field(name="Required Permissions", value=f"* {f' {nl}* '.join(keys)}", inline=False)
