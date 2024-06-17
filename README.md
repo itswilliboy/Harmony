@@ -3,7 +3,7 @@
 Harmony is a multipurpose bot that was created by me in **2020**. It has seen multiple iterations and rewrites over the years since then but this is probably the final one as the code is **considerably** better than it was then.
 
 
-Harmony has a lot of different features, but there are definitely features that I'm more proud over like the **anime/manga** side of things.
+Harmony has a lot of different features, but there are definitely features that I'm more proud of like the **anime/manga** side of things.
 
 ### Some of the key features include:
 <details>
