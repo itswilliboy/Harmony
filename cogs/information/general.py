@@ -11,13 +11,13 @@ from typing import TYPE_CHECKING, Any, NamedTuple, Self, cast
 import aiohttp
 import asyncpg
 import discord
+import pygit2
 from cutlet import Cutlet
 from discord.ext import commands
 from jishaku.functools import executor_function
 from langcodes import Language
 from PIL import Image
 from psutil import Process, cpu_percent, virtual_memory
-import pygit2
 
 from config import JEYY_API, OWNER_IDS
 from utils import BaseCog, GenericError, PrimaryEmbed, argument_or_reference
