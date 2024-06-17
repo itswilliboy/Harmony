@@ -15,7 +15,7 @@ As well as partial OAuth2 integration and ability to view lists and other social
 
 * There is also a feature called *Inline Search* (Thanks [Leo](https://github.com/leocx1000)) which basically mimics some bots on anime subreddits:\
 For example you can use the syntax `{{anime}}` for anime and `[[manga]]` for manga to search for them respectively.\
-The bot will then respond with information about the thing(s) you searched for (supports multiple searches in the same message.):\
+The bot will then respond with information about the thing(s) you searched for (supports multiple searches in the same message):\
 \
 `{{frieren}}`\
 ![](images/frieren.png)
