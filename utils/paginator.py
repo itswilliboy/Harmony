@@ -1,16 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from math import ceil
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    Generic,
-    Optional,
-    Self,
-    Sequence,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, Self, TypeVar
 
 import discord
 from asyncpg import Pool, Record
