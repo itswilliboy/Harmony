@@ -25,23 +25,13 @@ To make this (and some other features) handier, you can use `anilist login` to l
 which means that commands such as the ones listed above default to your own account when invoked without any specific username.\
 This also means that if you have watched/read a show/manga whilst using the `anime`/`manga` command, it will show your and your followed users' current status and rating on the show.
 </details>
-<details>
-<summary>Moderation</summary>
+<br>
 
-* Your *standard* moderation commands such as `ban`, `unban`, `kick`, `purge`, etc.
-</details>
+Your *standard* moderation commands such as `ban`, `unban`, `kick`, `purge`, etc.
 
-<details>
-<summary>Information</summary>
+Various information commands such as `whois`, `icon`, `banner`, and `avatar`.
 
-* Various information commands such as `whois`, `icon`, `banner`, and `avatar`.
-</details>
-
-<details>
-<summary>Miscellaneous & Fun</summary>
-
-* Other miscellaneous / fun commands such as `urban` (Urban Dictionary), `raw`, `addemoji`, and more.
-</details>
+Other miscellaneous / fun commands such as `urban` (Urban Dictionary), `raw`, `addemoji`, and more.
 
 ### Going forward
 I'll continue adding- and fixing/improving features as time goes and anyone is free to contribute, submit bug reports, etc. if they feel like it. :)
