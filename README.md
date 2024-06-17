@@ -1,5 +1,5 @@
 # Harmony
-<img src="https://cdn.discordapp.com/avatars/741592089342640198/4024331a00944bb446f5ca8ac78aad66.png?size=1024" width=128 height=128 align="right">
+<img src="https://cdn.discordapp.com/avatars/741592089342640198/4024331a00944bb446f5ca8ac78aad66.png?size=1024" width=128 height=128 align="right">\
 Harmony is a multipurpose bot that was created by me in **2020**. It has seen multiple iterations and rewrites over the years since then but this is probably the final one as the code is **considerably** better than it was then.
 
 
