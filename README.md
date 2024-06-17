@@ -8,7 +8,7 @@ Harmony has a lot of different features, but there are definitely features that 
 ### Some of the key features include:
 
 * Anime and Manga search with the help of *AniList*.\
-As well as partial OAuth2 integration and ability to view lists and other social data that is encompassed on the platform (eg. following people's statuses, your own ratings, etc. on the anime/manga that you're searching for.)
+As well as partial OAuth2 integration and ability to view lists and other social data that is encompassed on the platform (eg. following people's statuses, your own ratings, etc. on the anime/manga that you're searching for).
 
     * There is also a feature called *Inline Search* (Thanks [Leo](https://github.com/leocx1000)) which basically mimics some bots on anime subreddits:\
     For example you can use the syntax `{{anime}}` for anime and `[[manga]]` for manga to search for them respectively.\
@@ -17,11 +17,16 @@ As well as partial OAuth2 integration and ability to view lists and other social
     `{{frieren}}`\
     ![](images/frieren.png)
 
+    * You can view your own *AniList* profile with the `anilist` command as well as see your own anime- or manga list with `anilist list`.
+
 * Your *standard* moderation commands such as `ban`, `unban`, `kick`, `purge`, etc.
 
 * Various information commands such as `whois`, `icon`, `banner`, and `avatar`.
 
 * Other miscellaneous / fun commands such as `urban` (Urban Dictionary), `raw`, `addemoji`, and more.
+
+### Going forward
+I'll continue adding- and fixing/improving features as time goes and anyone is free to contribute, submit bug reports, etc. if they feel like it. :)
 
 ## Inviting
 If you would like to invite my bot you can use the link below and start with `h;help` or by @mentioning the bot.\
