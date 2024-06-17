@@ -214,7 +214,7 @@ class General(BaseCog):
         embed.add_field(name="Servers", value=len(self.bot.guilds))
         embed.add_field(name="Users", value=f"{len(self.bot.users):,}")
 
-        embed.add_field(name="Latest Changes", value="\n".join(self.get_latest_commits()), inline=False)
+        embed.add_field(name="Latest Changes", value="\n".join(self.get_latest_commits(5)), inline=False)
 
         process = Process(getpid())
         cpu = cpu_percent()
