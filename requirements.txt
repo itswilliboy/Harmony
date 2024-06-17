@@ -7,6 +7,7 @@ asyncache
 Pillow
 types-Pillow
 pyjwt
+pygit2
 
 langcodes[data]
 cutlet

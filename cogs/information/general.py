@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import time
 from io import BytesIO
 from os import getpid
@@ -16,6 +17,7 @@ from jishaku.functools import executor_function
 from langcodes import Language
 from PIL import Image
 from psutil import Process, cpu_percent, virtual_memory
+import pygit2
 
 from config import JEYY_API, OWNER_IDS
 from utils import BaseCog, GenericError, PrimaryEmbed, argument_or_reference
@@ -183,6 +185,20 @@ class General(BaseCog):
         embed.set_field_at(1, name="Bot Response Time", value=get_color(resp_time))
         await msg.edit(embed=embed)
 
+    def format(self, commit: pygit2.Commit) -> str:
+        msg, *_ = commit.message.partition("\n")
+        time = datetime.datetime.fromtimestamp(commit.commit_time)
+
+        timestamp = discord.utils.format_dt(time, "R")
+        partial, full = commit.short_id, commit.id
+        return f"[`{partial}`](<https://github.com/itswilliboy/Harmony/commit/{full}>) {timestamp} | {msg}"
+
+    def get_latest_commits(self, limit: int = 3) -> list[str]:
+        repo = pygit2.Repository(".git")
+        commits = list(repo.walk(repo.head.target))[:limit]
+
+        return [self.format(commit) for commit in commits]
+
     @commands.command(aliases=["bot", "about", "abt"])
     async def botinfo(self, ctx: Context):
         """Displays information about the bot."""
@@ -197,6 +213,8 @@ class General(BaseCog):
         embed.add_field(name="Started", value=discord.utils.format_dt(self.bot.started_at, "R"))
         embed.add_field(name="Servers", value=len(self.bot.guilds))
         embed.add_field(name="Users", value=f"{len(self.bot.users):,}")
+
+        embed.add_field(name="Latest Changes", value="\n".join(self.get_latest_commits()), inline=False)
 
         process = Process(getpid())
         cpu = cpu_percent()
@@ -214,7 +232,7 @@ class General(BaseCog):
             `RAM (Server) `: {formatted(server_ram)} MiB
             `RAM (Process)`: {formatted(process_ram)} MiB
         """
-        embed.add_field(name="Process Information", value=dedent(value))
+        embed.add_field(name="Process Information", value=dedent(value), inline=False)
 
         command_runs: int = await ctx.pool.fetchval("SELECT SUM(count) FROM command_statistics")
         embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
