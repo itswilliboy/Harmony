@@ -75,15 +75,31 @@ class HelpCommand(commands.HelpCommand):
             embed.add_field(name="Aliases", value=", ".join([f"`{alias}`" for alias in aliases]), inline=False)
 
         perms: dict[str, bool] = {}
+        bot_perms: dict[str, bool] = {}
+        guild_only: bool = False
         for check in command.checks:
-            if check.__closure__:
-                perms = check.__closure__[0].cell_contents
-                break
 
+            if "guild_only" in str(check):
+                guild_only = True
+
+            if check.__closure__:
+                if "bot_has" in str(check):
+                    bot_perms = check.__closure__[0].cell_contents
+                else:
+                    perms = check.__closure__[0].cell_contents
+
+        nl = "\n"
         if perms:
-            nl = "\n"
             keys = [key.replace("_", " ").title() for key in list(perms.keys())]
             embed.add_field(name="Required Permissions", value=f"* {f' {nl}* '.join(keys)}", inline=False)
+
+        if bot_perms:
+            keys = [key.replace("_", " ").title() for key in list(bot_perms.keys())]
+            embed.add_field(name="Bot's Required Permissions", value=f"* {f' {nl}* '.join(keys)}", inline=False)
+
+        if guild_only:
+            assert isinstance(embed.title, str)
+            embed.title += " [Server Only]"
 
         await self.get_destination().send(embed=embed)
 
