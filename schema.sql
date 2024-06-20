@@ -39,10 +39,11 @@ CREATE TABLE IF NOT EXISTS snipe_optout(
     user_id BIGINT PRIMARY KEY
 );
 
-CREATE TABLE IF NOT EXISTS anilist_codes(
+CREATE TABLE IF NOT EXISTS anilist_tokens(
     user_id BIGINT PRIMARY KEY,
-    access_token TEXT NOT NULL,
-    expires_in TIMESTAMP NOT NULL
+    token TEXT NOT NULL,
+    refresh TEXT NOT NULL,
+    expiry TIMESTAMP NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS logging_config(

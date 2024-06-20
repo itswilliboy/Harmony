@@ -163,6 +163,7 @@ class PartialNode(NamedTuple):
 
 class AccessToken(NamedTuple):
     token: str
+    refresh: str
     expiry: datetime
 
 
@@ -275,7 +276,7 @@ class OAuth:
 
             expires = datetime.now() + timedelta(seconds=json["expires_in"])
 
-        return AccessToken(token, expires)
+        return AccessToken(token, json["refresh_token"], expires)
 
     async def get_current_user(self, token: str) -> User:
         """Gets the current user with the Access Token."""

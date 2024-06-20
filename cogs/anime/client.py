@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     from bot import Harmony
 
 
+class InvalidToken(Exception): ...
+
+
 MINIFIED_SEARCH_QUERY = """
     query ($search: String, $type: MediaType) {
         Media (search: $search, type: $type, sort: POPULARITY_DESC) {
@@ -224,6 +227,9 @@ class AniListClient:
             json={"query": MEDIA_QUERY, "variables": variables},
             headers=headers,
         ) as resp:
+            if resp.status == 400:
+                raise InvalidToken("The token has either expired or been revoked.")
+
             json = await resp.json()
 
             try:
@@ -351,15 +357,16 @@ class AniListClient:
             return collection
 
     async def get_token(self, user_id: int) -> Optional[AccessToken]:
-        query = "SELECT * FROM anilist_codes WHERE user_id = $1"
+        query = "SELECT * FROM anilist_tokens WHERE user_id = $1"
         resp = await self.bot.pool.fetchrow(query, user_id)
 
         if not resp:
             return None
 
         return AccessToken(
-            resp["access_token"],
-            resp["expires_in"],
+            resp["token"],
+            resp["refresh"],
+            resp["expiry"],
         )
 
     async def get_headers(self, user_id: int) -> dict[str, str]:

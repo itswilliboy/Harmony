@@ -266,13 +266,14 @@ class LoginView(ui.View):
         if resp is None:
             return False
 
-        token, expires_in = resp
+        token, refresh, expires_in = resp
 
-        query = "INSERT INTO anilist_codes VALUES ($1, $2, $3)"
+        query = "INSERT INTO anilist_tokens VALUES ($1, $2, $3, $4)"
         await self.bot.pool.execute(
             query,
             self.author.id,
             token,
+            refresh,
             expires_in,
         )
 

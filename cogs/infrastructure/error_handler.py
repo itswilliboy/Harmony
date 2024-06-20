@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 import discord
 from discord.ext import commands
 
+from cogs.anime.client import InvalidToken
 from utils import BaseCog, ErrorEmbed, GenericError, get_command_signature
 
 if TYPE_CHECKING:
@@ -124,6 +125,28 @@ class ErrorHandler(BaseCog):
             avail = datetime.datetime.now() + datetime.timedelta(seconds=error.retry_after)
             formatted = discord.utils.format_dt(avail, "R")
             embed = ErrorEmbed(description=f"This command is on cooldown, please try again in {formatted}.")
+
+        elif isinstance(error, InvalidToken):
+            embed = ErrorEmbed(
+                description=(
+                    "Your login has either expired or been manually revoked and you've been automatically logged out.\n\n"
+                    "Either log in via the button below or run the command again to keep yourself logged out."
+                )
+            )
+            await ctx.pool.execute("DELETE FROM anilist_tokens WHERE user_id = $1", ctx.author.id)
+
+            view = discord.ui.View()
+            button: discord.ui.Button[discord.ui.View] = discord.ui.Button(label="Log in", style=discord.ButtonStyle.green)
+
+            async def callback(interaction: discord.Interaction):
+                if interaction.user == ctx.author:
+                    await ctx.invoke(ctx.bot.get_command("anilist login"))  # type: ignore
+                await interaction.response.edit_message()
+
+            button.callback = callback
+            view.add_item(button)
+
+            return await ctx.send(embed=embed, view=view)
 
         else:
             embed = ErrorEmbed(description="An unknown error occurred")
