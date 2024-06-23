@@ -135,7 +135,7 @@ MEDIA_LIST_QUERY = """
         MediaListCollection(userName: $userName, userId: $userId, type: $type, sort: SCORE_DESC) {
             lists {
                 entries {
-                    score(format: POINT_10)
+                    score(format: POINT_10_DECIMAL)
                     status
                     progress
                     progressVolumes
