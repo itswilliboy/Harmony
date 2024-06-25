@@ -78,7 +78,6 @@ class HelpCommand(commands.HelpCommand):
         bot_perms: dict[str, bool] = {}
         guild_only: bool = False
         for check in command.checks:
-
             if "guild_only" in str(check):
                 guild_only = True
 

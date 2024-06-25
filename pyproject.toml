@@ -1,13 +1,10 @@
 [tool.ruff]
 line-length = 125
 target-version = "py311"
+extend-select = ["I"]
+
+[tool.ruff.lint]
 ignore = ["E731"]
-
-[tool.black]
-line-length = 125
-
-[tool.isort]
-profile = "black"
 
 [tool.pyright]
 pythonVersion = "3.11"

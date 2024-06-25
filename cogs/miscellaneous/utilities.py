@@ -135,7 +135,6 @@ class Utilities(BaseCog):
             file = cast(str, file)
 
         else:
-
             cmd = self.bot.get_command(command)
             if cmd is None:
                 raise GenericError("Couldn't find that command.")

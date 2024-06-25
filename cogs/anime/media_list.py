@@ -89,7 +89,6 @@ class MediaList(Paginator[discord.Embed]):
         await interaction.response.edit_message(embed=self.current, view=self)
 
     def embeds(self, type: MediaListStatus) -> list[discord.Embed]:
-
         try:
             list_ = [i for i in self.collection["lists"] if i["status"] == type][0]
 

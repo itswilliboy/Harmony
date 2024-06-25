@@ -37,7 +37,6 @@ class LoggingConfig:
 
 
 class Logging(BaseCog):
-
     async def create_guild_config(self, guild: discord.abc.Snowflake, channel: discord.TextChannel) -> LoggingConfig:
         """Creates a new logging config for a guild."""
 

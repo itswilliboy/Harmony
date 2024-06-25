@@ -86,9 +86,7 @@ VIEWER_QUERY = """
     }}
 
     {}
-""".format(
-    USER_FRAGMENT
-)
+""".format(USER_FRAGMENT)
 
 USER_QUERY = """
     query ($name: String, $id: Int) {{
@@ -98,9 +96,7 @@ USER_QUERY = """
     }}
 
     {}
-""".format(
-    USER_FRAGMENT
-)
+""".format(USER_FRAGMENT)
 
 
 def parse_dict_or_str(
