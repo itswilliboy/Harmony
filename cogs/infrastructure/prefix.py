@@ -39,13 +39,11 @@ class Prefix(BaseCog):
                     await self.bot.pool.execute("DELETE FROM prefixes WHERE guild_id = $1", id)
 
     async def get_custom_prefixes(self, message: discord.Message) -> list[str]:
-        prefixes = await self.bot.get_prefix(message)
+        if message.guild:
+            prefixes = await self.bot.pool.fetchval("SELECT prefixes FROM prefixes WHERE guild_id = $1", message.guild.id)
 
-        # Remove mention prefixes from list
-        del prefixes[0]
-        del prefixes[0]
-
-        return prefixes
+            return prefixes
+        return []
 
     async def add_custom_prefix(self, guild: discord.abc.Snowflake, prefix: str) -> None:
         query = """
