@@ -21,9 +21,6 @@ initial_extensions = [
 ]
 
 intents = Intents.default()
-intents.message_content = True
-intents.members = True
-
 bot = Harmony(intents=intents, initial_extensions=initial_extensions)
 
 

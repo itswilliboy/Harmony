@@ -104,7 +104,13 @@ class Prefix(BaseCog):
 
         if ctx.author.guild_permissions.manage_guild:  # type: ignore
             embed.set_footer(text=f"You can add another prefix with '{ctx.clean_prefix}prefix add <prefix>'")
-        await ctx.send(embed=embed)
+
+        content = (
+            "Hey! The bot has migrated to slash commands while the bot is being approved for message content intents.\n"
+            f"You can still use commands by using the <@{ctx.bot.user.id}> prefix, but slash commands also work until it's all figured out.\n\n"
+            "Sorry for any inconvenience!"
+        )
+        await ctx.send(content, embed=embed)
 
     @commands.has_guild_permissions(manage_guild=True)
     @prefix.command()

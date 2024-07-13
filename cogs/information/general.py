@@ -13,6 +13,7 @@ import asyncpg
 import discord
 import pygit2
 from cutlet import Cutlet
+from discord.app_commands import describe
 from discord.ext import commands
 from jishaku.functools import executor_function
 from langcodes import Language
@@ -50,7 +51,8 @@ class General(BaseCog):
         super().__init__(bot)
 
     @commands.guild_only()
-    @commands.command(aliases=["ui", "whois", "info"])
+    @commands.hybrid_command(aliases=["ui", "whois", "info"])
+    @describe(member="The member to view")
     async def userinfo(self, ctx: Context, member: discord.Member = commands.Author):
         """Get information about a member in the server."""
 
@@ -91,14 +93,16 @@ class General(BaseCog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["av", "pfp"])
+    @commands.hybrid_command(aliases=["av", "pfp"])
+    @describe(user="The user whose avatar to view")
     async def avatar(self, ctx: Context, user: discord.User = commands.Author):
         """Get someone's avatar."""
         view = AvatarView(user.display_avatar)
         embed = PrimaryEmbed(title=f"{user.name}'s Avatar").set_image(url=user.display_avatar.url)
         await ctx.send(embed=embed, view=view)
 
-    @commands.command()
+    @commands.hybrid_command()
+    @describe(user="The user whose banner to view")
     async def banner(self, ctx: Context, user: discord.User = commands.Author):
         """Get someone's banner"""
         try:
@@ -114,7 +118,7 @@ class General(BaseCog):
         embed = PrimaryEmbed(title=f"{user.name}'s Banner").set_image(url=fetched.banner.url)
         await ctx.send(embed=embed, view=view)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def icon(self, ctx: Context):
         """Get the server's icon."""
         if ctx.guild.icon is None:
@@ -124,7 +128,7 @@ class General(BaseCog):
         embed = PrimaryEmbed(title=f"{ctx.guild.name}'s Icon").set_image(url=ctx.guild.icon.url)
         await ctx.send(embed=embed, view=view)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def invite(self, ctx: Context):
         """Invite the bot."""
         permissions = discord.Permissions(10170482945222)
@@ -143,7 +147,7 @@ class General(BaseCog):
             view=view,
         )
 
-    @commands.command()
+    @commands.hybrid_command()
     async def support(self, ctx: Context):
         """Join our support server."""
         invite = "https://discord.gg/P22UdJUdHk"
@@ -199,7 +203,7 @@ class General(BaseCog):
 
         return [self.format(commit) for commit in commits]
 
-    @commands.command(aliases=["bot", "about", "abt"])
+    @commands.hybrid_command(aliases=["bot", "about", "abt"])
     async def botinfo(self, ctx: Context):
         """Displays information about the bot."""
 
@@ -247,7 +251,8 @@ class General(BaseCog):
         embed.add_field(name="Version Information", value=dedent(value), inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
+    @describe(text="The text to translate")
     async def translate(
         self,
         ctx: Context,

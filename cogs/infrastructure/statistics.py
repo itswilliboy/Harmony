@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import discord
+from discord.app_commands import describe
 from discord.ext import commands
 
 from utils import BaseCog, Context, Paginator, PrimaryEmbed
@@ -59,8 +60,14 @@ class Statistics(BaseCog):
             message.author.bot,
         )
 
-    @commands.group(aliases=["msgs"], invoke_without_command=True)
-    async def messages(self, ctx: Context, member: discord.Member = commands.Author):
+    @commands.hybrid_group(aliases=["msgs"], invoke_without_command=True)
+    async def messages(self, ctx: Context):
+        await ctx.send_help(ctx.command)
+
+    @messages.command()
+    @describe(member="The member to view the messages for")
+    async def amount(self, ctx: Context, member: discord.Member = commands.Author):
+        """See the amount of messages someone has sent in the server."""
         res: int = await ctx.pool.fetchval(
             "SELECT count FROM message_statistics WHERE user_id = $1 AND guild_id = $2", member.id, ctx.guild.id
         )
@@ -74,7 +81,9 @@ class Statistics(BaseCog):
         )
 
     @messages.command(aliases=["lb"])
+    @describe(with_bots="Whether to include bots in the leaderboard")
     async def leaderboard(self, ctx: Context, with_bots: bool = False):
+        """Shows the messages leaderboard."""
         res = await ctx.pool.fetch(
             """
             SELECT user_id, count FROM message_statistics

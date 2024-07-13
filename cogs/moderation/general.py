@@ -1,48 +1,37 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Annotated, Optional
+from typing import TYPE_CHECKING, Annotated, Callable, Optional
 
 import discord
+from discord import app_commands
 from discord.ext import commands
 
-from utils import BannedMember, BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
+from utils import BannedMember, BaseCog, ErrorEmbed, GenericError, SuccessEmbed
+from utils.autocomplete import ban_entry_autocomplete
 
 if TYPE_CHECKING:
-    from bot import Harmony
     from utils import Context
 
 
+class BanFlags(commands.FlagConverter):
+    reason: str = commands.flag(description="The reason for the ban.", default="No reason given.")
+    days: int = commands.flag(description="The amount of days to delete messages for", default=0)
+
+
+class ClearFlags(commands.FlagConverter):
+    after: Optional[int] = commands.flag(description="The ID of the message to delete messages after", default=None)
+    before: Optional[int] = commands.flag(description="The ID of the message to delete messages before", default=None)
+    user: Optional[discord.Member] = commands.flag(description="The user to delete messages from", default=None)
+
+
 class General(BaseCog):
-    def __init__(self, bot: Harmony) -> None:
-        super().__init__(bot)
-        bot.loop.create_task(self.init_dict())
-
-        self.snipes: dict[int, dict[int, tuple[Optional[discord.Message], Optional[datetime.datetime]]]]
-
-    async def init_dict(self) -> None:
-        await self.bot.wait_until_ready()
-
-        self.snipes = {}
-        for guild in self.bot.guilds:
-            self.snipes[guild.id] = {}
-
-            for channel in guild.channels:
-                self.snipes[guild.id].update({channel.id: (None, None)})
-
-    @commands.Cog.listener()
-    async def on_message_delete(self, message: discord.Message):
-        guild = message.guild
-        channel = message.channel
-
-        assert guild, channel
-
-        self.snipes[guild.id][channel.id] = (message, datetime.datetime.now())
-
     @commands.has_guild_permissions(kick_members=True)
     @commands.bot_has_guild_permissions(kick_members=True)
     @commands.guild_only()
-    @commands.command()
+    @commands.hybrid_command()
+    @app_commands.default_permissions(kick_members=True)
+    @app_commands.describe(member="The member to kick", reason="The reason for the kick")
     async def kick(self, ctx: Context, member: discord.Member, *, reason: Optional[str] = None):
         """Kicks a user."""
 
@@ -67,12 +56,15 @@ class General(BaseCog):
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.guild_only()
-    @commands.command()
-    async def ban(self, ctx: Context, member: discord.Member | int, *, reason: Optional[str] = None):
+    @commands.hybrid_command()
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.describe(member="The member to ban", reason="The reason for the ban")
+    async def ban(self, ctx: Context, member: discord.Member | discord.User, *, flags: BanFlags):
         """Bans a user that is either in the server or not."""
+
         to_ban: discord.abc.Snowflake
-        if isinstance(member, int) and ctx.guild.get_member(member) is None:
-            to_ban = discord.Object(member)
+        if isinstance(member, discord.User) and ctx.guild.get_member(member.id) is None:
+            to_ban = discord.Object(member.id)
 
         else:
             assert isinstance(ctx.author, discord.Member) and isinstance(member, discord.Member)
@@ -88,8 +80,8 @@ class General(BaseCog):
 
             to_ban = member
 
-        reason = reason or "No reason given."
-        await ctx.guild.ban(to_ban, reason=reason)
+        reason = flags.reason
+        await ctx.guild.ban(to_ban, reason=reason, delete_message_days=flags.days)
         embed = SuccessEmbed(description=f"Sucessfully banned <@{to_ban.id}>.\nReason: `{reason}`")
         embed.set_footer(text=f"ID: {to_ban.id}").timestamp = discord.utils.utcnow()
 
@@ -111,6 +103,7 @@ class General(BaseCog):
             to_unban: discord.abc.Snowflake
             if isinstance(user, discord.BanEntry):
                 to_unban = user.user
+
             else:
                 to_unban = user
 
@@ -122,58 +115,73 @@ class General(BaseCog):
         except discord.HTTPException:
             raise GenericError("Something went wrong when trying to unban that user.")
 
+    @app_commands.guild_only()
+    @app_commands.command(name="unban")
+    @app_commands.autocomplete(user=ban_entry_autocomplete)
+    @app_commands.default_permissions(ban_members=True)
+    @app_commands.describe(
+        user="The user to unban, use the autocomplete or input a user id", reason="The reason for the unban"
+    )
+    @app_commands.checks.bot_has_permissions(ban_members=True)
+    async def slash_unban(self, interaction: discord.Interaction, user: str, reason: Optional[str] = None):
+        """Unbans a banned user."""
+
+        if not user.isnumeric():
+            return await interaction.response.send_message(
+                embed=ErrorEmbed(description="Please use the autocomplete or input a valid user ID."), ephemeral=True
+            )
+
+        assert interaction.guild
+
+        try:
+            reason = reason or "No reason given."
+            await interaction.guild.unban(discord.Object(user))
+            embed = SuccessEmbed(description=f"Sucessfully unbanned <@{user}>.\nReason: `{reason}`")
+            await interaction.response.send_message(embed=embed)
+
+        except discord.NotFound:
+            await interaction.response.send_message(
+                embed=ErrorEmbed(description="Couldn't find that banned user."), ephemeral=True
+            )
+
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_guild_permissions(manage_messages=True)
     @commands.guild_only()
-    @commands.command(aliases=["purge"])
-    async def clear(self, ctx: Context, amount: commands.Range[int, 1, 500]):
+    @commands.hybrid_command(aliases=["purge"])
+    @app_commands.default_permissions(manage_messages=True)
+    @app_commands.describe(amount="Amount of messages to clear")
+    async def clear(self, ctx: Context, amount: commands.Range[int, 1, 500], *, flags: ClearFlags):
         """Clears up to 500 messages from the current channel."""
+        before = None
+        after = None
+        if flags.before:
+            before = discord.Object(flags.before)
+
+        if flags.after:
+            after = discord.Object(flags.after)
+
+        check: Optional[Callable[[discord.Message], bool]] = None
+        if flags.user:
+
+            def actual_check(message: discord.Message) -> bool:
+                return bool(message.author == flags.user)
+
+            check = actual_check
+
         assert not isinstance(ctx.channel, (discord.DMChannel, discord.PartialMessageable, discord.GroupChannel))
-        await ctx.channel.purge(limit=amount, before=ctx.message)
+        await ctx.channel.purge(
+            limit=amount, before=before or ctx.message, after=after, check=check or discord.utils.MISSING
+        )
 
         try:
             await ctx.message.add_reaction("\N{OK HAND SIGN}")
         except Exception:
             pass
 
-    @commands.guild_only()
-    @commands.command()
-    async def snipe(self, ctx: Context):
-        """Views (snipes) the most recently deleted message in the current channel."""
-        exists = await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM snipe_optout WHERE user_id = $1)", ctx.author.id)
-        if exists is True:
-            raise GenericError("You are opted out from snipes.")
-
-        snipe = self.snipes[ctx.guild.id].get(ctx.channel.id)
-
-        assert snipe
-        if snipe[0] is None:
-            raise GenericError("No sniped messages in this channel.")
-
-        message, timestamp = snipe
-        assert message, timestamp
-
-        embed = PrimaryEmbed(description=message.content or "*No Content*", timestamp=timestamp)
-        embed.set_author(name=message.author, icon_url=message.author.display_avatar.url)
-
-        await ctx.send(embed=embed)
-
-    @commands.command()
-    async def snipe_opt_out(self, ctx: Context):
-        """Toggles opt-out from snipes."""
-        exists = await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM snipe_optout WHERE user_id = $1)", ctx.author.id)
-
-        if exists is True:
-            await ctx.pool.execute("DELETE FROM snipe_optout WHERE user_id = $1", ctx.author.id)
-            await ctx.send("Successfully opted you in.")
-
-        else:
-            await ctx.pool.execute("INSERT INTO snipe_optout VALUES ($1)", ctx.author.id)
-            await ctx.send("Successfully opted you out.")
-
     @commands.bot_has_permissions(manage_messages=True, read_message_history=True)
     @commands.guild_only()
-    @commands.command()
+    @commands.hybrid_command()
+    @app_commands.describe(amount="Amount of messages to clean up")
     async def cleanup(self, ctx: Context, amount: int = 25):
         """Removes the bot's messages, and command invocations in the current channel."""
 

@@ -35,10 +35,6 @@ CREATE TABLE IF NOT EXISTS guild_blacklist(
     timestamp TIMESTAMP DEFAULT current_timestamp
 );
 
-CREATE TABLE IF NOT EXISTS snipe_optout(
-    user_id BIGINT PRIMARY KEY
-);
-
 CREATE TABLE IF NOT EXISTS anilist_tokens(
     user_id BIGINT PRIMARY KEY,
     token TEXT NOT NULL,

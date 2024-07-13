@@ -8,6 +8,7 @@ from urllib.parse import urljoin, urlparse
 
 import discord
 from aiohttp import ClientConnectionError, InvalidURL
+from discord.app_commands import describe
 from discord.ext import commands
 
 from utils import BaseCog, ErrorEmbed, GenericError, SuccessEmbed, argument_or_reference
@@ -102,7 +103,8 @@ class Utilities(BaseCog):
                     True,
                 )
 
-    @commands.command()
+    @commands.hybrid_command()
+    @describe(text="The text to view raw")
     async def raw(
         self,
         ctx: Context,
@@ -118,7 +120,8 @@ class Utilities(BaseCog):
         await ctx.send(f"```\n{escaped}\n```")
 
     # Some code from https://github.com/Rapptz/RoboDanny
-    @commands.command(aliases=["src"])
+    @describe(command="Command to view source for")
+    @commands.hybrid_command(aliases=["src"])
     async def source(self, ctx: Context, *, command: Optional[str] = None):
         """Gets the source code of a specific command."""
 
