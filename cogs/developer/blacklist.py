@@ -111,7 +111,7 @@ class GuildBlacklistItem:
         return self._timestamp
 
 
-class Flags(commands.FlagConverter, prefix="--", delimiter=" "):
+class Flags(commands.FlagConverter):
     guild: Optional[discord.Guild] = None
     reason: Optional[str] = None
 
@@ -123,6 +123,9 @@ class Blacklist(BaseCog):
         bot.guild_blacklist = {}
         bot.loop.create_task(self.fill_cache())
         bot.add_check(self.blacklist_check, call_once=True)
+
+    def cog_unload(self):
+        self.bot.remove_check(self.blacklist_check, call_once=True)
 
     @staticmethod
     def blacklist_check(ctx: Context) -> bool:

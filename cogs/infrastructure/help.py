@@ -70,6 +70,17 @@ class HelpCommand(commands.HelpCommand):
             return await self.context.message.add_reaction("\N{CROSS MARK}")
 
         embed.add_field(name="Usage", value=f"```\n{get_command_signature((self.context.clean_prefix, command))}\n```")
+
+        flags: list[str] = []
+        for param in command.clean_params.values():
+            if issubclass(param.annotation.__class__, commands.flags.FlagsMeta):
+                for name, flag in param.annotation.get_flags().items():
+                    flags.append(f"`{name}`: {flag.description} `(Default: {flag.default})`")
+
+        nl = "\n"
+        if flags:
+            embed.add_field(name="Flags", value=f"* {f' {nl}* '.join(flags)}", inline=False)
+
         embed.set_footer(text="< > = required | [ ] = optional")
         if aliases := command.aliases:
             embed.add_field(name="Aliases", value=", ".join([f"`{alias}`" for alias in aliases]), inline=False)
@@ -87,7 +98,6 @@ class HelpCommand(commands.HelpCommand):
                 else:
                     perms = check.__closure__[0].cell_contents
 
-        nl = "\n"
         if perms:
             keys = [key.replace("_", " ").title() for key in list(perms.keys())]
             embed.add_field(name="Required Permissions", value=f"* {f' {nl}* '.join(keys)}", inline=False)

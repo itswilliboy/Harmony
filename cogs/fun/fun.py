@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 import discord
 from aiohttp import ClientSession
+from discord.app_commands import describe
 from discord.ext import commands
 
 from utils import BaseCog, GenericError, Paginator, PrimaryEmbed
@@ -63,7 +64,7 @@ class Fun(BaseCog):
 
             return json
 
-    @commands.command()
+    @commands.hybrid_command()
     async def fox(self, ctx: Context):
         """Sends a random picture of a fox."""
         await ctx.typing()
@@ -73,7 +74,7 @@ class Fun(BaseCog):
         embed = PrimaryEmbed().set_image(url=json["image"])
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def dog(self, ctx: Context):
         """Sends a random picture of a dog."""
         await ctx.typing()
@@ -83,7 +84,7 @@ class Fun(BaseCog):
         embed = PrimaryEmbed().set_image(url=json["url"])
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def cat(self, ctx: Context):
         """Sends a random picture of a cat"""
         await ctx.typing()
@@ -94,7 +95,7 @@ class Fun(BaseCog):
         embed = PrimaryEmbed().set_image(url=url)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     async def meme(self, ctx: Context):
         """Sends a meme."""
         await ctx.typing()
@@ -108,7 +109,8 @@ class Fun(BaseCog):
         )
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["ud", "define"])
+    @commands.hybrid_command(aliases=["ud", "define"])
+    @describe(query="The term to search for")
     async def urban(self, ctx: Context, *, query: str):
         """Get a defnition of a phrase from the Urban Dictionary."""
         url = "http://api.urbandictionary.com/v0/define"
@@ -134,7 +136,7 @@ class Fun(BaseCog):
 
         await Paginator(embeds, ctx.author).start(ctx)
 
-    @commands.command(aliases=["cf", "flip"])
+    @commands.hybrid_command(aliases=["cf", "flip"])
     async def coinflip(self, ctx: Context):
         """Flips a coin."""
         await ctx.send(f"\N{COIN} {'Heads' if randint(0, 1) else 'Tails'}")

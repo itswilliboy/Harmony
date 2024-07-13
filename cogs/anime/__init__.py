@@ -6,6 +6,7 @@ import re
 from typing import Annotated, Any, Optional
 
 import discord
+from discord.app_commands import describe
 from discord.ext import commands
 from jwt import decode
 
@@ -223,7 +224,7 @@ class AniList(BaseCog, name="Anime"):
 
             return user_
 
-    @commands.command(hidden=True)
+    @commands.hybrid_command(hidden=True)
     async def optout(self, ctx: Context):
         """Opts you out (or back in) of inline search."""
         if await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM inline_search_optout WHERE user_id = $1)", ctx.author.id):
@@ -233,18 +234,26 @@ class AniList(BaseCog, name="Anime"):
             await ctx.pool.execute("INSERT INTO inline_search_optout (user_id) VALUES ($1)", ctx.author.id)
             await ctx.send("Opted out of inline search.")
 
-    @commands.command()
+    @commands.hybrid_command()
+    @describe(search="The anime to search for")
     async def anime(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific anime."""
         await self.search(ctx, search, MediaType.ANIME)
 
-    @commands.command()
+    @commands.hybrid_command()
+    @describe(search="The manga to search for")
     async def manga(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific manga."""
         await self.search(ctx, search, MediaType.MANGA)
 
-    @commands.group(invoke_without_command=True)
-    async def anilist(self, ctx: Context, user: Annotated[Optional[str | int], AniUser] = None):
+    @commands.hybrid_group(invoke_without_command=True)
+    async def anilist(self, ctx: Context):
+        await ctx.send_help(ctx.command)
+
+    @anilist.command()
+    @describe(user="AniList username")
+    async def profile(self, ctx: Context, user: Annotated[Optional[str | int], AniUser] = None):
+        """View someone's AniList profile."""
         user_ = await self.get_user(ctx, user)
 
         embed = PrimaryEmbed(
@@ -312,8 +321,10 @@ class AniList(BaseCog, name="Anime"):
 
         await ctx.send(embed=embed)
 
+    @describe(user="AniList username")
     @anilist.command()
     async def list(self, ctx: Context, user: Annotated[Optional[str | int], AniUser] = None):
+        """View someone's anime list on AniList."""
         user_ = await self.get_user(ctx, user)
 
         async with ctx.typing():
@@ -324,6 +335,7 @@ class AniList(BaseCog, name="Anime"):
 
     @anilist.command(aliases=["auth"])
     async def login(self, ctx: Context):
+        """Log in with an AniList account."""
         query = "SELECT expiry FROM anilist_tokens WHERE user_id = $1"
         expiry: Optional[datetime.datetime] = await self.bot.pool.fetchval(
             query,
@@ -347,6 +359,7 @@ class AniList(BaseCog, name="Anime"):
 
     @anilist.command()
     async def logout(self, ctx: Context):
+        """Logs you out."""
         query = "SELECT EXISTS(SELECT 1 FROM anilist_tokens WHERE user_id = $1)"
         exists = await self.bot.pool.fetchval(query, ctx.author.id)
 
