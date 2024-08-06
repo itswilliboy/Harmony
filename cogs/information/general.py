@@ -249,6 +249,14 @@ class General(BaseCog):
             `asyncpg   `: v{asyncpg.__version__}
         """
         embed.add_field(name="Version Information", value=dedent(value), inline=False)
+        embed.add_field(
+            name="Privacy Policy & Terms of Service",
+            value=(
+                "**[Privacy Policy](https://itswilli.dev/bot/privacy)**\n"
+                "**[Terms of Service](https://old.itswilli.dev/harmony/terms)**"
+            ),
+        )
+
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
