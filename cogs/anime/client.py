@@ -217,7 +217,7 @@ class AniListClient:
     async def search_media(
         self, search: str, *, type: MediaType, user_id: Optional[int] = None
     ) -> tuple[Media, Optional[User]] | tuple[None, None]:
-        """Searchs and returns a media via a search query."""
+        """Searches and returns a media via a search query."""
 
         variables = {"search": search, "type": type}
         headers = await self.get_headers(user_id) if user_id else {}

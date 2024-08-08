@@ -37,7 +37,7 @@ class PageModal(ui.Modal, title="Hop to page"):
         self.paginator = paginator
         self.min = min
         self.max = max
-        self.page: ui.TextInput[Self] = ui.TextInput(label=f"Select a page ({min}-{max})")
+        self.page: ui.TextInput[PageModal] = ui.TextInput(label=f"Select a page ({min}-{max})")
 
         self.add_item(self.page)
 
