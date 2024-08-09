@@ -9,6 +9,7 @@ from .embed import *
 from .exceptions import *
 from .paginator import *
 from .utils import *
+from .view import *
 
 if TYPE_CHECKING:
     PrimaryEmbed = Embed

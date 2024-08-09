@@ -9,6 +9,8 @@ from asyncpg import Pool, Record
 from discord import ui
 from discord.utils import MISSING
 
+from .view import BaseView
+
 if TYPE_CHECKING:
     from bot import Harmony
 
@@ -54,7 +56,7 @@ class PageModal(ui.Modal, title="Hop to page"):
         await self.paginator.go_to(interaction, int(self.page.value) - 1)
 
 
-class Paginator(ui.View, Generic[T]):
+class Paginator(BaseView, Generic[T]):
     items: Sequence[T]
     count: int
     page: int
@@ -66,7 +68,7 @@ class Paginator(ui.View, Generic[T]):
     message: discord.Message
 
     def __init__(self, items: Sequence[T], user: Optional[discord.abc.Snowflake] = None) -> None:
-        super().__init__()
+        super().__init__(user)
 
         self.items = items
         self.count = len(self)
@@ -79,15 +81,6 @@ class Paginator(ui.View, Generic[T]):
 
     def __len__(self) -> int:
         return len(self.items)
-
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        if self.user and self.user.id == interaction.user.id:
-            return True
-        return False
-
-    async def on_timeout(self) -> None:
-        self.stop()
-        await self.message.edit(view=None)
 
     async def go_to(self, interaction: Interaction, page: int) -> None:
         """Goes to a specific page."""
@@ -194,7 +187,7 @@ class Paginator(ui.View, Generic[T]):
         await self.go_to(interaction, self.count - 1)
 
 
-class DynamicPaginator(ui.View, Generic[T]):
+class DynamicPaginator(BaseView, Generic[T]):
     PER_CHUNK: ClassVar[int] = 20
 
     pool: Pool[Record]

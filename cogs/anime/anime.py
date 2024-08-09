@@ -315,12 +315,14 @@ class Media:
         return to_return
 
     @property
-    def embed(self) -> discord.Embed:
-        url = f"https://anilist.co/{str(self.type.lower())}/{self.id}"
+    def url(self) -> str:
+        return f"https://anilist.co/{str(self.type.lower())}/{self.id}"
 
+    @property
+    def embed(self) -> discord.Embed:
         title = self.title.get("english") or self.title.get("romaji") or self.title.get("native")
 
-        embed = discord.Embed(title=title, description=self.description, color=self.colour, url=url)
+        embed = discord.Embed(title=title, description=self.description, color=self.colour, url=self.url)
 
         if title != self.title["romaji"]:
             embed.set_author(name=self.title["romaji"])
@@ -464,3 +466,84 @@ class Media:
             return None
 
         return discord.Embed(title="Followed Users", colour=self.colour, description="\n".join(information))
+
+    def status_embed(self, user: Optional[User] = None) -> Optional[discord.Embed]:
+        status = self.following_statuses
+        entry = self.list_entry
+
+        embed = discord.Embed(title=self.title["english"], url=self.url, colour=self.colour)
+
+        if entry and not entry["private"]:
+            ent_st = entry["status"]
+            if ent_st == MediaListStatus.CURRENT:
+                ent_st = "watching"
+
+            desc = [
+                f"↪ Status: **{ent_st.title()}**",
+                f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**" if self.type == MediaType.MANGA else "",
+                f"↪ Progress: **{entry['progress']}"
+                + " / "
+                + (str(self.episodes) if self.type == MediaType.ANIME else str(self.chapters))
+                + (" episode(s)" if self.type == MediaType.ANIME else " chapter(s)")
+                + "**",
+                f"↪ Score: **{entry['score']} / 10**",
+            ]
+
+            if entry["startedAt"] or entry["completedAt"]:
+                started_at = completed_at = None
+
+                if entry["startedAt"]["year"]:
+                    started_at = discord.utils.format_dt(
+                        self._to_datetime(entry["startedAt"]),  # type: ignore
+                        "d",
+                    )
+
+                if entry["completedAt"]["year"]:
+                    completed_at = discord.utils.format_dt(
+                        self._to_datetime(entry["completedAt"]),  # type: ignore
+                        "d",
+                    )
+
+                if started_at and not completed_at:
+                    desc.append(f"↪ Started at: **{started_at}**")
+                elif completed_at and not started_at:
+                    desc.append(f"↪ Completed at: **{completed_at}**")
+                elif started_at and completed_at:
+                    desc.append(f"↪ Started / Completed: **{started_at} ⟶ {completed_at}**")
+
+                if entry["repeat"]:
+                    desc.append(f"↪ Rewatches: **{entry['repeat']}**")
+
+            desc = [i for i in desc if i != ""]
+
+            embed.description = "\n".join(desc)
+
+        if status:
+            information: list[str] = []
+            for st in status:
+                user_: Any = st["user"]
+
+                if user is not None:
+                    if user_["id"] == user.id:
+                        continue
+
+                TOTAL_PROGRESS = st["media"]["episodes"] or st["media"]["chapters"]
+
+                desc = (
+                    f"↪ **[{user_['name']}]({user_['siteUrl']}) - "
+                    f"{st['score']} / 10**\n"
+                    f"╰ `{st['status'].title()}:` "
+                    f"{st['progress']} / {TOTAL_PROGRESS} "
+                    f"{'chapter(s)' if self.type == MediaType.MANGA else 'episode(s)'}"
+                )
+
+                information.append(desc)
+
+            if information:
+                embed.add_field(name="Followed Users", value="\n".join(information))
+
+        if user:
+            embed.set_author(name=user.name, url=user.url, icon_url=user.avatar_url)
+
+        if any((embed.description, embed.fields)):
+            return embed

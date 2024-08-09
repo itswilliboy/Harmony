@@ -25,7 +25,7 @@ from .client import AniListClient
 from .media_list import MediaList
 from .oauth import User
 from .types import FavouriteTypes, MediaType
-from .views import PIXEL_LINE_URL, Delete, LoginView, RelationView
+from .views import Delete, EmbedRelationView, LoginView
 
 ANIME_REGEX = re.compile(r"\{\{(.*?)\}\}")
 MANGA_REGEX = re.compile(r"\[\[(.*?)\]\]")
@@ -174,31 +174,9 @@ class AniList(BaseCog, name="Anime"):
                 )
             )
 
-        view = discord.utils.MISSING
+        view = EmbedRelationView(self, media, user, author=ctx.author)
 
-        if media.relations:
-            view = RelationView(self, media, user, ctx.author.id)
-
-        embeds: list[discord.Embed] = []
-
-        if not media.embed.image:
-            em = media.embed.copy()
-            em.set_image(url=PIXEL_LINE_URL)
-            embeds.append(em)
-
-        else:
-            embeds.append(media.embed)
-
-        if em := media.list_embed:
-            em.set_image(url=PIXEL_LINE_URL)
-            em.set_thumbnail(url=ctx.author.display_avatar.url)
-            embeds.append(em)
-
-        if em := media.following_status_embed(user):
-            em.set_image(url=PIXEL_LINE_URL)
-            embeds.append(em)
-
-        await ctx.send(embeds=embeds, view=view)
+        view.message = await ctx.send(embed=media.embed, view=view)
 
     async def get_user(self, ctx: Context, user: Optional[str | int] = None) -> User:
         if user is None:

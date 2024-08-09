@@ -7,7 +7,7 @@ import discord
 from discord import ui
 
 from config import ANILIST_URL
-from utils import ErrorEmbed, SuccessEmbed
+from utils import BaseView, ErrorEmbed, SuccessEmbed
 
 from .anime import Media
 from .oauth import User
@@ -27,32 +27,12 @@ async def callback(cog: AniList, id: int, interaction: discord.Interaction, user
 
     if media is None:
         return await interaction.response.send_message(
-            "Something went wrong when trying to find that media.", ephemeral=True
+            "Something went wrong when trying to fetch that media", ephemeral=True
         )
 
-    view = discord.utils.MISSING
-    if media.relations:
-        view = RelationView(cog, media, user, interaction.user.id)
+    view = EmbedRelationView(cog, media, user, author=interaction.user)
 
-    embeds: list[discord.Embed] = []
-
-    if not media.embed.image:
-        em = media.embed.copy()
-        em.set_image(url=PIXEL_LINE_URL)
-        embeds.append(em)
-
-    else:
-        embeds.append(media.embed)
-
-    if em := media.list_embed:
-        em.set_image(url=PIXEL_LINE_URL)
-        embeds.append(em)
-
-    if em := media.following_status_embed(user):
-        em.set_image(url=PIXEL_LINE_URL)
-        embeds.append(em)
-
-    await interaction.response.edit_message(embeds=embeds, view=view)
+    await interaction.response.edit_message(embed=media.embed, view=view)
 
 
 class RelationButton(ui.Button["RelationView"]):
@@ -124,12 +104,14 @@ class AdaptationSelect(ui.Select["RelationView"]):
         await callback(self.cog, int(self.values[0].split("\u200b")[1]), interaction)
 
 
-class RelationView(ui.View):
-    def __init__(self, cog: AniList, media: Media, user: Optional[User] = None, author_id: Optional[int] = None) -> None:
-        super().__init__()
+class RelationView(BaseView):
+    def __init__(
+        self, cog: AniList, media: Media, user: Optional[User] = None, author: Optional[discord.abc.Snowflake] = None
+    ) -> None:
+        super().__init__(author)
         self.media = media
         self.cog = cog
-        self.author_id = author_id
+        self.author = author
 
         relation_options: list[discord.SelectOption] = []
         adaptation_options: list[discord.SelectOption] = []
@@ -201,11 +183,6 @@ class RelationView(ui.View):
     def _sort_relations(edge: Edge) -> int:
         enums = [enum.value for enum in MediaRelation]
         return enums.index(edge.type)
-
-    async def interaction_check(self, interaction: discord.Interaction[Harmony]) -> bool:
-        if self.author_id:
-            return self.author_id == interaction.user.id
-        return False
 
 
 class CodeModal(ui.Modal, title="Enter OAuth Code"):
@@ -325,3 +302,57 @@ class Delete(discord.ui.DynamicItem[discord.ui.Button[discord.ui.View]], templat
         view = discord.ui.View(timeout=None)
         view.add_item(cls(user.id))
         return view
+
+
+class EmbedSelect(discord.ui.Select["EmbedRelationView"]):
+    def __init__(self, media: Media, user: Optional[User] = None) -> None:
+        self.media = media
+        self.user = user
+
+        options = [
+            discord.SelectOption(
+                label="Information",
+                description="General information about the media.",
+                emoji="\N{INFORMATION SOURCE}\N{VARIATION SELECTOR-16}",
+                default=True,
+                value="0",
+            )
+        ]
+
+        if media.list_entry or media.following_status_embed(user):
+            options.append(
+                discord.SelectOption(
+                    label="Your & Friends' Statuses",
+                    description="View watching status, progress, rating, etc.",
+                    emoji="\N{BUSTS IN SILHOUETTE}",
+                    value="1",
+                )
+            )
+
+        super().__init__(options=options, min_values=1, max_values=1)
+
+    async def callback(self, interaction: discord.Interaction[Harmony]):
+        value = self.values[0]
+
+        for option in self.options:
+            option.default = False
+        self.options[int(value)].default = True
+
+        embed: discord.Embed
+        if value == "0":
+            embed = self.media.embed
+
+        else:
+            embed = self.media.status_embed(self.user) or discord.Embed(description="Something went wrong...")
+
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class EmbedRelationView(RelationView):
+    def __init__(
+        self, cog: AniList, media: Media, user: Optional[User] = None, author: Optional[discord.abc.Snowflake] = None
+    ):
+        super().__init__(cog, media, user, author)
+
+        if media.status_embed(user):
+            self.add_item(EmbedSelect(media, user))

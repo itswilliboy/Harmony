@@ -1,0 +1,40 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
+
+import discord
+from discord import ui
+
+if TYPE_CHECKING:
+    from bot import Harmony
+
+    Interaction = discord.Interaction[Harmony]
+
+
+class BaseView(ui.View):
+    def __init__(
+        self,
+        author: Optional[discord.abc.Snowflake] = None,
+        message: Optional[discord.Message] = None,
+        *,
+        timeout: float = 600.0,
+    ) -> None:
+        super().__init__(timeout=timeout)
+        self.author = author
+        self.message = message
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        if self.author and self.author.id == interaction.user.id:
+            return True
+
+        await interaction.response.send_message("This is not for you.", ephemeral=True)
+        return False
+
+    async def on_timeout(self) -> None:
+        if self.message is not None:
+            self.stop()
+
+            try:
+                await self.message.edit(view=None)
+            except Exception:
+                pass
