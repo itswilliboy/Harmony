@@ -380,98 +380,12 @@ class Media:
 
         return embed
 
-    @property
-    def list_embed(self) -> Optional[discord.Embed]:
-        entry = self.list_entry
-        if entry is None:
-            return None
-
-        if entry["private"] is True:
-            return None
-
-        status = entry["status"]
-        if status == MediaListStatus.CURRENT:
-            status = "watching"
-
-        desc = [
-            f"↪ Status: **{status.title()}**",
-            f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**" if self.type == MediaType.MANGA else "",
-            f"↪ Progress: **{entry['progress']}"
-            + " / "
-            + (str(self.episodes) if self.type == MediaType.ANIME else str(self.chapters))
-            + (" episode(s)" if self.type == MediaType.ANIME else " chapter(s)")
-            + "**",
-            f"↪ Score: **{entry['score']} / 10**",
-        ]
-
-        if entry["startedAt"] or entry["completedAt"]:
-            started_at = completed_at = None
-
-            if entry["startedAt"]["year"]:
-                started_at = discord.utils.format_dt(
-                    self._to_datetime(entry["startedAt"]),  # type: ignore
-                    "d",
-                )
-
-            if entry["completedAt"]["year"]:
-                completed_at = discord.utils.format_dt(
-                    self._to_datetime(entry["completedAt"]),  # type: ignore
-                    "d",
-                )
-
-            if started_at and not completed_at:
-                desc.append(f"↪ Started at: **{started_at}**")
-            elif completed_at and not started_at:
-                desc.append(f"↪ Completed at: **{completed_at}**")
-            elif started_at and completed_at:
-                desc.append(f"↪ Started / Completed: **{started_at} ⟶ {completed_at}**")
-
-            if entry["repeat"]:
-                desc.append(f"↪ Rewatches: **{entry['repeat']}**")
-
-        desc = [i for i in desc if i != ""]
-        embed = discord.Embed(title="Your Status", colour=self.colour, description="\n".join(desc))
-
-        if entry["updatedAt"] and not self.following_statuses:
-            embed.set_footer(text="Last Updated").timestamp = datetime.datetime.fromtimestamp(entry["updatedAt"])
-
-        return embed
-
-    def following_status_embed(self, user: Optional[User] = None) -> Optional[discord.Embed]:
-        status_ = self.following_statuses
-        if not status_:
-            return
-
-        information: list[str] = []
-        for status in status_:
-            user_: Any = status["user"]
-
-            if user is not None:
-                if user_["id"] == user.id:
-                    continue
-
-            TOTAL_PROGRESS = status["media"]["episodes"] or status["media"]["chapters"]
-
-            desc = (
-                f"↪ **[{user_['name']}]({user_['siteUrl']}) - "
-                f"{status['score']} / 10**\n"
-                f"╰ `{status['status'].title()}:` "
-                f"{status['progress']} / {TOTAL_PROGRESS} "
-                f"{'chapter(s)' if self.type == MediaType.MANGA else 'episode(s)'}"
-            )
-
-            information.append(desc)
-
-        if not information:
-            return None
-
-        return discord.Embed(title="Followed Users", colour=self.colour, description="\n".join(information))
-
     def status_embed(self, user: Optional[User] = None) -> Optional[discord.Embed]:
         status = self.following_statuses
         entry = self.list_entry
 
         embed = discord.Embed(title=self.title["english"], url=self.url, colour=self.colour)
+        embed.set_thumbnail(url=self.cover_image["extraLarge"])
 
         if entry and not entry["private"]:
             ent_st = entry["status"]

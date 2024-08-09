@@ -60,7 +60,7 @@ class RelationButton(ui.Button["RelationView"]):
 
 
 class RelationSelect(ui.Select["RelationView"]):
-    def __init__(self, cog: AniList, options: list[discord.SelectOption]) -> None:
+    def __init__(self, cog: AniList, options: list[discord.SelectOption], user: Optional[User] = None) -> None:
         for option in options:
             if len(option.label) > 80:
                 option.label = option.label[:77] + "..."
@@ -73,9 +73,10 @@ class RelationSelect(ui.Select["RelationView"]):
         )
 
         self.cog = cog
+        self.user = user
 
     async def callback(self, interaction: discord.Interaction):
-        await callback(self.cog, self._edge_id, interaction)
+        await callback(self.cog, self._edge_id, interaction, self.user)
 
     @property
     def _edge_name(self) -> str:
@@ -91,7 +92,7 @@ class RelationSelect(ui.Select["RelationView"]):
 
 
 class AdaptationSelect(ui.Select["RelationView"]):
-    def __init__(self, cog: AniList, options: list[discord.SelectOption]) -> None:
+    def __init__(self, cog: AniList, options: list[discord.SelectOption], user: Optional[User] = None) -> None:
         super().__init__(
             placeholder="Select an adaptation to view",
             min_values=1,
@@ -99,9 +100,10 @@ class AdaptationSelect(ui.Select["RelationView"]):
             options=options[:25],
         )
         self.cog = cog
+        self.user = user
 
     async def callback(self, interaction: discord.Interaction):
-        await callback(self.cog, int(self.values[0].split("\u200b")[1]), interaction)
+        await callback(self.cog, int(self.values[0].split("\u200b")[1]), interaction, self.user)
 
 
 class RelationView(BaseView):
@@ -171,10 +173,10 @@ class RelationView(BaseView):
                 )
 
         if adaptation_options:
-            self.add_item(AdaptationSelect(self.cog, adaptation_options))
+            self.add_item(AdaptationSelect(self.cog, adaptation_options, user))
 
         if relation_options:
-            self.add_item(RelationSelect(self.cog, relation_options))
+            self.add_item(RelationSelect(self.cog, relation_options, user))
 
         if len(self.children) > 25:
             self._children = self._children[:25]
@@ -308,6 +310,7 @@ class EmbedSelect(discord.ui.Select["EmbedRelationView"]):
     def __init__(self, media: Media, user: Optional[User] = None) -> None:
         self.media = media
         self.user = user
+        self.children: list[discord.ui.Item["EmbedRelationView"]]
 
         options = [
             discord.SelectOption(
@@ -319,7 +322,7 @@ class EmbedSelect(discord.ui.Select["EmbedRelationView"]):
             )
         ]
 
-        if media.list_entry or media.following_status_embed(user):
+        if media.status_embed(user):
             options.append(
                 discord.SelectOption(
                     label="Your & Friends' Statuses",
@@ -342,8 +345,17 @@ class EmbedSelect(discord.ui.Select["EmbedRelationView"]):
         if value == "0":
             embed = self.media.embed
 
+            assert self.view
+            self.view._children = self.children
+
         else:
             embed = self.media.status_embed(self.user) or discord.Embed(description="Something went wrong...")
+
+            assert self.view
+            self.children = self.view.children.copy()
+            for item in self.view.children:
+                if not isinstance(item, EmbedSelect):
+                    self.view._children.remove(item)
 
         await interaction.response.edit_message(embed=embed, view=self.view)
 
