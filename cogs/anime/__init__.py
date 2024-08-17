@@ -354,6 +354,7 @@ class AniList(BaseCog, name="Anime"):
         )
 
     @describe(
+        status="The status of the anime to compare",
         user1="The first user to compare",
         user2="The second user to compare",
         user3="The third user to compare",
@@ -371,6 +372,7 @@ class AniList(BaseCog, name="Anime"):
         user4: Optional[AniUserConv] = None,
         user5: Optional[AniUserConv] = None,
     ):
+        """Compares up to five different peoples' anime lists with a specific status."""
         users: list[AniUserConv] = [user1, user2]
         for u in (user3, user4, user5):
             if u:
@@ -399,7 +401,6 @@ class AniList(BaseCog, name="Anime"):
         pages: list[Page] = []
         for i in to_list:
             media = Media.from_json(dict(i), {})
-            print(media.list_entry)
             embeds = [media.embed]
 
             if emb := media.status_embed():
