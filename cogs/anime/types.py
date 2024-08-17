@@ -138,7 +138,6 @@ class MediaList(TypedDict):
     completedAt: FuzzyDate
     updatedAt: int
     createdAt: int
-    repeat: int
 
 
 class _Media(TypedDict):

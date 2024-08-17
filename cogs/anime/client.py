@@ -125,7 +125,6 @@ MEDIA_QUERY = """
                 }
                 updatedAt
                 createdAt
-                repeat
             }
     }
 """
@@ -153,7 +152,6 @@ MEDIA_LIST_QUERY = """
                     }
                     updatedAt
                     createdAt
-                    repeat
                     media {
                         id
                         type
