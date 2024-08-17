@@ -194,3 +194,9 @@ class MediaListCollection(TypedDict):
     lists: list[_MediaList]
     user: PartialUser
     hasNextChunk: bool
+
+
+class ComparisonEntry(TypedDict):
+    id: int
+    title: MediaTitle
+    siteUrl: str

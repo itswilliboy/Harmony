@@ -3,7 +3,8 @@ from __future__ import annotations
 import asyncio
 import datetime
 import re
-from typing import Annotated, Any, Optional
+from collections import ChainMap
+from typing import Annotated, Any, Literal, Optional
 
 import discord
 from discord.app_commands import describe
@@ -11,20 +12,14 @@ from discord.ext import commands
 from jwt import decode
 
 from bot import Harmony
-from utils import (
-    BaseCog,
-    Context,
-    GenericError,
-    PrimaryEmbed,
-    SuccessEmbed,
-    progress_bar,
-)
+from utils import BaseCog, Context, GenericError, PrimaryEmbed, SuccessEmbed, progress_bar
+from utils.paginator import Page, Paginator
 
-from .anime import MinifiedMedia
+from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import User
-from .types import FavouriteTypes, MediaType
+from .types import FavouriteTypes, MediaType, _Media
 from .views import Delete, EmbedRelationView, LoginView
 
 ANIME_REGEX = re.compile(r"\{\{(.*?)\}\}")
@@ -67,6 +62,9 @@ class AniUser(commands.UserConverter):
         return argument
 
 
+AniUserConv = Annotated[Optional[str | int], AniUser]
+
+
 class AniList(BaseCog, name="Anime"):
     def __init__(
         self,
@@ -80,6 +78,10 @@ class AniList(BaseCog, name="Anime"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        ctx = await self.bot.get_context(message)
+        if ctx.is_blacklisted():
+            return
+
         if message.author.bot:
             return
 
@@ -348,8 +350,74 @@ class AniList(BaseCog, name="Anime"):
         await self.bot.pool.execute(query, ctx.author.id)
 
         await ctx.send(
-            embed=SuccessEmbed(description="Successfully logged you out."),
+            embed=SuccessEmbed(description="Success3lly logged you out."),
         )
+
+    @describe(
+        user1="The first user to compare",
+        user2="The second user to compare",
+        user3="The third user to compare",
+        user4="The fourth user to compare",
+        user5="The fifth user to compare",
+    )
+    @anilist.command()
+    async def compare(
+        self,
+        ctx: Context,
+        status: Literal["current", "paused", "completed", "dropped", "planning", "repeating"],
+        user1: AniUserConv,
+        user2: AniUserConv,
+        user3: Optional[AniUserConv] = None,
+        user4: Optional[AniUserConv] = None,
+        user5: Optional[AniUserConv] = None,
+    ):
+        users: list[AniUserConv] = [user1, user2]
+        for u in (user3, user4, user5):
+            if u:
+                users.append(u)
+
+        await ctx.typing()
+        cols = await self.client.fetch_media_collections(
+            *users,  #type: ignore
+            type=MediaType.ANIME,
+            status=status.upper(), # type: ignore
+            user_id=ctx.author.id
+        )
+
+        entries: list[dict[int, _Media]] = []
+
+        for item in cols.values():
+            entries.append({i["media"]["id"]: i["media"] for i in item["lists"][0]["entries"]})
+
+        total = ChainMap(*entries)
+        shared = set(total).intersection(*entries)
+
+        to_list = [total[i] for i in shared]
+
+        nl = "\n"
+        pages = [Page(embed=e) for e in [Media.from_json(dict(media), {}).embed.remove_footer() for media in to_list]]
+        pages: list[Page] = []
+        for i in to_list:
+            media = Media.from_json(dict(i), {})
+            print(media.list_entry)
+            embeds = [media.embed]
+
+            if emb := media.status_embed():
+                embeds.append(emb)
+
+            pages.append(Page(embeds=embeds))
+
+        pages.insert(
+            0,
+            Page(
+                embed=PrimaryEmbed(
+                    title=f"Common Media: {status.upper()}",
+                    description=f"2. {f'{nl}2. '.join([str(i['title'].get('english', i['title']['romaji'])) for i in to_list])}",
+                ).set_author(name=" - ".join([str(u) for u in users]))
+            ),
+        )
+
+        await Paginator(pages, ctx.author).start(ctx)
 
 
 async def setup(bot: Harmony) -> None:

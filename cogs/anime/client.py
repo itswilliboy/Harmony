@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 from .anime import Media, MinifiedMedia
 from .oauth import AccessToken, OAuth, User
-from .types import MediaListCollection, MediaType
+from .types import MediaListCollection, MediaListStatus, MediaType
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -107,7 +107,7 @@ MEDIA_QUERY = """
 
     fragment listEntry on Media {
         mediaListEntry {
-                score(format: POINT_10)
+                score(format: POINT_10_DECIMAL)
                 status
                 progress
                 progressVolumes
@@ -129,57 +129,146 @@ MEDIA_QUERY = """
     }
 """
 
-MEDIA_LIST_QUERY = """
-    query ($userName: String, $userId: Int $type: MediaType) {
-        MediaListCollection(userName: $userName, userId: $userId, type: $type, sort: SCORE_DESC) {
-            lists {
-                entries {
-                    score(format: POINT_10_DECIMAL)
-                    status
-                    progress
-                    progressVolumes
-                    repeat
-                    private
-                    startedAt {
-                        year
-                        month
-                        day
-                    }
-                    completedAt {
-                        year
-                        month
-                        day
-                    }
-                    updatedAt
-                    createdAt
-                    media {
-                        id
-                        type
-                        episodes
-                        status
-                        duration
-                        chapters
-                        volumes
-                        title {
-                            english
-                            romaji
-                            native
-                        }
-
-                    }
-                }
-                name
-                isCustomList
-                isSplitCompletedList
+MEDIA_LIST_FRAGMENT = """
+    fragment mediaListFragment on MediaListCollection {
+        lists {
+            entries {
+                score(format: POINT_10_DECIMAL)
                 status
+                progress
+                progressVolumes
+                repeat
+                private
+                startedAt {
+                    year
+                    month
+                    day
+                }
+                completedAt {
+                    year
+                    month
+                    day
+                }
+                updatedAt
+                createdAt
+                repeat
+                media {
+                    id
+                    isAdult
+                    idMal
+                    type
+                    description(asHtml: false)
+                    episodes
+                    hashtag
+                    status
+                    bannerImage
+                    duration
+                    chapters
+                    volumes
+                    genres
+                    title {
+                        romaji
+                        english
+                        native
+                    }
+                    startDate {
+                        year
+                        month
+                        day
+                    }
+                    endDate {
+                        year
+                        month
+                        day
+                    }
+                    season
+                    seasonYear
+                    meanScore
+                    coverImage {
+                        extraLarge
+                        large
+                        medium
+                        color
+                    }
+                    studios(isMain: true) {
+                        nodes {
+                            name
+                            siteUrl
+                        }
+                    }
+                    relations {
+                        edges {
+                            node {
+                                id
+                                title {
+                                    romaji
+                                }
+                                ...listEntry
+                            }
+                            relationType(version: 2)
+                        }
+                    }
+                    ...listEntry
+                }
             }
-            user {
-                name
-                id
-            }
-            hasNextChunk
+            name
+            isCustomList
+            isSplitCompletedList
+            status
+        }
+        user {
+            name
+            id
         }
     }
+
+    fragment listEntry on Media {
+        mediaListEntry {
+                score(format: POINT_10_DECIMAL)
+                status
+                progress
+                progressVolumes
+                repeat
+                private
+                startedAt {
+                    year
+                    month
+                    day
+                }
+                completedAt {
+                    year
+                    month
+                    day
+                }
+                updatedAt
+                createdAt
+                repeat
+        }
+    }
+"""
+
+MEDIA_LIST_QUERY = """
+    query ($userName: String, $userId: Int $type: MediaType) {{
+        MediaListCollection(userName: $userName, userId: $userId, type: $type, sort: SCORE_DESC) {{
+            ...mediaListFragment
+        }}
+    }}
+
+    {}
+""".format(MEDIA_LIST_FRAGMENT)
+
+COMPARISON_LIST_SUBQUERY = """
+    q{n}: MediaListCollection (userName: $u{n}, userId: $i{n}, type: $type, status: $status) {{
+        ...mediaListFragment
+    }}
+"""
+
+COMPARISON_LIST_QUERY = """
+    query ({params}) {{
+        {queries}
+    }}
+
+    {fragment}
 """
 
 FOLLOWING_QUERY = """
@@ -187,7 +276,7 @@ FOLLOWING_QUERY = """
         Page(page: $page, perPage: $perPage) {
             mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
                 status
-                score(format: POINT_10)
+                score(format: POINT_10_DECIMAL)
                 progress
                 repeat
                 media {
@@ -340,7 +429,7 @@ class AniListClient:
                 return data
 
     async def fetch_media_collection(self, user: int | str, type: MediaType) -> MediaListCollection:
-        """Fetches a user's anime- or manga list via their user ID."""
+        """Fetches a user's anime- or manga list via their user ID or username."""
 
         variables: dict[str, Any] = {"type": type}
         if isinstance(user, int):
@@ -353,6 +442,38 @@ class AniListClient:
             data = (await resp.json())["data"]["MediaListCollection"]
             collection: MediaListCollection = data
             return collection
+
+    async def fetch_media_collections(
+        self, *users: str | int, type: MediaType, status: MediaListStatus, user_id: Optional[int] = None
+    ) -> dict[str, MediaListCollection]:
+        """Fetches multiple users' anime-or manga lists via their user ID or username."""
+
+        variables: dict[str, str | int] = {"type": type, "status": status}
+        for c, user in enumerate(users):
+            if isinstance(user, str):
+                variables[f"u{c}"] = user
+
+            else:
+                variables[f"i{c}"] = user
+
+        amount = len(users)
+        params = ", ".join(f"$u{n}: String, $i{n}: Int" for n in range(amount))
+        params += ", $type: MediaType, $status: MediaListStatus"
+
+        queries = "".join(COMPARISON_LIST_SUBQUERY.format(n=n) for n in range(amount))
+
+        query = COMPARISON_LIST_QUERY.format(params=params, queries=queries, fragment=MEDIA_LIST_FRAGMENT)
+
+        headers = {}
+        if user_id is not None:
+            headers = await self.get_headers(user_id)
+
+        async with self.bot.session.post(self.URL, json={"query": query, "variables": variables}, headers=headers) as resp:
+            if resp.status == 200:
+                data = (await resp.json())["data"]
+
+                return data
+            return {}
 
     async def get_token(self, user_id: int) -> Optional[AccessToken]:
         query = "SELECT * FROM anilist_tokens WHERE user_id = $1"

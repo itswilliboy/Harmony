@@ -215,10 +215,10 @@ class Media:
             for edge in edges:
                 node = edge["node"]
                 title_ = MediaTitle(node["title"])
-                list_entry_ = MediaList(node["mediaListEntry"]) if node["mediaListEntry"] else None
+                list_entry_ = MediaList(node["mediaListEntry"]) if node.get("mediaListEntry") else None
                 relations.append(Edge(node["id"], title_["romaji"], edge["relationType"], list_entry_))
 
-        list_entry = MediaList(data["mediaListEntry"]) if data["mediaListEntry"] else None
+        list_entry = MediaList(data["mediaListEntry"]) if data.get("mediaListEntry") else None
 
         return cls(
             data["id"],

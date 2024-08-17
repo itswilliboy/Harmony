@@ -19,13 +19,22 @@ if TYPE_CHECKING:
 
 class Page:
     def __init__(
-        self, content: Optional[str] = None, *, embed: Optional[discord.Embed] = None, file: Optional[discord.File] = None
+        self,
+        content: Optional[str] = None,
+        *,
+        embed: Optional[discord.Embed] = None,
+        embeds: Optional[list[discord.Embed]] = None,
+        file: Optional[discord.File] = None,
     ) -> None:
-        if not any((content, embed, file)):
-            raise ValueError("At least one argument has to be supplied.")
+        if not any((content, embed, embeds, file)):
+            raise ValueError("at least one argument has to be supplied")
+
+        if embed and embeds:
+            raise ValueError("embed and embeds are mutually exclusive")
 
         self.content = content
         self.embed = embed
+        self.embeds = embeds
         self.file = file
 
 
@@ -57,7 +66,7 @@ class PageModal(ui.Modal, title="Hop to page"):
 
 
 class Paginator(BaseView, Generic[T]):
-    items: Sequence[T]
+    items: list[T]
     count: int
     page: int
 
@@ -67,7 +76,7 @@ class Paginator(BaseView, Generic[T]):
     kwargs: Any
     message: discord.Message
 
-    def __init__(self, items: Sequence[T], user: Optional[discord.abc.Snowflake] = None) -> None:
+    def __init__(self, items: list[T], user: Optional[discord.abc.Snowflake] = None) -> None:
         super().__init__(user)
 
         self.items = items
@@ -94,7 +103,7 @@ class Paginator(BaseView, Generic[T]):
         self.update_buttons()
         await self.update(interaction)
 
-    async def start(self, destination: discord.abc.Messageable) -> None:
+    async def start(self, destination: discord.abc.Messageable) -> discord.Message:
         """Starts the paginator."""
 
         if isinstance(self.current, Page):
@@ -112,6 +121,7 @@ class Paginator(BaseView, Generic[T]):
             msg = await destination.send(self.current, view=self)
 
         self.message = msg
+        return msg
 
     async def update(self, interaction: Interaction) -> None:
         if isinstance(self.current, Page):
@@ -121,6 +131,7 @@ class Paginator(BaseView, Generic[T]):
             await interaction.response.edit_message(
                 content=self.current.content,
                 embed=self.current.embed or MISSING,
+                embeds=self.current.embeds or MISSING,
                 attachments=[self.current.file] if self.current.file else MISSING,
                 view=self,
             )

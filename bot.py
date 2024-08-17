@@ -88,7 +88,8 @@ class Harmony(commands.Bot):
             schema = f.read()
             await pool.execute(schema)
 
-        self.session = ClientSession()
+        headers = {"User-Agent": "Harmony Discord Bot (https://github.com/itswilliboy/Harmony)"}
+        self.session = ClientSession(headers=headers)
         self.log = logging.getLogger("Harmony")
 
         for ext in self.initial_extensions:

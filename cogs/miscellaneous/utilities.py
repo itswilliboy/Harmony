@@ -40,13 +40,12 @@ class Utilities(BaseCog):
         else:
             author = guild.get_member(ctx.author.id)
 
-        assert isinstance(ctx.author, discord.Member) and isinstance(author, discord.Member)
         perm = discord.Permissions(manage_expressions=True)
 
         if guild != ctx.guild and ctx.author not in guild.members:
             raise GenericError("You aren't in that server.")
 
-        if not author.guild_permissions.is_superset(perm):
+        if not author.guild_permissions.is_superset(perm):  # type: ignore
             raise commands.MissingPermissions(missing_permissions=["Manage Expressions"])
 
         elif not guild.me.guild_permissions.is_superset(perm):

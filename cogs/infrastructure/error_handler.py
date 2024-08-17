@@ -96,6 +96,14 @@ class ErrorHandler(BaseCog):
             if msgs := error.args:
                 embed.description += f"\n`{msgs[0]}`"  # type: ignore
 
+        elif isinstance(error, commands.BadLiteralArgument):
+            usage = get_command_signature(ctx)
+            embed = ErrorEmbed(title="Bad Argument")
+            embed.description = f"Correct usage:\n```\n{usage}\n```"
+            embed.set_footer(text="< > = required | [ ] = optional")
+
+            embed.description += f"\nValue must be one of: {', '.join([f'`{lit}`' for lit in error.literals])}"
+
         elif isinstance(error, commands.NotOwner):
             embed = ErrorEmbed(description="Only bot developers can use this command.")
 

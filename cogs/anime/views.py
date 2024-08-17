@@ -196,25 +196,19 @@ class CodeModal(ui.Modal, title="Enter OAuth Code"):
         await interaction.response.defer()
 
 
-class CodeView(ui.View):
+class CodeView(BaseView):
     def __init__(self, author: discord.User | discord.Member) -> None:
-        super().__init__(timeout=120)
+        super().__init__(author, timeout=120)
         self.author = author
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.user != self.author:
-            await interaction.response.send_message("This is not your button.", ephemeral=True)
-            return False
-        return True
 
     @ui.button(label="Enter Code", style=discord.ButtonStyle.green)
     async def enter(self, interaction: discord.Interaction, _):
         await interaction.response.send_modal(CodeModal())
 
 
-class LoginView(ui.View):
+class LoginView(BaseView):
     def __init__(self, bot: Harmony, author: discord.User | discord.Member, client: AniListClient) -> None:
-        super().__init__(timeout=120)
+        super().__init__(author, timeout=120)
         self.author = author
         self.bot = bot
         self.client = client
@@ -226,13 +220,6 @@ class LoginView(ui.View):
                 label="Get Code",
             ),
         )
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.user != self.author:
-            await interaction.response.send_message("This is not your button.", ephemeral=True)
-            return False
-
-        return True
 
     async def check_login(
         self,

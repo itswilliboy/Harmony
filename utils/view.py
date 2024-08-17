@@ -24,7 +24,10 @@ class BaseView(ui.View):
         self.message = message
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        if self.author and self.author.id == interaction.user.id:
+        if not self.author:
+            return True
+
+        if self.author.id == interaction.user.id:
             return True
 
         await interaction.response.send_message("This is not for you.", ephemeral=True)
