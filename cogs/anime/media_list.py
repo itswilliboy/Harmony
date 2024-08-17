@@ -135,7 +135,8 @@ class MediaList(Paginator[discord.Embed]):
 
     @ui.button(emoji="\N{VIDEO CAMERA}", label="Anime", row=2, disabled=True, style=discord.ButtonStyle.green)
     async def _anime(self, interaction: Interaction, button: ui.Button[Self]):
-        self._manga.disabled = False
+        if self.manga is not None:
+            self._manga.disabled = False
         button.disabled = True
 
         self.collection = self.anime
@@ -151,6 +152,9 @@ class MediaList(Paginator[discord.Embed]):
 
         if self.manga is None:
             self.manga = await self.fetch_manga()
+            if not self.manga["lists"]:
+                self._anime.disabled = True
+                return await self.update(interaction)
 
             button.label = f"Manga ({self.get_length(self.manga)})"
 
