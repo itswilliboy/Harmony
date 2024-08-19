@@ -127,6 +127,10 @@ class FollowingStatus(TypedDict):
     user: Object
 
 
+class AiringSchedule(TypedDict):
+    episode: int
+
+
 class MediaList(TypedDict):
     score: float
     status: MediaListStatus
@@ -161,6 +165,7 @@ class _Media(TypedDict):
     meanScore: int
     coverImage: MediaCoverImage
     studios: dict[str, list[dict[str, str]]]
+    nextAiringEpisode: Optional[AiringSchedule]
 
 
 class MediaListEntry(TypedDict):

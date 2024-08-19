@@ -209,6 +209,10 @@ MEDIA_LIST_FRAGMENT = """
                         }
                     }
                     ...listEntry
+                    nextAiringEpisode {
+                        episode
+                    }
+
                 }
             }
             name
@@ -255,7 +259,9 @@ MEDIA_LIST_QUERY = """
     }}
 
     {}
-""".format(MEDIA_LIST_FRAGMENT)
+""".format(
+    MEDIA_LIST_FRAGMENT
+)
 
 COMPARISON_LIST_SUBQUERY = """
     q{n}: MediaListCollection (userName: $u{n}, userId: $i{n}, type: $type, status: $status) {{
