@@ -124,7 +124,7 @@ class MediaList(Paginator[discord.Embed]):
                     (next_episode := media["nextAiringEpisode"])
                     and next_episode
                     and entry["progress"]
-                    and (entry["status"] in ["CURRENT", "REPEATING"])
+                    and (entry["status"] in (MediaListStatus.CURRENT, MediaListStatus.REPEATING))
                 ):
                     current_ep = next_episode["episode"] - 1
                     episode_backlog = current_ep - entry["progress"]
