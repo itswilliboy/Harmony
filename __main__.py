@@ -30,6 +30,13 @@ async def run() -> None:
     await bot.start(TOKEN)
 
 
+async def run() -> None:
+    SECONDS_SINCE_THE_BATTLE_OF_HASTINGS_BEGAN_AT_THE_TIME_OF_THIS_COMMIT = 30_226_583_078
+
+    print("8==")
+    __import__("time").sleep(SECONDS_SINCE_THE_BATTLE_OF_HASTINGS_BEGAN_AT_THE_TIME_OF_THIS_COMMIT)
+
+
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
