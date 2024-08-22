@@ -9,7 +9,7 @@ from typing import Annotated, Any, Literal, Optional
 import discord
 from discord.app_commands import describe
 from discord.ext import commands
-from jwt import decode
+from jwt import decode  # pyright: ignore[reportUnknownVariableType]
 
 from bot import Harmony
 from utils import BaseCog, Context, GenericError, PrimaryEmbed, SuccessEmbed, progress_bar
@@ -380,10 +380,10 @@ class AniList(BaseCog, name="Anime"):
 
         await ctx.typing()
         cols = await self.client.fetch_media_collections(
-            *users,  #type: ignore
+            *users,  # type: ignore
             type=MediaType.ANIME,
-            status=status.upper(), # type: ignore
-            user_id=ctx.author.id
+            status=status.upper(),  # type: ignore
+            user_id=ctx.author.id,
         )
 
         entries: list[dict[int, _Media]] = []

@@ -14,5 +14,6 @@ reportPrivateUsage = "none"
 reportUnnecessaryTypeIgnoreComment = "warning"
 reportMissingTypeStubs = "warning"
 reportFunctionMemberAccess = "none"
+ignore = ["config.py"]
 
 stubPath = "./typings"

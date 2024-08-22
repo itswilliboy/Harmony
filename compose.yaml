@@ -1,6 +1,7 @@
 services:
-  server:
+  harmony:
     build:
       context: .
     ports:
       - 8013:8013
+    restart: unless-stopped

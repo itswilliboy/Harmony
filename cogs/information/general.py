@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import time
 from io import BytesIO
 from os import getpid
@@ -333,6 +334,7 @@ class General(BaseCog):
 
         await ctx.typing()
 
+        params = json.dumps(params)
         async with ctx.session.get("https://api.jeyy.xyz/v2/discord/spotify", params=params, headers=headers) as resp:
             buffer = BytesIO(await resp.read())
 
