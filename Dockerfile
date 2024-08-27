@@ -1,7 +1,6 @@
 FROM python:3.12.3-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1
-
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
@@ -17,4 +16,4 @@ COPY . .
 
 EXPOSE 8013
 
-ENTRYPOINT [ "python", "." ]
+ENTRYPOINT [ "python3", "." ]

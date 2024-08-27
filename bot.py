@@ -13,7 +13,7 @@ from discord.ext.commands.core import (  # pyright: ignore[reportMissingTypeStub
     _CaseInsensitiveDict,
 )
 
-from config import DEFAULT_PREFIX, OWNER_IDS, POSTGRES_CREDENTIALS
+from config import DEFAULT_PREFIX, OWNER_IDS, POSTGRES_CONNECTION_URI
 from utils import Context
 
 if TYPE_CHECKING:
@@ -76,8 +76,7 @@ class Harmony(commands.Bot):
         discord.utils.setup_logging(level=logging.INFO)
         logging.getLogger("discord.gateway").setLevel(logging.WARNING)
 
-        credentials: dict[str, Any] = POSTGRES_CREDENTIALS
-        pool: Optional[Pool[Record]] = await create_pool(**credentials)
+        pool: Optional[Pool[Record]] = await create_pool(POSTGRES_CONNECTION_URI, timeout=30)
         if not pool or pool and pool._closed:
             raise RuntimeError("Pool is closed")
 

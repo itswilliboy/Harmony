@@ -240,7 +240,7 @@ class General(BaseCog):
         embed.add_field(name="Process Information", value=dedent(value), inline=False)
 
         command_runs: int = await ctx.pool.fetchval("SELECT SUM(count) FROM command_statistics")
-        embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
+        embed.add_field(name="Commands Ran", value=f"{command_runs or 0:,}")
 
         version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"
         value = f"""
