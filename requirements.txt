@@ -4,9 +4,11 @@ asyncpg-stubs
 psutil
 asyncache
 Pillow
-types-Pillow
 pyjwt
 pygit2
+
+types-cachetools
+types-Pillow
 
 langcodes[data]
 cutlet

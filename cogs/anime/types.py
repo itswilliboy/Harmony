@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import NamedTuple, Optional, TypedDict
+from typing import Any, NamedTuple, Optional, TypedDict
 
 
 class MediaType(StrEnum):
@@ -70,11 +70,19 @@ class MediaListStatus(StrEnum):
 
 
 class FavouriteTypes(StrEnum):
-    ANIME = "anime"
-    MANGA = "manga"
-    CHARACTERS = "characters"
-    STAFF = "staff"
-    STUDIOS = "studios"
+    ANIME = "ANIME"
+    MANGA = "MANGA"
+    CHARACTERS = "CHARACTERS"
+    STAFF = "STAFF"
+    STUDIOS = "STUDIOS"
+
+
+class ActivityType(StrEnum):
+    TEXT = "TEXT"
+    ANIME_LIST = "ANIME_LIST"
+    MANGA_LIST = "MANGA_LIST"
+    MESSAGE = "MESSAGE"
+    MEDIA_LIST = "MEDIA_LIST"
 
 
 class MediaTitle(TypedDict):
@@ -127,6 +135,10 @@ class FollowingStatus(TypedDict):
     user: Object
 
 
+class AiringSchedule(TypedDict):
+    episode: int
+
+
 class MediaList(TypedDict):
     score: float
     status: MediaListStatus
@@ -161,6 +173,7 @@ class _Media(TypedDict):
     meanScore: int
     coverImage: MediaCoverImage
     studios: dict[str, list[dict[str, str]]]
+    nextAiringEpisode: Optional[AiringSchedule]
 
 
 class MediaListEntry(TypedDict):
@@ -196,7 +209,16 @@ class MediaListCollection(TypedDict):
     hasNextChunk: bool
 
 
-class ComparisonEntry(TypedDict):
+class ListActivity(TypedDict):
     id: int
-    title: MediaTitle
+    userId: int
+    type: ActivityType
+    replyCount: int
+    status: str
+    progress: str
+    likeCount: int
     siteUrl: str
+    createdAt: int  # timestamp
+    user: dict[str, Any]  # TODO: Fix types
+    media: dict[str, Any]  # --
+    likes: list[dict[str, Any]]  # --

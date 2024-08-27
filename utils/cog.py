@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
     from . import Context
 
+__all__ = ("BaseCog", "BaseCogMeta")
 
 class BaseCogMeta(commands.CogMeta):
     hidden: bool

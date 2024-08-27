@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from cogs.developer.blacklist import BlacklistItem, GuildBlacklistItem
 
 
+__all__ = ("Harmony",)
+
 class Harmony(commands.Bot):
     """Bot class for Harmony"""
 

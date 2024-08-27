@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     Interaction = discord.Interaction[Harmony]
 
 
+__all__ = ("Page", "Paginator", "DynamicPaginator")
+
 class Page:
     def __init__(
         self,

@@ -4,12 +4,13 @@ import asyncio
 import datetime
 import re
 from collections import ChainMap
-from typing import Annotated, Any, Literal, Optional
+from typing import Annotated, Any, Literal, Optional, cast
 
 import discord
+from cachetools import TTLCache
 from discord.app_commands import describe
 from discord.ext import commands
-from jwt import decode  # pyright: ignore[reportUnknownVariableType]
+from jwt import decode
 
 from bot import Harmony
 from utils import BaseCog, Context, GenericError, PrimaryEmbed, SuccessEmbed, progress_bar
@@ -47,22 +48,46 @@ def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteTypes, max
     embed.add_field(name=f"Favourite {type.title()}", value=value, inline=False)
 
 
+async def try_get_ani_id(ctx: Context, user_id: int) -> Optional[int]:
+    if jwt := await ctx.pool.fetchval("SELECT token FROM anilist_tokens WHERE user_id = $1", user_id):
+        uid = decode(jwt, options={"verify_signature": False})["sub"]
+        print("uid", uid)
+        return int(uid)
+
+
 class AniUser(commands.UserConverter):
-    async def convert(self, ctx: Context, argument: str) -> Optional[str | int]:
+    async def convert(self, ctx: Context, argument: str) -> Optional[User]:
+        arg: Optional[int] = None
         try:
             user = await super().convert(ctx, argument)
 
-            if jwt := await ctx.pool.fetchval("SELECT token FROM anilist_tokens WHERE user_id = $1", user.id):
-                uid = decode(jwt, options={"verify_signature": False})["sub"]
-                return int(uid)
+            arg = await try_get_ani_id(ctx, user.id)
 
         except commands.BadArgument:
             pass
 
-        return argument
+        finally:
+            cog = cast(AniList, ctx.bot.cogs["anime"])
+            if u := cog.user_cache.get(arg or argument):
+                return u
+
+            user = await cog.client.oauth.get_user(arg or argument)
+
+            if not user:
+                raise commands.BadArgument("Couldn't find a user with that name")
+
+            cog.user_cache[arg or argument] = user
+            return user
 
 
-AniUserConv = Annotated[Optional[str | int], AniUser]
+async def _default(ctx: Context) -> Optional[User]:
+    return await AniUser().convert(ctx, str(ctx.author.id))
+
+
+aniuser = commands.parameter(default=_default, converter=AniUser, displayed_name="AniList user")
+
+
+AniUserConv = Annotated[User, AniUser]
 
 
 class AniList(BaseCog, name="Anime"):
@@ -75,6 +100,11 @@ class AniList(BaseCog, name="Anime"):
         super().__init__(bot, *args, **kwargs)
 
         self.client = AniListClient(bot)
+        self.user_cache: TTLCache[str | int, User] = TTLCache(maxsize=100, ttl=600)
+
+    async def cog_check(self, ctx: Context) -> bool:
+        await ctx.typing()
+        return True
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -232,27 +262,26 @@ class AniList(BaseCog, name="Anime"):
 
     @anilist.command()
     @describe(user="AniList username")
-    async def profile(self, ctx: Context, user: Annotated[Optional[str | int], AniUser] = None):
+    async def profile(self, ctx: Context, user: AniUserConv = aniuser):
         """View someone's AniList profile."""
-        user_ = await self.get_user(ctx, user)
 
         embed = PrimaryEmbed(
-            title=user_.name,
-            url=user_.url,
-            description=user_.about + "\n\u200b" if user_.about else "",
+            title=user.name,
+            url=user.url,
+            description=user.about + "\n\u200b" if user.about else "",
         )
 
         embed.set_footer(text="Account Created")
-        embed.timestamp = user_.created_at
+        embed.timestamp = user.created_at
 
-        if url := user_.banner_url:
+        if url := user.banner_url:
             embed.set_image(url=url)
 
-        if url := user_.avatar_url:
+        if url := user.avatar_url:
             embed.set_thumbnail(url=url)
 
-        if user_.anime_stats.episodes_watched:
-            s = user_.anime_stats
+        if user.anime_stats.episodes_watched:
+            s = user.anime_stats
             embed.add_field(
                 name="Anime Statistics",
                 value=(
@@ -270,10 +299,10 @@ class AniList(BaseCog, name="Anime"):
                     inline=True,
                 )
 
-        if user_.manga_stats.chapters_read:
-            add_favourite(embed, user=user_, type=FavouriteTypes.ANIME, empty=True)
+        if user.manga_stats.chapters_read:
+            add_favourite(embed, user=user, type=FavouriteTypes.ANIME, empty=True)
 
-            s = user_.manga_stats
+            s = user.manga_stats
             embed.add_field(
                 name="Manga Statistics",
                 value=(
@@ -292,26 +321,24 @@ class AniList(BaseCog, name="Anime"):
                 )
 
         else:
-            add_favourite(embed, user=user_, type=FavouriteTypes.ANIME)
+            add_favourite(embed, user=user, type=FavouriteTypes.ANIME)
 
-        add_favourite(embed, user=user_, type=FavouriteTypes.MANGA)
-        add_favourite(embed, user=user_, type=FavouriteTypes.CHARACTERS)
-        add_favourite(embed, user=user_, type=FavouriteTypes.STAFF)
-        add_favourite(embed, user=user_, type=FavouriteTypes.STUDIOS)
+        add_favourite(embed, user=user, type=FavouriteTypes.MANGA)
+        add_favourite(embed, user=user, type=FavouriteTypes.CHARACTERS)
+        add_favourite(embed, user=user, type=FavouriteTypes.STAFF)
+        add_favourite(embed, user=user, type=FavouriteTypes.STUDIOS)
 
         await ctx.send(embed=embed)
 
     @describe(user="AniList username")
     @anilist.command()
-    async def list(self, ctx: Context, user: Annotated[Optional[str | int], AniUser] = None):
+    async def list(self, ctx: Context, user: AniUserConv = aniuser):
         """View someone's anime list on AniList."""
-        user_ = await self.get_user(ctx, user)
 
-        async with ctx.typing():
-            ml = MediaList(
-                self.client, await self.client.fetch_media_collection(user_.id, MediaType.ANIME), user_.id, ctx.author.id
-            )
-            await ml.start(ctx)
+        ml = MediaList(
+            self.client, await self.client.fetch_media_collection(user.id, MediaType.ANIME), user.id, ctx.author.id
+        )
+        await ml.start(ctx)
 
     @anilist.command(aliases=["auth"])
     async def login(self, ctx: Context):
@@ -371,16 +398,15 @@ class AniList(BaseCog, name="Anime"):
         user3: Optional[AniUserConv] = None,
         user4: Optional[AniUserConv] = None,
         user5: Optional[AniUserConv] = None,
-    ):
+    ) -> None:
         """Compares up to five different peoples' anime lists with a specific status."""
         users: list[AniUserConv] = [user1, user2]
         for u in (user3, user4, user5):
             if u:
                 users.append(u)
 
-        await ctx.typing()
         cols = await self.client.fetch_media_collections(
-            *users,  # type: ignore
+            *[u.id for u in users],
             type=MediaType.ANIME,
             status=status.upper(),  # type: ignore
             user_id=ctx.author.id,
@@ -397,7 +423,6 @@ class AniList(BaseCog, name="Anime"):
         to_list = [total[i] for i in shared]
 
         nl = "\n"
-        pages = [Page(embed=e) for e in [Media.from_json(dict(media), {}).embed.remove_footer() for media in to_list]]
         pages: list[Page] = []
         for i in to_list:
             media = Media.from_json(dict(i), {})
@@ -419,6 +444,52 @@ class AniList(BaseCog, name="Anime"):
         )
 
         await Paginator(pages, ctx.author).start(ctx)
+
+    @anilist.command(aliases=["recent"])
+    async def activity(self, ctx: Context, user: AniUserConv = aniuser):
+        activities = await self.client.fetch_user_activity(user.id)
+
+        if not activities:
+            raise GenericError("Couldn't find any recent activities for this user.")
+
+        name = activities[0]["user"]["name"]
+        embed = PrimaryEmbed()
+        embed.set_author(name=f"{name}'s recent activity", icon_url=activities[0]["user"]["avatar"]["large"])
+
+        to_add: list[str] = []
+
+        def add_item(item: str, timestamp: datetime.datetime) -> None:
+            w_timestamp = discord.utils.format_dt(timestamp, "R") + f"\n{item}"
+            to_add.append(w_timestamp)
+
+        for act in activities[:5]:
+            media = act["media"]
+            timestamp = datetime.datetime.fromtimestamp(act["createdAt"])
+            linked = f"**[{media['title']['english']}]({media['siteUrl']})**"
+
+            status = act["status"]
+            match status:
+                case "watched episode":
+                    ep = act["progress"]
+
+                    value = f"Watched episode ***{ep}*** of {linked}"
+                    add_item(value, timestamp)
+
+                case "plans to watch":
+                    value = f"Plans to watch {linked}"
+                    add_item(value, timestamp)
+
+                case "completed":
+                    value = f"Completed {linked}"
+                    add_item(value, timestamp)
+
+                case _:
+                    print(status)
+                    pass
+
+        embed.description = "\n\n".join(to_add)
+
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: Harmony) -> None:
