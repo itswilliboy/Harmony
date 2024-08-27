@@ -5,3 +5,5 @@ services:
     ports:
       - 8013:8013
     restart: unless-stopped
+    env_file:
+      - .env
