@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING
 
+from discord import Embed
+
 from .banned_member import *
 from .cog import *
 from .context import *
@@ -15,3 +17,5 @@ if TYPE_CHECKING:
     PrimaryEmbed = Embed
     SuccessEmbed = Embed
     ErrorEmbed = Embed
+
+del TYPE_CHECKING, Embed

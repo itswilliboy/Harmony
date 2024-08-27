@@ -191,6 +191,9 @@ class User:
     def __str__(self) -> str:
         return self.name
 
+    def __repr__(self) -> str:
+        return f"<User id={self.id} name={self.name}>"
+
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> Self:
         avatar_url = data["avatar"]["large"]

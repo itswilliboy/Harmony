@@ -17,6 +17,8 @@ if TYPE_CHECKING:
     Command = commands.Command[Any, Any, Any]
 
 
+__all__ = ("Context", "get_command_signature")
+
 class Context(commands.Context["Harmony"]):
     """Custom bot context."""
 

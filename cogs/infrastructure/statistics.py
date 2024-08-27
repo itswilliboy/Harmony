@@ -27,10 +27,7 @@ class Statistics(BaseCog):
                 VALUES ($1, 1)
             ON CONFLICT (guild_id)
                 DO UPDATE
-                SET count = (
-                    SELECT count FROM command_statistics
-                    WHERE guild_id = $1
-                ) + 1
+                SET count = command_statistics.count + 1
             """,
             ctx.guild.id,
         )
@@ -49,11 +46,7 @@ class Statistics(BaseCog):
                 VALUES ($1, $2, 1, $3)
             ON CONFLICT (guild_id, user_id)
                 DO UPDATE
-                SET count = (
-                    SELECT count FROM message_statistics
-                    WHERE guild_id = $1
-                    AND user_id = $2
-                ) + 1
+                SET count = message_statistics.count + 1
             """,
             message.guild.id,
             message.author.id,

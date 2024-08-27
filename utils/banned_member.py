@@ -9,6 +9,7 @@ from discord.ext import commands
 
 from .context import Context
 
+__all__ = ("BannedMember",)
 
 class BannedMember(commands.Converter[Any]):
     async def convert(self, ctx: Context, argument: str) -> discord.BanEntry:

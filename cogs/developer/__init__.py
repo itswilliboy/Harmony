@@ -4,13 +4,12 @@ from typing import TYPE_CHECKING
 
 from .blacklist import Blacklist
 from .general import General
-from .test import Test
 
 if TYPE_CHECKING:
     from bot import Harmony
 
 
-class Developer(Test, General, Blacklist, hidden=True, owner_only=True):
+class Developer(General, Blacklist, hidden=True, owner_only=True):
     def __init__(self, bot: Harmony) -> None:
         super().__init__(bot)
 

@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     Interaction = discord.Interaction[Harmony]
 
 
+__all__ = ("BaseView",)
+
 class BaseView(ui.View):
     def __init__(
         self,
