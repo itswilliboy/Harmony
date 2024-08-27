@@ -1,5 +1,4 @@
 from os import getenv
-from re import compile
 from warnings import warn
 
 POSTGRES_CREDENTIALS = {
@@ -13,12 +12,11 @@ POSTGRES_CREDENTIALS = {
 TOKEN: str = getenv("TOKEN")
 DEFAULT_PREFIX: str = getenv("DEFAULT_PREFIX")
 
-OWNER_IDS = ()
-pattern = compile(r"(.+?)(?:,|$)")  # comma-separated list
+OWNER_IDS = ()  # comma-separated list (123,456,789)
 if ids := getenv("OWNER_IDS"):
-    matches = pattern.findall(ids)
+    OWNER_IDS = tuple(int(id) for id in ids.split(","))
 
-    OWNER_IDS = tuple(int(i) for i in matches)
+print(OWNER_IDS)
 
 JEYY_API = getenv("JEYY_API")
 
