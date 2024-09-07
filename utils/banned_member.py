@@ -11,6 +11,7 @@ from .context import Context
 
 __all__ = ("BannedMember",)
 
+
 class BannedMember(commands.Converter[Any]):
     async def convert(self, ctx: Context, argument: str) -> discord.BanEntry:
         if argument.isdigit():

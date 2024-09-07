@@ -1,13 +1,12 @@
 # VSCode settings
 .vscode
 
-# Config and test file
-config.py
+# env and test file
+.env
 cogs/developer/test.py
 
 # IPC
 cogs/infrastructure/ipc.py
-cogs/infrastructure/_ipc.py
 
 # Virtual environment and cache
 .venv

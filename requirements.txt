@@ -1,7 +1,6 @@
 discord.py
 asyncpg
 asyncpg-stubs
-jishaku
 psutil
 asyncache
 Pillow
@@ -14,3 +13,5 @@ types-Pillow
 langcodes[data]
 cutlet
 unidic-lite
+
+jishaku @ git+https://github.com/Gorialis/jishaku@master

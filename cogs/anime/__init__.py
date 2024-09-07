@@ -7,13 +7,11 @@ from collections import ChainMap
 from typing import Annotated, Any, Literal, Optional, cast
 
 import discord
-from cachetools import TTLCache
 from discord.app_commands import describe
 from discord.ext import commands
-from jwt import decode
 
 from bot import Harmony
-from utils import BaseCog, Context, GenericError, PrimaryEmbed, SuccessEmbed, progress_bar
+from utils import BaseCog, Context, GenericError, PrimaryEmbed, SuccessEmbed, progress_bar, try_get_ani_id
 from utils.paginator import Page, Paginator
 
 from .anime import Media, MinifiedMedia
@@ -31,7 +29,7 @@ HL_REGEX = re.compile(r"\[.*?\]\(.*?\)")
 
 
 def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteTypes, maxlen: int = 1024, empty: bool = False):
-    favourites = discord.utils.find(lambda f: f["_type"] == type, user.favourites)
+    favourites = discord.utils.find(lambda f: f["_type"] == type.lower(), user.favourites)
 
     if favourites and favourites["items"]:
         value = ""
@@ -48,20 +46,13 @@ def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteTypes, max
     embed.add_field(name=f"Favourite {type.title()}", value=value, inline=False)
 
 
-async def try_get_ani_id(ctx: Context, user_id: int) -> Optional[int]:
-    if jwt := await ctx.pool.fetchval("SELECT token FROM anilist_tokens WHERE user_id = $1", user_id):
-        uid = decode(jwt, options={"verify_signature": False})["sub"]
-        print("uid", uid)
-        return int(uid)
-
-
 class AniUser(commands.UserConverter):
     async def convert(self, ctx: Context, argument: str) -> Optional[User]:
         arg: Optional[int] = None
         try:
             user = await super().convert(ctx, argument)
 
-            arg = await try_get_ani_id(ctx, user.id)
+            arg = await try_get_ani_id(ctx.pool, user.id)
 
         except commands.BadArgument:
             pass
@@ -71,7 +62,7 @@ class AniUser(commands.UserConverter):
             if u := cog.user_cache.get(arg or argument):
                 return u
 
-            user = await cog.client.oauth.get_user(arg or argument)
+            user = await cog.client.oauth.get_user(arg or argument, use_cache=False)
 
             if not user:
                 raise commands.BadArgument("Couldn't find a user with that name")
@@ -100,7 +91,7 @@ class AniList(BaseCog, name="Anime"):
         super().__init__(bot, *args, **kwargs)
 
         self.client = AniListClient(bot)
-        self.user_cache: TTLCache[str | int, User] = TTLCache(maxsize=100, ttl=600)
+        self.user_cache = self.client.user_cache
 
     async def cog_check(self, ctx: Context) -> bool:
         await ctx.typing()
@@ -481,6 +472,15 @@ class AniList(BaseCog, name="Anime"):
 
                 case "completed":
                     value = f"Completed {linked}"
+                    add_item(value, timestamp)
+
+                case "paused watching":
+                    value =f"Paused watching of {linked}"
+                    add_item(value, timestamp)
+
+                case "read chapter":
+                    ch = act["progress"]
+                    value = f"Read chapter ***{ch}*** of {linked}"
                     add_item(value, timestamp)
 
                 case _:

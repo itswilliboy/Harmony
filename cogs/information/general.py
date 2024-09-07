@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import time
 from io import BytesIO
 from os import getpid
@@ -239,7 +240,7 @@ class General(BaseCog):
         embed.add_field(name="Process Information", value=dedent(value), inline=False)
 
         command_runs: int = await ctx.pool.fetchval("SELECT SUM(count) FROM command_statistics")
-        embed.add_field(name="Commands Ran", value=f"{command_runs:,}")
+        embed.add_field(name="Commands Ran", value=f"{command_runs or 0:,}")
 
         version = f"{version_info.major}.{version_info.minor}.{version_info.micro}"
         value = f"""
@@ -333,6 +334,7 @@ class General(BaseCog):
 
         await ctx.typing()
 
+        params = json.dumps(params)
         async with ctx.session.get("https://api.jeyy.xyz/v2/discord/spotify", params=params, headers=headers) as resp:
             buffer = BytesIO(await resp.read())
 

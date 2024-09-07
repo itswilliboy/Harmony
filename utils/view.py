@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 __all__ = ("BaseView",)
 
+
 class BaseView(ui.View):
     def __init__(
         self,

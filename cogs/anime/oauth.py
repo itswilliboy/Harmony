@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Optional, Self, TypedDict
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Optional, Self, TypedDict, cast
 
 from config import ANILIST_ID, ANILIST_SECRET
+from utils.utils import try_get_ani_id
 
 from .types import FavouriteTypes
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
+
+    from .client import AniListClient
 
 USER_FRAGMENT = """
     fragment userFragment on User {
@@ -240,8 +243,9 @@ class User:
 class OAuth:
     URL: ClassVar[str] = "https://graphql.anilist.co"
 
-    def __init__(self, session: ClientSession) -> None:
+    def __init__(self, session: ClientSession, client: AniListClient) -> None:
         self.session = session
+        self.client = client
 
     @staticmethod
     def get_headers(token: str) -> dict[str, str]:
@@ -279,13 +283,22 @@ class OAuth:
 
     async def get_current_user(self, token: str) -> User:
         """Gets the current user with the Access Token."""
+        id_ = cast(int, await try_get_ani_id(self.client.bot.pool, token))
+        if u := self.client.user_cache.get(id_):
+            return u
 
         async with self.session.post(self.URL, headers=self.get_headers(token), json={"query": VIEWER_QUERY}) as resp:
             json = await resp.json()
-            return User.from_json(json["data"]["Viewer"])
+            user = User.from_json(json["data"]["Viewer"])
+            self.client.user_cache[id_] = user
 
-    async def get_user(self, user: str | int) -> Optional[User]:
+            return user
+
+    async def get_user(self, user: str | int, *, use_cache: bool = True) -> Optional[User]:
         """Gets a user by their username or AniList ID."""
+        if use_cache is True:
+            if u := self.client.user_cache.get(user):
+                return u
 
         if isinstance(user, str):
             variables = {"name": user}
@@ -296,6 +309,10 @@ class OAuth:
         async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": variables}) as resp:
             json = await resp.json()
             try:
-                return User.from_json(json["data"]["User"])
+                u = User.from_json(json["data"]["User"])
+                if use_cache is True:
+                    self.client.user_cache[user] = u
+
+                return u
             except Exception:
                 return None

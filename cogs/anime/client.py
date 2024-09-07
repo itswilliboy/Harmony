@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
+from cachetools import TTLCache
+
 from .anime import Media, MinifiedMedia
 from .oauth import AccessToken, OAuth, User
 from .types import ActivityType, ListActivity, MediaListCollection, MediaListStatus, MediaType
@@ -346,39 +348,45 @@ class AniListClient:
 
     def __init__(self, bot: Harmony) -> None:
         self.bot = bot
-        self.oauth = OAuth(bot.session)
+        self.oauth = OAuth(bot.session, self)
+        self.user_cache: TTLCache[str | int, User] = TTLCache(maxsize=100, ttl=600)
+        self.media_cache: TTLCache[str | int, Media] = TTLCache(maxsize=100, ttl=3600)
 
     async def search_media(
         self, search: str, *, type: MediaType, user_id: Optional[int] = None
     ) -> tuple[Media, Optional[User]] | tuple[None, None]:
         """Searches and returns a media via a search query."""
 
+        m = self.media_cache.get(search)
+
         variables = {"search": search, "type": type}
         headers = await self.get_headers(user_id) if user_id else {}
 
-        async with self.bot.session.post(
-            self.URL,
-            json={"query": MEDIA_QUERY, "variables": variables},
-            headers=headers,
-        ) as resp:
-            if resp.status == 400:
-                raise InvalidToken("The token has either expired or been revoked.")
+        data: Any = None
+        if m is None:
+            async with self.bot.session.post(
+                self.URL,
+                json={"query": MEDIA_QUERY, "variables": variables},
+                headers=headers,
+            ) as resp:
+                if resp.status == 400:
+                    raise InvalidToken("The token has either expired or been revoked.")
 
-            json = await resp.json()
+                json = await resp.json()
 
-            try:
-                data_ = json["data"]
-                data = data_["Media"]
-            except KeyError:
-                return (None, None)
+                try:
+                    data_ = json["data"]
+                    data = data_["Media"]
+                except (KeyError, TypeError):
+                    return (None, None)
 
-            if data is None:
-                return (None, None)
+                if data is None:
+                    return (None, None)
 
         following_status = {}
         if user_id:
             following_status = await self.fetch_following_status(
-                data["id"],
+                m and m.id or data and data["id"],
                 user_id,
                 headers=headers,
             )
@@ -387,7 +395,15 @@ class AniListClient:
         if headers:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
-        return Media.from_json(data, following_status or {}), user
+        if m is not None:
+            if following_status:
+                m.following_statuses = m.parse_following_statuses(following_status)
+            return m, user
+
+        media = Media.from_json(data, following_status or {}), user
+        self.media_cache[search] = media[0]
+
+        return media
 
     async def search_minified_media(self, search: str, *, type: MediaType) -> Optional[MinifiedMedia]:
         """Searchs and returns a "minified" media via a search query."""
@@ -399,7 +415,6 @@ class AniListClient:
             json={"query": MINIFIED_SEARCH_QUERY, "variables": variables},
         ) as resp:
             json = await resp.json()
-
             if not json:
                 return None
 

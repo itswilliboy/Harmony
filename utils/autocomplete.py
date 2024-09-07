@@ -5,6 +5,7 @@ from discord import app_commands
 
 __all__ = ("ban_entry_autocomplete",)
 
+
 @cached(TTLCache(1000, 60))
 async def get_ban_entries(guild: discord.Guild) -> list[discord.BanEntry]:
     return [ban async for ban in guild.bans(limit=None)]

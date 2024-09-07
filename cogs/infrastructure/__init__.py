@@ -7,13 +7,28 @@ from .help import Help
 from .prefix import Prefix
 from .statistics import Statistics
 
+try:
+    from .ipc import IPC
+
+    has_ipc = True
+
+except ImportError:
+    has_ipc = False
+
 if TYPE_CHECKING:
     from bot import Harmony
 
+if has_ipc is True:
 
-class Infrastructure(Prefix, ErrorHandler, Help, Statistics):
-    def __init__(self, bot: Harmony) -> None:
-        super().__init__(bot)
+    class Infrastructure(Prefix, ErrorHandler, Help, Statistics, IPC):  # type: ignore
+        def __init__(self, bot: Harmony) -> None:
+            super().__init__(bot)
+
+else:
+
+    class Infrastructure(Prefix, ErrorHandler, Help, Statistics):
+        def __init__(self, bot: Harmony) -> None:
+            super().__init__(bot)
 
 
 async def setup(bot: Harmony) -> None:
