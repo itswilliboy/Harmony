@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 __all__ = ("Page", "Paginator", "DynamicPaginator")
 
+
 class Page:
     def __init__(
         self,

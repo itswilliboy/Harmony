@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 __all__ = ("BaseCog", "BaseCogMeta")
 
+
 class BaseCogMeta(commands.CogMeta):
     hidden: bool
     owner_only: bool

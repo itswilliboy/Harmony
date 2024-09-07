@@ -195,6 +195,13 @@ class Media:
         self.relations = relations
         self.list_entry = list_entry
 
+    def __repr__(self) -> str:
+        title = self.title["english"] or self.title["romaji"]
+        return f"<Media id={self.id} name={title} type={self.type}>"
+
+    def __str__(self) -> str:
+        return self.title["english"] or self.title["romaji"] or self.title["native"] or "<No Title>"
+
     @classmethod
     def from_json(cls, data: dict[str, Any], following_status: dict[str, Any]) -> Self:
         type_ = MediaType(data["type"])
@@ -205,10 +212,7 @@ class Media:
         cover_image = MediaCoverImage(data["coverImage"])
         studio = data["studios"]["nodes"][0] if data["studios"]["nodes"] else None
 
-        following_statuses: list[FollowingStatus] = []
-        following_users = following_status.get("data", {}).get("Page", {}).get("mediaList", [])
-        for user in following_users:
-            following_statuses.append(FollowingStatus(user))
+        following_statuses: list[FollowingStatus] = cls.parse_following_statuses(following_status)
 
         relations: list[Edge] = []
         if edges := data["relations"]["edges"]:
@@ -246,6 +250,15 @@ class Media:
             relations,
             list_entry,
         )
+
+    @staticmethod
+    def parse_following_statuses(data: dict[str, Any]) -> list[FollowingStatus]:
+        following_statuses: list[FollowingStatus] = []
+        following_users = data.get("data", {}).get("Page", {}).get("mediaList", [])
+        for user in following_users:
+            following_statuses.append(FollowingStatus(user))
+
+        return following_statuses
 
     @staticmethod
     def _to_datetime(date: FuzzyDate) -> Optional[datetime.datetime]:
@@ -320,7 +333,7 @@ class Media:
 
     @property
     def embed(self) -> discord.Embed:
-        title = self.title.get("english") or self.title.get("romaji") or self.title.get("native")
+        title = str(self)
 
         embed = discord.Embed(title=title, description=self.description, color=self.colour, url=self.url)
 

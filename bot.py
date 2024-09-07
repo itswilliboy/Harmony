@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 __all__ = ("Harmony",)
 
+
 class Harmony(commands.Bot):
     """Bot class for Harmony"""
 

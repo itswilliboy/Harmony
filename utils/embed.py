@@ -4,6 +4,7 @@ from discord import Colour, Embed
 
 __all__ = ("PrimaryEmbed", "SuccessEmbed", "ErrorEmbed")
 
+
 class PrimaryEmbed(Embed):
     """Primary embed with a purple colour."""
 
