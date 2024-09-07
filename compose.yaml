@@ -10,6 +10,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app/.
+          ignore:
+            - .git
 
   db:
     image: postgres:14.13-alpine
