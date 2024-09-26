@@ -8,6 +8,7 @@ extend-select = ["I"]
 
 [tool.pyright]
 pythonVersion = "3.11"
+typeCheckingMode = "strict"
 reportIncompatibleMethodOverride = "none"
 reportIncompatibleVariableOverride = "none"
 reportPrivateUsage = "none"
