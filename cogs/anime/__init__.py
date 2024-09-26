@@ -466,8 +466,17 @@ class AniList(BaseCog, name="Anime"):
                     value = f"Watched episode ***{ep}*** of {linked}"
                     add_item(value, timestamp)
 
+                case "read chapter":
+                    ch = act["progress"]
+                    value = f"Read chapter ***{ch}*** of {linked}"
+                    add_item(value, timestamp)
+
                 case "plans to watch":
                     value = f"Plans to watch {linked}"
+                    add_item(value, timestamp)
+
+                case "plans to read":
+                    value = f"Plans to read {linked}"
                     add_item(value, timestamp)
 
                 case "completed":
@@ -476,11 +485,6 @@ class AniList(BaseCog, name="Anime"):
 
                 case "paused watching":
                     value = f"Paused watching of {linked}"
-                    add_item(value, timestamp)
-
-                case "read chapter":
-                    ch = act["progress"]
-                    value = f"Read chapter ***{ch}*** of {linked}"
                     add_item(value, timestamp)
 
                 case _:
