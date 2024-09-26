@@ -487,6 +487,10 @@ class AniList(BaseCog, name="Anime"):
                     value = f"Paused watching of {linked}"
                     add_item(value, timestamp)
 
+                case "paused watching":
+                    value = f"Paused reading of {linked}"
+                    add_item(value, timestamp)
+
                 case _:
                     print(status)
                     pass
