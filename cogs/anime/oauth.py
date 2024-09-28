@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Optional, Self, TypedDict, cast
 
+from aiohttp import ContentTypeError
+
 from config import ANILIST_ID, ANILIST_SECRET
-from utils.utils import try_get_ani_id
+from utils import GenericError, try_get_ani_id
 
 from .types import FavouriteTypes
 
@@ -12,6 +15,12 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
 
     from .client import AniListClient
+
+
+class ApiExecption(GenericError):
+    def __init__(self) -> None:
+        super().__init__("The AniList API is having problems and is sending invalid data, please try again later.", True)
+
 
 USER_FRAGMENT = """
     fragment userFragment on User {
@@ -271,7 +280,11 @@ class OAuth:
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
         async with self.session.post("https://anilist.co/api/v2/oauth/token", json=json, headers=headers) as resp:
-            json = await resp.json()
+            try:
+                json = await resp.json()
+
+            except (ContentTypeError, JSONDecodeError):
+                raise ApiExecption()
             token = json.get("access_token", None)
 
             if token is None:
@@ -288,7 +301,12 @@ class OAuth:
             return u
 
         async with self.session.post(self.URL, headers=self.get_headers(token), json={"query": VIEWER_QUERY}) as resp:
-            json = await resp.json()
+            try:
+                json = await resp.json()
+
+            except (ContentTypeError, JSONDecodeError):
+                raise ApiExecption()
+
             user = User.from_json(json["data"]["Viewer"])
             self.client.user_cache[id_] = user
 
@@ -307,7 +325,11 @@ class OAuth:
             variables = {"id": user}
 
         async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": variables}) as resp:
-            json = await resp.json()
+            try:
+                json = await resp.json()
+
+            except (ContentTypeError, JSONDecodeError):
+                raise ApiExecption()
             try:
                 u = User.from_json(json["data"]["User"])
                 if use_cache is True:

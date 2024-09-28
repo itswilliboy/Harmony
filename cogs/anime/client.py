@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
+from aiohttp import ContentTypeError
 from cachetools import TTLCache
 
 from .anime import Media, MinifiedMedia
-from .oauth import AccessToken, OAuth, User
+from .oauth import AccessToken, ApiExecption, OAuth, User
 from .types import ActivityType, ListActivity, MediaListCollection, MediaListStatus, MediaType
 
 if TYPE_CHECKING:
@@ -368,7 +370,11 @@ class AniListClient:
             if resp.status == 400:
                 raise InvalidToken("The token has either expired or been revoked.")
 
-            json = await resp.json()
+            try:
+                json = await resp.json()
+
+            except (ContentTypeError, JSONDecodeError):
+                raise ApiExecption()
 
             try:
                 data_ = json["data"]
@@ -403,7 +409,12 @@ class AniListClient:
             self.URL,
             json={"query": MINIFIED_SEARCH_QUERY, "variables": variables},
         ) as resp:
-            json = await resp.json()
+            try:
+                json = await resp.json()
+
+            except (ContentTypeError, JSONDecodeError):
+                return None  # Not sending error messages if it's a minified media
+
             if not json:
                 return None
 
@@ -476,8 +487,13 @@ class AniListClient:
             headers=headers,
         ) as resp:
             if resp.status == 200:
-                data = await resp.json()
-                return data
+                try:
+                    json = await resp.json()
+
+                except (ContentTypeError, JSONDecodeError):
+                    raise ApiExecption()
+
+                return json
 
     async def fetch_media_collection(self, user: int | str, type: MediaType) -> MediaListCollection:
         """Fetches a user's anime- or manga list via their user ID or username."""
@@ -490,7 +506,13 @@ class AniListClient:
             variables["userName"] = user
 
         async with self.bot.session.post(self.URL, json={"query": MEDIA_LIST_QUERY, "variables": variables}) as resp:
-            data = (await resp.json())["data"]["MediaListCollection"]
+            try:
+                json = await resp.json()
+
+            except (ContentTypeError, JSONDecodeError):
+                raise ApiExecption()
+
+            data = json["data"]["MediaListCollection"]
             collection: MediaListCollection = data
             return collection
 
@@ -521,7 +543,12 @@ class AniListClient:
 
         async with self.bot.session.post(self.URL, json={"query": query, "variables": variables}, headers=headers) as resp:
             if resp.status == 200:
-                data = (await resp.json())["data"]
+                try:
+                    json = await resp.json()
+
+                except (ContentTypeError, JSONDecodeError):
+                    raise ApiExecption()
+                data = json["data"]
 
                 return data
             return {}
