@@ -10,9 +10,9 @@ from utils import Paginator, PrimaryEmbed
 from .types import MediaFormat, MediaListCollection, MediaListStatus, MediaType
 
 if TYPE_CHECKING:
-    from client import AniListClient
-
     from bot import Harmony
+
+    from . import AniListClient
 
     Interaction = discord.Interaction[Harmony]
 

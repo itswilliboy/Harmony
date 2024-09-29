@@ -69,7 +69,7 @@ class MediaListStatus(StrEnum):
     REPEATING = "REPEATING"
 
 
-class FavouriteTypes(StrEnum):
+class FavouriteType(StrEnum):
     ANIME = "ANIME"
     MANGA = "MANGA"
     CHARACTERS = "CHARACTERS"

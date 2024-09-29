@@ -16,8 +16,7 @@ from .types import Edge, MediaRelation
 if TYPE_CHECKING:
     from bot import Harmony
 
-    from . import AniList
-    from .client import AniListClient
+    from . import AniList, AniListClient
 
 PIXEL_LINE_URL = "https://i.imgur.com/IfBmnOp.png"  # For making multiple embeds the same width
 
@@ -350,7 +349,7 @@ class EmbedSelect(discord.ui.Select["EmbedRelationView"]):
 class EmbedRelationView(RelationView):
     def __init__(
         self, cog: AniList, media: Media, user: Optional[User] = None, author: Optional[discord.abc.Snowflake] = None
-    ):
+    ) -> None:
         super().__init__(cog, media, user, author)
 
         if media.status_embed(user):

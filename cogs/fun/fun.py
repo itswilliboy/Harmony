@@ -99,7 +99,12 @@ class Fun(BaseCog):
     async def meme(self, ctx: Context):
         """Sends a meme."""
         await ctx.typing()
-        meme = await self.fetch_meme(ctx.session)
+        meme = None
+        try:
+            meme = await self.fetch_meme(ctx.session)
+
+        except Exception:
+            pass
 
         if meme is None:
             raise GenericError("Couldn't fetch a meme right now, please try again later.")

@@ -27,7 +27,7 @@ from .types import (
 if TYPE_CHECKING:
     from bot import Harmony
 
-    from .oauth import User
+    from . import User
 
     Interaction = discord.Interaction[Harmony]
 
@@ -134,10 +134,9 @@ class MinifiedMedia:
         if self.id_mal:
             fmt.append(f"[MAL](<https://myanimelist.net/{self.type.lower()}/{self.id_mal}>)")
 
+        genres = ""
         if self.genres:
             genres = f"\nGenre{'' if len(self.genres) == 1 else 's'}: " + (", ".join(self.genres))
-        else:
-            genres = ""
 
         return " \N{EM DASH} ".join(fmt) + genres
 
@@ -195,6 +194,8 @@ class Media:
         self.relations = relations
         self.list_entry = list_entry
 
+        self._data: dict[str, Any]  # Raw json data
+
     def __repr__(self) -> str:
         title = self.title["english"] or self.title["romaji"]
         return f"<Media id={self.id} name={title} type={self.type}>"
@@ -224,7 +225,7 @@ class Media:
 
         list_entry = MediaList(data["mediaListEntry"]) if data.get("mediaListEntry") else None
 
-        return cls(
+        inst = cls(
             data["id"],
             data["idMal"],
             data["isAdult"],
@@ -250,6 +251,9 @@ class Media:
             relations,
             list_entry,
         )
+
+        inst._data = data
+        return inst
 
     @staticmethod
     def parse_following_statuses(data: dict[str, Any]) -> list[FollowingStatus]:

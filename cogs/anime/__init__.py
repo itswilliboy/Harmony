@@ -18,7 +18,7 @@ from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import User
-from .types import FavouriteTypes, MediaType, _Media
+from .types import FavouriteType, MediaType, _Media
 from .views import Delete, EmbedRelationView, LoginView
 
 ANIME_REGEX = re.compile(r"\{\{(.*?)\}\}")
@@ -28,7 +28,7 @@ CB_REGEX = re.compile(r"```[\S\s]+?```")
 HL_REGEX = re.compile(r"\[.*?\]\(.*?\)")
 
 
-def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteTypes, maxlen: int = 1024, empty: bool = False):
+def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False):
     favourites = discord.utils.find(lambda f: f["_type"] == type.lower(), user.favourites)
 
     if favourites and favourites["items"]:
@@ -291,7 +291,7 @@ class AniList(BaseCog, name="Anime"):
                 )
 
         if user.manga_stats.chapters_read:
-            add_favourite(embed, user=user, type=FavouriteTypes.ANIME, empty=True)
+            add_favourite(embed, user=user, type=FavouriteType.ANIME, empty=True)
 
             s = user.manga_stats
             embed.add_field(
@@ -312,12 +312,12 @@ class AniList(BaseCog, name="Anime"):
                 )
 
         else:
-            add_favourite(embed, user=user, type=FavouriteTypes.ANIME)
+            add_favourite(embed, user=user, type=FavouriteType.ANIME)
 
-        add_favourite(embed, user=user, type=FavouriteTypes.MANGA)
-        add_favourite(embed, user=user, type=FavouriteTypes.CHARACTERS)
-        add_favourite(embed, user=user, type=FavouriteTypes.STAFF)
-        add_favourite(embed, user=user, type=FavouriteTypes.STUDIOS)
+        add_favourite(embed, user=user, type=FavouriteType.MANGA)
+        add_favourite(embed, user=user, type=FavouriteType.CHARACTERS)
+        add_favourite(embed, user=user, type=FavouriteType.STAFF)
+        add_favourite(embed, user=user, type=FavouriteType.STUDIOS)
 
         await ctx.send(embed=embed)
 
@@ -456,7 +456,10 @@ class AniList(BaseCog, name="Anime"):
         for act in activities[:5]:
             media = act["media"]
             timestamp = datetime.datetime.fromtimestamp(act["createdAt"])
-            linked = f"**[{media['title']['english']}]({media['siteUrl']})**"
+
+            t = media["title"]
+            title = t["english"] or t["romaji"] or t["native"]
+            linked = f"**[{title}]({media['siteUrl']})**"
 
             status = act["status"]
             match status:
@@ -472,6 +475,7 @@ class AniList(BaseCog, name="Anime"):
                     add_item(value, timestamp)
 
                 case "plans to watch":
+                    print(media)
                     value = f"Plans to watch {linked}"
                     add_item(value, timestamp)
 

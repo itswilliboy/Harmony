@@ -9,12 +9,12 @@ from aiohttp import ContentTypeError
 from config import ANILIST_ID, ANILIST_SECRET
 from utils import GenericError, try_get_ani_id
 
-from .types import FavouriteTypes
+from .types import FavouriteType
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from .client import AniListClient
+    from . import AniListClient
 
 
 class ApiExecption(GenericError):
@@ -24,26 +24,26 @@ class ApiExecption(GenericError):
 
 USER_FRAGMENT = """
     fragment userFragment on User {
-        name,
-        id,
-        about,
+        name
+        id
+        about
         avatar {
             large
-        },
-        bannerImage,
-        siteUrl,
-        createdAt,
+        }
+        bannerImage
+        siteUrl
+        createdAt
         statistics {
             anime {
-                count,
-                meanScore,
-                minutesWatched,
+                count
+                meanScore
+                minutesWatched
                 episodesWatched
             }
             manga {
-                count,
-                meanScore,
-                chaptersRead,
+                count
+                meanScore
+                chaptersRead
                 volumesRead
             }
         }
@@ -52,7 +52,7 @@ USER_FRAGMENT = """
                 nodes {
                     title {
                         userPreferred
-                    },
+                    }
                     siteUrl
                 }
             }
@@ -60,7 +60,7 @@ USER_FRAGMENT = """
                 nodes {
                     title {
                         userPreferred
-                    },
+                    }
                     siteUrl
                 }
             }
@@ -76,13 +76,13 @@ USER_FRAGMENT = """
                 nodes {
                     name {
                         userPreferred
-                    },
+                    }
                     siteUrl
                 }
             }
             studios {
                 nodes {
-                    name,
+                    name
                     siteUrl
                 }
             }
@@ -150,7 +150,7 @@ def parse_favourites(
 
 
 class Favourites(TypedDict):
-    _type: FavouriteTypes
+    _type: FavouriteType
     items: list[PartialNode]
 
 
@@ -285,6 +285,7 @@ class OAuth:
 
             except (ContentTypeError, JSONDecodeError):
                 raise ApiExecption()
+
             token = json.get("access_token", None)
 
             if token is None:
@@ -330,6 +331,7 @@ class OAuth:
 
             except (ContentTypeError, JSONDecodeError):
                 raise ApiExecption()
+
             try:
                 u = User.from_json(json["data"]["User"])
                 if use_cache is True:

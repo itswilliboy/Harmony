@@ -87,10 +87,10 @@ MEDIA_QUERY = """
                 color
             }
             studios(isMain: true) {
-            nodes {
-                name
-                siteUrl
-            }
+                nodes {
+                    name
+                    siteUrl
+                }
             }
             relations {
                 edges {
@@ -279,23 +279,23 @@ COMPARISON_LIST_QUERY = """
 
 FOLLOWING_QUERY = """
     query ($id: Int, $page: Int, $perPage: Int) {
-    Page(page: $page, perPage: $perPage) {
-        mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
-        status
-        score(format: POINT_10_DECIMAL)
-        progress
-        repeat
-        media {
-            episodes
-            chapters
+        Page(page: $page, perPage: $perPage) {
+            mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
+                status
+                score(format: POINT_10_DECIMAL)
+                progress
+                repeat
+                media {
+                    episodes
+                    chapters
+                }
+                user {
+                    siteUrl
+                    name
+                    id
+                }
+            }
         }
-        user {
-            siteUrl
-            name
-            id
-        }
-        }
-    }
     }
 """
 
@@ -361,7 +361,6 @@ class AniListClient:
         variables = {"search": search, "type": type}
         headers = await self.get_headers(user_id) if user_id else {}
 
-        data: Any = None
         async with self.bot.session.post(
             self.URL,
             json={"query": MEDIA_QUERY, "variables": variables},
@@ -476,7 +475,7 @@ class AniListClient:
         headers = headers or await self.get_headers(user_id)
 
         if not headers:
-            return
+            return None
 
         async with self.bot.session.post(
             self.URL,
@@ -548,6 +547,7 @@ class AniListClient:
 
                 except (ContentTypeError, JSONDecodeError):
                     raise ApiExecption()
+
                 data = json["data"]
 
                 return data
