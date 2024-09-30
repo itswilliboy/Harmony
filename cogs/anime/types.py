@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from typing import Any, NamedTuple, Optional, TypedDict
 
@@ -222,3 +223,13 @@ class ListActivity(TypedDict):
     user: dict[str, Any]  # TODO: Fix types
     media: dict[str, Any]  # --
     likes: list[dict[str, Any]]  # --
+
+
+class Regex:
+    ANIME_REGEX = re.compile(r"\{\{(.*?)\}\}")
+    MANGA_REGEX = re.compile(r"\[\[(.*?)\]\]")
+    INLINE_CB_REGEX = re.compile(r"(?P<CB>(`{1,2})[^`^\n]+?\2)(?:$|[^`])")
+    CB_REGEX = re.compile(r"```[\S\s]+?```")
+    HL_REGEX = re.compile(r"\[.*?\]\(.*?\)")
+    TAG_REGEX = re.compile(r"</?\w+/?>")
+    SOURCE_REGEX = re.compile(r"\(Source: .+\)")

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime
-import re
 from typing import TYPE_CHECKING, Any, Optional, Self
 
 import discord
@@ -22,6 +21,7 @@ from .types import (
     MediaTitle,
     MediaType,
     Object,
+    Regex,
 )
 
 if TYPE_CHECKING:
@@ -30,9 +30,6 @@ if TYPE_CHECKING:
     from . import User
 
     Interaction = discord.Interaction[Harmony]
-
-TAG_REGEX = re.compile(r"</?\w+/?>")
-SOURCE_REGEX = re.compile(r"\(Source: .+\)")
 
 
 class MinifiedMedia:
@@ -298,8 +295,8 @@ class Media:
         if self._description is None:
             return ""
 
-        desc = TAG_REGEX.sub("", self._description)
-        split = SOURCE_REGEX.split(desc)
+        desc = Regex.TAG_REGEX.sub("", self._description)
+        split = Regex.SOURCE_REGEX.split(desc)
         desc = split[0]
         desc = desc.replace("\N{HORIZONTAL ELLIPSIS}", "").replace("...", "").rstrip()
 

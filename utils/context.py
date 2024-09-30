@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, Any, Optional, cast, overload
 
 import discord
 from aiohttp import ClientSession
@@ -55,8 +55,9 @@ class Context(commands.Context["Harmony"]):
 
         blacklist = self.bot.blacklist
 
-        if self.guild is not None:  # type: ignore
-            if self.guild.id in self.bot.guild_blacklist:
+        guild = cast(Optional[discord.Guild], self.guild)
+        if guild is not None:
+            if guild.id in self.bot.guild_blacklist:
                 return True
 
         if self.author.id in blacklist:
@@ -65,7 +66,7 @@ class Context(commands.Context["Harmony"]):
             if item.is_global:
                 return True
 
-            if self.guild is not None:  # type: ignore
+            if guild is not None:
                 if self.guild.id in item.guild_ids:
                     return True
 

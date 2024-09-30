@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-import re
 from collections import ChainMap
 from typing import Annotated, Any, Literal, Optional, cast
 
@@ -11,24 +10,18 @@ from discord.app_commands import describe
 from discord.ext import commands
 
 from bot import Harmony
-from utils import BaseCog, Context, GenericError, PrimaryEmbed, SuccessEmbed, progress_bar, try_get_ani_id
+from utils import BaseCog, Context, GenericError, PrimaryEmbed, SuccessEmbed, try_get_ani_id
 from utils.paginator import Page, Paginator
 
 from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
-from .oauth import User
-from .types import FavouriteType, MediaType, _Media
-from .views import Delete, EmbedRelationView, LoginView
-
-ANIME_REGEX = re.compile(r"\{\{(.*?)\}\}")
-MANGA_REGEX = re.compile(r"\[\[(.*?)\]\]")
-INLINE_CB_REGEX = re.compile(r"(?P<CB>(`{1,2})[^`^\n]+?\2)(?:$|[^`])")
-CB_REGEX = re.compile(r"```[\S\s]+?```")
-HL_REGEX = re.compile(r"\[.*?\]\(.*?\)")
+from .oauth import Favourites, User
+from .types import FavouriteType, ListActivity, MediaListStatus, MediaType, Regex, _Media
+from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView
 
 
-def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False):
+def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False) -> None:
     favourites = discord.utils.find(lambda f: f["_type"] == type.lower(), user.favourites)
 
     if favourites and favourites["items"]:
@@ -44,6 +37,80 @@ def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxl
         return
 
     embed.add_field(name=f"Favourite {type.title()}", value=value, inline=False)
+
+
+def get_favourites(favourites: list[Favourites], type: FavouriteType) -> list[tuple[str, str]]:
+    favs = discord.utils.find(lambda f: f["_type"] == type.lower(), favourites)
+
+    if favs is None:
+        return []
+
+    to_return: list[tuple[str, str]] = []
+    for fav in favs["items"]:
+        to_return.append((fav.name, fav.site_url))
+
+    return to_return
+
+
+def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime]:
+    act = activity
+
+    to_add: list[str] = []
+
+    def add_item(item: str, timestamp: datetime.datetime) -> None:
+        w_timestamp = discord.utils.format_dt(timestamp, "R") + f"\n{item}"
+        to_add.append(w_timestamp)
+
+    media = act["media"]
+    timestamp = datetime.datetime.fromtimestamp(act["createdAt"])
+
+    t = media["title"]
+    title = t["english"] or t["romaji"] or t["native"]
+    linked = f"**[{title}]({media['siteUrl']})**"
+
+    status = act["status"]
+
+    value = f"{status} | {linked}"
+    match status:
+        case "watched episode":
+            ep = act["progress"]
+            value = f"Watched episode **{ep}** of {linked}"
+            add_item(value, timestamp)
+
+        case "read chapter":
+            ch = act["progress"]
+            value = f"Read chapter **{ch}** of {linked}"
+            add_item(value, timestamp)
+
+        case "plans to watch":
+            value = f"Plans to watch {linked}"
+            add_item(value, timestamp)
+
+        case "plans to read":
+            value = f"Plans to read {linked}"
+            add_item(value, timestamp)
+
+        case "completed":
+            value = f"Completed {linked}"
+            add_item(value, timestamp)
+
+        case "paused watching":
+            value = f"Paused watching of {linked}"
+            add_item(value, timestamp)
+
+        case "paused reading":
+            value = f"Paused reading of {linked}"
+            add_item(value, timestamp)
+
+        case "dropped":
+            value = f"Dropped {linked}"
+            add_item(value, timestamp)
+
+        case _:
+            print(status)
+            add_item(f"{status.title()} | {linked}", timestamp)
+
+    return value, timestamp
 
 
 class AniUser(commands.UserConverter):
@@ -76,8 +143,6 @@ async def _default(ctx: Context) -> Optional[User]:
 
 
 aniuser = commands.parameter(default=_default, converter=AniUser, displayed_name="AniList user")
-
-
 AniUserConv = Annotated[User, AniUser]
 
 
@@ -87,7 +152,7 @@ class AniList(BaseCog, name="Anime"):
         bot: Harmony,
         *args: Any,
         **kwargs: Any,
-    ):
+    ) -> None:
         super().__init__(bot, *args, **kwargs)
 
         self.client = AniListClient(bot)
@@ -113,15 +178,15 @@ class AniList(BaseCog, name="Anime"):
 
         content = message.content
 
-        for match in reversed(list(INLINE_CB_REGEX.finditer(content))):
+        for match in reversed(list(Regex.INLINE_CB_REGEX.finditer(content))):
             start, end = match.span("CB")
             content = content[:start] + content[end:]
 
-        content = CB_REGEX.sub(" ", content)
-        content = HL_REGEX.sub(" ", content)
+        content = Regex.CB_REGEX.sub(" ", content)
+        content = Regex.HL_REGEX.sub(" ", content)
 
-        anime = list(set(ANIME_REGEX.findall(content)))
-        manga = list(set(MANGA_REGEX.findall(content)))
+        anime = list(set(Regex.ANIME_REGEX.findall(content)))
+        manga = list(set(Regex.MANGA_REGEX.findall(content)))
 
         if not anime and not manga:
             return
@@ -251,75 +316,55 @@ class AniList(BaseCog, name="Anime"):
     async def anilist(self, ctx: Context):
         await ctx.send_help(ctx.command)
 
-    @anilist.command()
     @describe(user="AniList username")
+    @anilist.command(aliases=["p"])
     async def profile(self, ctx: Context, user: AniUserConv = aniuser):
-        """View someone's AniList profile."""
+        embed = PrimaryEmbed(title=user.name, url=user.url)
+        embed.set_thumbnail(url=user.avatar_url)
 
-        embed = PrimaryEmbed(
-            title=user.name,
-            url=user.url,
-            description=user.about + "\n\u200b" if user.about else "",
-        )
+        astats = mstats = None
+        afavs = get_favourites(user.favourites, FavouriteType.ANIME)
+        mfavs = get_favourites(user.favourites, FavouriteType.MANGA)
 
-        embed.set_footer(text="Account Created")
-        embed.timestamp = user.created_at
-
-        if url := user.banner_url:
-            embed.set_image(url=url)
-
-        if url := user.avatar_url:
-            embed.set_thumbnail(url=url)
-
-        if user.anime_stats.episodes_watched:
-            s = user.anime_stats
-            embed.add_field(
-                name="Anime Statistics",
-                value=(
-                    f"Anime Watched: **`{s.count:,}`**\n"
-                    f"Episodes Watched: **`{s.episodes_watched:,}`**\n"
-                    f"Hours Watched: **`{(s.minutes_watched / 60):.1f}` (`{(s.minutes_watched / 1440):.1f} days`)**"
-                ),
-                inline=True,
+        if s := user.anime_stats:
+            items = (
+                f"Anime watched: `{s.count:,}`",
+                f"Episodes watched: `{s.episodes_watched:,}`",
+                f"Hours watched: `{s.minutes_watched // 60:,}` (`{s.minutes_watched // 60 // 24}d`)",
+                f"Favourite: [{afavs[0][0]}]({afavs[0][1]})" if afavs else (" " if mfavs else ""),
+                f"-# Average score: `{s.mean_score:.1f}%`" if s.mean_score else None,
             )
+            astats = [i for i in items if i]
 
-            if s.mean_score:
-                embed.add_field(
-                    name="Average Anime Score",
-                    value=f"**{s.mean_score} // 100**\n{progress_bar(s.mean_score)}",
-                    inline=True,
-                )
-
-        if user.manga_stats.chapters_read:
-            add_favourite(embed, user=user, type=FavouriteType.ANIME, empty=True)
-
-            s = user.manga_stats
-            embed.add_field(
-                name="Manga Statistics",
-                value=(
-                    f"Manga Read: **`{s.count:,}`**\n"
-                    f"Volumes Read: **`{s.volumes_read:,}`**\n"
-                    f"Chapters Read: **`{s.chapters_read:,}`**"
-                ),
-                inline=True,
+        if s := user.manga_stats:
+            items = (
+                f"Manga read: `{s.count:,}`",
+                f"Chapters read: `{s.chapters_read:,}`",
+                f"Volumes read: `{s.volumes_read:,}`",
+                f"Favourite: [{mfavs[0][0]}]({mfavs[0][1]})" if mfavs else (" " if afavs else ""),
+                f"-# Average score: `{s.mean_score:.1f}%`" if s.mean_score else None,
             )
+            mstats = [i for i in items if i]
 
-            if s.mean_score:
-                embed.add_field(
-                    name="Average Manga Score",
-                    value=f"**{s.mean_score} // 100**\n{progress_bar(s.mean_score)}",
-                    inline=True,
-                )
+        if astats:
+            embed.add_field(name="Anime", value="\n".join(astats))
 
-        else:
-            add_favourite(embed, user=user, type=FavouriteType.ANIME)
+        if mstats:
+            embed.add_field(name="Manga", value="\n".join(mstats))
 
-        add_favourite(embed, user=user, type=FavouriteType.MANGA)
-        add_favourite(embed, user=user, type=FavouriteType.CHARACTERS)
-        add_favourite(embed, user=user, type=FavouriteType.STAFF)
-        add_favourite(embed, user=user, type=FavouriteType.STUDIOS)
+        activities = await self.client.fetch_user_activity(user.id)
+        first = [get_activity_message(act) for act in activities[:3]]
 
-        await ctx.send(embed=embed)
+        if first:
+            fmtd = [f"-# {discord.utils.format_dt(act[1], 'R')}\n-# {act[0]}" for act in first]
+            embed.add_field(name="Recent Activity", value="\n".join(fmtd), inline=False)
+
+        view: Optional[discord.ui.View] = None
+        id = await try_get_ani_id(ctx.pool, ctx.author.id)
+        if id and id == user.id and False:
+            view = ProfileManagementView(self, user)
+
+        await ctx.send(embed=embed, view=view or discord.utils.MISSING)
 
     @describe(user="AniList username")
     @anilist.command()
@@ -368,7 +413,7 @@ class AniList(BaseCog, name="Anime"):
         await self.bot.pool.execute(query, ctx.author.id)
 
         await ctx.send(
-            embed=SuccessEmbed(description="Success3lly logged you out."),
+            embed=SuccessEmbed(description="Successlly logged you out."),
         )
 
     @describe(
@@ -399,7 +444,7 @@ class AniList(BaseCog, name="Anime"):
         cols = await self.client.fetch_media_collections(
             *[u.id for u in users],
             type=MediaType.ANIME,
-            status=status.upper(),  # type: ignore
+            status=MediaListStatus[status.upper()],
             user_id=ctx.author.id,
         )
 
@@ -412,6 +457,8 @@ class AniList(BaseCog, name="Anime"):
         shared = set(total).intersection(*entries)
 
         to_list = [total[i] for i in shared]
+
+        to_list.sort(key=lambda li: li["title"]["english"] or li["title"]["romaji"])
 
         nl = "\n"
         pages: list[Page] = []
@@ -444,64 +491,20 @@ class AniList(BaseCog, name="Anime"):
             raise GenericError("Couldn't find any recent activities for this user.")
 
         name = activities[0]["user"]["name"]
-        embed = PrimaryEmbed()
-        embed.set_author(name=f"{name}'s recent activity", icon_url=activities[0]["user"]["avatar"]["large"])
 
-        to_add: list[str] = []
+        messages = [get_activity_message(act) for act in activities]
 
-        def add_item(item: str, timestamp: datetime.datetime) -> None:
-            w_timestamp = discord.utils.format_dt(timestamp, "R") + f"\n{item}"
-            to_add.append(w_timestamp)
+        embeds: list[discord.Embed] = []
+        for chunk in discord.utils.as_chunks(messages, 5):
+            embed = PrimaryEmbed()
+            embed.set_author(name=f"{name}'s recent activity", icon_url=activities[0]["user"]["avatar"]["large"])
 
-        for act in activities[:5]:
-            media = act["media"]
-            timestamp = datetime.datetime.fromtimestamp(act["createdAt"])
+            fmtd = [f"-# {discord.utils.format_dt(act[1], 'R')}\n{act[0]}" for act in chunk]
+            embed.description = "\n\n".join(fmtd)
 
-            t = media["title"]
-            title = t["english"] or t["romaji"] or t["native"]
-            linked = f"**[{title}]({media['siteUrl']})**"
+            embeds.append(embed)
 
-            status = act["status"]
-            match status:
-                case "watched episode":
-                    ep = act["progress"]
-
-                    value = f"Watched episode ***{ep}*** of {linked}"
-                    add_item(value, timestamp)
-
-                case "read chapter":
-                    ch = act["progress"]
-                    value = f"Read chapter ***{ch}*** of {linked}"
-                    add_item(value, timestamp)
-
-                case "plans to watch":
-                    print(media)
-                    value = f"Plans to watch {linked}"
-                    add_item(value, timestamp)
-
-                case "plans to read":
-                    value = f"Plans to read {linked}"
-                    add_item(value, timestamp)
-
-                case "completed":
-                    value = f"Completed {linked}"
-                    add_item(value, timestamp)
-
-                case "paused watching":
-                    value = f"Paused watching of {linked}"
-                    add_item(value, timestamp)
-
-                case "paused watching":
-                    value = f"Paused reading of {linked}"
-                    add_item(value, timestamp)
-
-                case _:
-                    print(status)
-                    pass
-
-        embed.description = "\n\n".join(to_add)
-
-        await ctx.send(embed=embed)
+        await Paginator(embeds, ctx.author).start(ctx)
 
 
 async def setup(bot: Harmony) -> None:
