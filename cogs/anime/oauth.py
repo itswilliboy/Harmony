@@ -191,7 +191,7 @@ class User:
     ) -> None:
         self.name = name
         self.id = id
-        self.about = about
+        self._about = about
         self.avatar_url = avatar_url
         self.banner_url = banner_url
         self.url = url

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-import re
 from collections import ChainMap
 from typing import Annotated, Any, Literal, Optional, cast
 
@@ -18,14 +17,8 @@ from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import Favourites, User
-from .types import FavouriteType, ListActivity, MediaType, _Media
+from .types import FavouriteType, ListActivity, MediaType, Regex, _Media
 from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView
-
-ANIME_REGEX = re.compile(r"\{\{(.*?)\}\}")
-MANGA_REGEX = re.compile(r"\[\[(.*?)\]\]")
-INLINE_CB_REGEX = re.compile(r"(?P<CB>(`{1,2})[^`^\n]+?\2)(?:$|[^`])")
-CB_REGEX = re.compile(r"```[\S\s]+?```")
-HL_REGEX = re.compile(r"\[.*?\]\(.*?\)")
 
 
 def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False):
@@ -45,6 +38,7 @@ def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxl
 
     embed.add_field(name=f"Favourite {type.title()}", value=value, inline=False)
 
+
 def get_favourites(favourites: list[Favourites], type: FavouriteType) -> list[tuple[str, str]]:
     favs = discord.utils.find(lambda f: f["_type"] == type.lower(), favourites)
 
@@ -56,6 +50,7 @@ def get_favourites(favourites: list[Favourites], type: FavouriteType) -> list[tu
         to_return.append((fav.name, fav.site_url))
 
     return to_return
+
 
 def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime]:
     act = activity
@@ -108,7 +103,7 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
             add_item(value, timestamp)
 
         case "dropped":
-            value =f"Dropped {linked}"
+            value = f"Dropped {linked}"
             add_item(value, timestamp)
 
         case _:
@@ -183,15 +178,15 @@ class AniList(BaseCog, name="Anime"):
 
         content = message.content
 
-        for match in reversed(list(INLINE_CB_REGEX.finditer(content))):
+        for match in reversed(list(Regex.INLINE_CB_REGEX.finditer(content))):
             start, end = match.span("CB")
             content = content[:start] + content[end:]
 
-        content = CB_REGEX.sub(" ", content)
-        content = HL_REGEX.sub(" ", content)
+        content = Regex.CB_REGEX.sub(" ", content)
+        content = Regex.HL_REGEX.sub(" ", content)
 
-        anime = list(set(ANIME_REGEX.findall(content)))
-        manga = list(set(MANGA_REGEX.findall(content)))
+        anime = list(set(Regex.ANIME_REGEX.findall(content)))
+        manga = list(set(Regex.MANGA_REGEX.findall(content)))
 
         if not anime and not manga:
             return
@@ -324,7 +319,7 @@ class AniList(BaseCog, name="Anime"):
     @describe(user="AniList username")
     @anilist.command(aliases=["p"])
     async def profile(self, ctx: Context, user: AniUserConv = aniuser):
-        embed = PrimaryEmbed(title=user.name, description=user.about, url=user.url)
+        embed = PrimaryEmbed(title=user.name, url=user.url)
         embed.set_thumbnail(url=user.avatar_url)
 
         astats = mstats = None
@@ -347,15 +342,15 @@ class AniList(BaseCog, name="Anime"):
                 f"Chapters read: `{s.chapters_read:,}`",
                 " ",
                 f"Favourite: [{mfavs[0][0]}]({mfavs[0][1]})" if mfavs else (" " if afavs else ""),
-                f"-# Average score: `{s.mean_score:.1f}%`" if s.mean_score else None
+                f"-# Average score: `{s.mean_score:.1f}%`" if s.mean_score else None,
             )
             mstats = [i for i in items if i]
 
         if astats:
-            embed.add_field(name="Anime", value='\n'.join(astats))
+            embed.add_field(name="Anime", value="\n".join(astats))
 
         if mstats:
-            embed.add_field(name="Manga", value='\n'.join(mstats))
+            embed.add_field(name="Manga", value="\n".join(mstats))
 
         activities = await self.client.fetch_user_activity(user.id)
         first = [get_activity_message(act) for act in activities[:3]]
@@ -366,7 +361,7 @@ class AniList(BaseCog, name="Anime"):
 
         view: Optional[discord.ui.View] = None
         id = await try_get_ani_id(ctx.pool, ctx.author.id)
-        if id and id == user.id:
+        if id and id == user.id and False:
             view = ProfileManagementView(self, user)
 
         await ctx.send(embed=embed, view=view or discord.utils.MISSING)
