@@ -19,7 +19,7 @@ from .client import AniListClient
 from .media_list import MediaList
 from .oauth import Favourites, User
 from .types import FavouriteType, ListActivity, MediaType, _Media
-from .views import Delete, EmbedRelationView, LoginView
+from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView
 
 ANIME_REGEX = re.compile(r"\{\{(.*?)\}\}")
 MANGA_REGEX = re.compile(r"\[\[(.*?)\]\]")
@@ -326,7 +326,6 @@ class AniList(BaseCog, name="Anime"):
     async def profile(self, ctx: Context, user: AniUserConv = aniuser):
         embed = PrimaryEmbed(title=user.name, description=user.about, url=user.url)
         embed.set_thumbnail(url=user.avatar_url)
-        embed.set_image(url=user.banner_url)
 
         astats = mstats = None
         afavs = get_favourites(user.favourites, FavouriteType.ANIME)
@@ -365,7 +364,12 @@ class AniList(BaseCog, name="Anime"):
             fmtd = [f"-# {discord.utils.format_dt(act[1], 'R')}\n-# {act[0]}" for act in first]
             embed.add_field(name="Recent Activity", value="\n".join(fmtd), inline=False)
 
-        await ctx.send(embed=embed)
+        view: Optional[discord.ui.View] = None
+        id = await try_get_ani_id(ctx.pool, ctx.author.id)
+        if id and id == user.id:
+            view = ProfileManagementView(self, user)
+
+        await ctx.send(embed=embed, view=view or discord.utils.MISSING)
 
     @describe(user="AniList username")
     @anilist.command()
@@ -491,7 +495,6 @@ class AniList(BaseCog, name="Anime"):
 
         name = activities[0]["user"]["name"]
 
-
         messages = [get_activity_message(act) for act in activities]
 
         embeds: list[discord.Embed] = []
@@ -499,7 +502,7 @@ class AniList(BaseCog, name="Anime"):
             embed = PrimaryEmbed()
             embed.set_author(name=f"{name}'s recent activity", icon_url=activities[0]["user"]["avatar"]["large"])
 
-            fmtd = [f"-# {discord.utils.format_dt(act[1], 'R')}\n-# {act[0]}" for act in chunk]
+            fmtd = [f"-# {discord.utils.format_dt(act[1], 'R')}\n{act[0]}" for act in chunk]
             embed.description = "\n\n".join(fmtd)
 
             embeds.append(embed)

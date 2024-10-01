@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
     from . import AniList, AniListClient
 
+    Interaction = discord.Interaction[Harmony]
+
 PIXEL_LINE_URL = "https://i.imgur.com/IfBmnOp.png"  # For making multiple embeds the same width
 
 
@@ -354,3 +356,15 @@ class EmbedRelationView(RelationView):
 
         if media.status_embed(user):
             self.add_item(EmbedSelect(media, user))
+
+
+class ProfileManagementView(BaseView):
+    def __init__(self, cog: AniList, user: User, author: Optional[discord.abc.Snowflake] = None) -> None:
+        super().__init__(author)
+
+        self.cog = cog
+        self.user = user
+
+    @ui.button(label="Logout", style=discord.ButtonStyle.red)
+    async def logout(self, interaction: Interaction, _):
+        await interaction.response.send_message("logged out")
