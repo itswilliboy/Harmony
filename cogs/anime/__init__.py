@@ -340,7 +340,7 @@ class AniList(BaseCog, name="Anime"):
             items = (
                 f"Manga read: `{s.count:,}`",
                 f"Chapters read: `{s.chapters_read:,}`",
-                " ",
+                f"Volumes read: `{s.volumes_read:,}`",
                 f"Favourite: [{mfavs[0][0]}]({mfavs[0][1]})" if mfavs else (" " if afavs else ""),
                 f"-# Average score: `{s.mean_score:.1f}%`" if s.mean_score else None,
             )
