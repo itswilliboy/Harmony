@@ -448,6 +448,7 @@ class Media:
 
         if status:
             information: list[str] = []
+            status.sort(key=lambda st: st["status"])
             for st in status:
                 user_: Any = st["user"]
 
@@ -455,13 +456,13 @@ class Media:
                     if user_["id"] == user.id:
                         continue
 
-                TOTAL_PROGRESS = st["media"]["episodes"] or st["media"]["chapters"]
+                total_progress = st["media"]["episodes"] or st["media"]["chapters"]
 
                 desc = (
                     f"↪ **[{user_['name']}]({user_['siteUrl']}) - "
                     f"{st['score']} / 10**\n"
                     f"╰ `{st['status'].title()}:` "
-                    f"{st['progress']} / {TOTAL_PROGRESS} "
+                    f"{st['progress']} / {total_progress} "
                     f"{'chapter(s)' if self.type == MediaType.MANGA else 'episode(s)'}"
                 )
 
