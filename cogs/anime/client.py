@@ -420,7 +420,7 @@ class AniListClient:
             try:
                 data_ = json["data"]
                 data = data_["Media"]
-            except KeyError:
+            except (KeyError, TypeError):
                 return None
 
             if data is None:
@@ -444,7 +444,7 @@ class AniListClient:
             try:
                 data_ = json["data"]
                 data = data_["Media"]
-            except KeyError:
+            except (KeyError, TypeError):
                 return None
 
             if data is None:
