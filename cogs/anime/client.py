@@ -467,7 +467,7 @@ class AniListClient:
         *,
         headers: Optional[dict[str, str]] = None,
         page: int = 1,
-        per_page: int = 5,
+        per_page: int = 15,
     ) -> Optional[dict[str, Any]]:
         """Fetches all the ratings of the followed users."""
 
