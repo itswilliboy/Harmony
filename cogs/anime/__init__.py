@@ -77,6 +77,11 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
             value = f"Watched episode **{ep}** of {linked}"
             add_item(value, timestamp)
 
+        case "rewatched episode":
+            ep = act["progress"]
+            value = f"Rewatched episode **{ep}** of {linked}"
+            add_item(value, timestamp)
+
         case "read chapter":
             ch = act["progress"]
             value = f"Read chapter **{ch}** of {linked}"
