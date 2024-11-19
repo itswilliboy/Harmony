@@ -404,7 +404,7 @@ class Media:
         if entry and not entry["private"]:
             ent_st = entry["status"]
             if ent_st == MediaListStatus.CURRENT:
-                ent_st = "watching"
+                ent_st = "watching" if self.type == MediaType.ANIME else "reading"
 
             desc = [
                 f"↪ Status: **{ent_st.title()}**",
@@ -440,7 +440,8 @@ class Media:
                     desc.append(f"↪ Started / Completed: **{started_at} ⟶ {completed_at}**")
 
                 if entry["repeat"]:
-                    desc.append(f"↪ Rewatches: **{entry['repeat']}**")
+                    wording = "rewatches" if self.type == MediaType.ANIME else "reread"
+                    desc.append(f"↪ {wording.title()}: **{entry['repeat']}**")
 
             desc = [i for i in desc if i != ""]
 
