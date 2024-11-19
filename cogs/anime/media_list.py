@@ -131,6 +131,7 @@ class MediaList(Paginator[discord.Embed]):
                     plural = "s" if episode_backlog > 1 else ""
                     backlog_text = f"`({episode_backlog} episode{plural} behind)`" if episode_backlog else ""
 
+                wording = "Rewatches" if format == MediaType.ANIME else "Rereads"
                 info = field(
                     f"### [{title}]({url})",
                     f"↪ Score: **{entry['score']}**",
