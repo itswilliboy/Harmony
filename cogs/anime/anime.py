@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Optional, Self
 
 import discord
 
-from utils import progress_bar
+from utils import plural, progress_bar
 
 from .types import (
     Edge,
@@ -389,7 +389,7 @@ class Media:
 
         if not self.list_entry:
             embed.set_footer(
-                text="Tip: Log in with `anilist login` to see your own- and your friends' progress on this show."
+                text="Tip: Log in with `anilist login` to see your own- and your friends' progress on this media."
             )
 
         return embed
@@ -408,11 +408,17 @@ class Media:
 
             desc = [
                 f"↪ Status: **{ent_st.title()}**",
-                f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**" if self.type == MediaType.MANGA else "",
+                f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes or "TBA"}**"
+                if self.type == MediaType.MANGA
+                else "",
                 f"↪ Progress: **{entry['progress']}"
                 + " / "
-                + (str(self.episodes) if self.type == MediaType.ANIME else str(self.chapters))
-                + (" episode(s)" if self.type == MediaType.ANIME else " chapter(s)")
+                + str(self.episodes or self.chapters or "TBA")
+                + (
+                    f" {plural(self.episodes or 0):episode}"
+                    if self.type == MediaType.ANIME
+                    else f" {plural(self.chapters or 0):chapter}"
+                )
                 + "**",
                 f"↪ Score: **{entry['score']} / 10**",
             ]
@@ -463,7 +469,7 @@ class Media:
                     f"{st['score']} / 10**\n"
                     f"╰ `{st['status'].title()}:` "
                     f"{st['progress']} / {total_progress} "
-                    f"{'chapter(s)' if self.type == MediaType.MANGA else 'episode(s)'}"
+                    f"{f'{plural(self.chapters):chapter}' if self.type == MediaType.MANGA else f'{plural(self.episodes):episode}'}"
                 )
 
                 information.append(desc)
@@ -474,5 +480,5 @@ class Media:
         if user:
             embed.set_author(name=user.name, url=user.url, icon_url=user.avatar_url)
 
-        if any((embed.description, embed.fields)):
+        if embed.description or embed.fields:
             return embed

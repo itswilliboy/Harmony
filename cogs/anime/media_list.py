@@ -135,7 +135,7 @@ class MediaList(Paginator[discord.Embed]):
                     f"### [{title}]({url})",
                     f"↪ Score: **{entry['score']}**",
                     f"↪ Progress: **{entry['progress']} / {total}** {backlog_text}",
-                    entry["repeat"] and f"╰ Rewatches: **{entry['repeat']}**",
+                    entry["repeat"] and f"╰ Repeats: **{entry['repeat']}**",
                 )
 
                 desc.append(info)
