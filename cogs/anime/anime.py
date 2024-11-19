@@ -394,6 +394,11 @@ class Media:
 
         return embed
 
+    def _get_wording(self, status: MediaListStatus) -> str:
+        if status == MediaListStatus.CURRENT:
+            return "watching" if self.type == MediaType.ANIME else "reading"
+        return str(status)
+
     def status_embed(self, user: Optional[User] = None) -> Optional[discord.Embed]:
         status = self.following_statuses
         entry = self.list_entry
@@ -402,12 +407,8 @@ class Media:
         embed.set_thumbnail(url=self.cover_image["extraLarge"])
 
         if entry and not entry["private"]:
-            ent_st = entry["status"]
-            if ent_st == MediaListStatus.CURRENT:
-                ent_st = "watching" if self.type == MediaType.ANIME else "reading"
-
             desc = [
-                f"↪ Status: **{ent_st.title()}**",
+                f"↪ Status: **{self._get_wording(entry["status"]).title()}**",
                 f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**" if self.type == MediaType.MANGA else "",
                 f"↪ Progress: **{entry['progress']}"
                 + " / "
@@ -462,7 +463,7 @@ class Media:
                 desc = (
                     f"↪ **[{user_['name']}]({user_['siteUrl']}) - "
                     f"{st['score']} / 10**\n"
-                    f"╰ `{st['status'].title()}:` "
+                    f"╰ `{self._get_wording(st["status"]).title()}:` "
                     f"{st['progress']} / {total_progress} "
                     f"{'chapter(s)' if self.type == MediaType.MANGA else 'episode(s)'}"
                 )
