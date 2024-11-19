@@ -305,19 +305,19 @@ class AniList(BaseCog, name="Anime"):
             await ctx.pool.execute("INSERT INTO inline_search_optout (user_id) VALUES ($1)", ctx.author.id)
             await ctx.send("Opted out of inline search.")
 
-    @commands.hybrid_command()
+    @commands.hybrid_command(aliases=["a"])
     @describe(search="The anime to search for")
     async def anime(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific anime."""
         await self.search(ctx, search, MediaType.ANIME)
 
-    @commands.hybrid_command()
+    @commands.hybrid_command(aliases=["m"])
     @describe(search="The manga to search for")
     async def manga(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific manga."""
         await self.search(ctx, search, MediaType.MANGA)
 
-    @commands.hybrid_group(invoke_without_command=True)
+    @commands.hybrid_group(invoke_without_command=True, aliases=["al"])
     async def anilist(self, ctx: Context):
         await ctx.send_help(ctx.command)
 
