@@ -471,7 +471,7 @@ class Media:
                     f"{st['score']} / 10**\n"
                     f"╰ `{self._get_wording(st["status"]).title()}:` "
                     f"{st['progress']} / {total_progress} "
-                    f"{f'{plural(self.chapters):chapter}' if self.type == MediaType.MANGA else f'{plural(self.episodes):episode}'}"
+                    f"{f'{plural(self.chapters or 0):chapter}' if self.type == MediaType.MANGA else f'{plural(self.episodes or 0):episode}'}"
                 )
 
                 information.append(desc)
