@@ -6,7 +6,7 @@ import discord
 from discord.app_commands import describe
 from discord.ext import commands
 
-from utils import BaseCog, Context, Paginator, PrimaryEmbed
+from utils import BaseCog, Context, Paginator, PrimaryEmbed, plural
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -69,7 +69,7 @@ class Statistics(BaseCog):
         apos = "'"  # :^)
         await ctx.send(
             embed=PrimaryEmbed(
-                description=f"{f'{member.mention} has' if not is_author else f'You{apos}ve'} sent **{res or 0}** message(s) in *{ctx.guild.name}*"
+                description=f"{f'{member.mention} has' if not is_author else f'You{apos}ve'} sent **{res or 0}** {plural(res or 0):message} in *{ctx.guild.name}*"
             )
         )
 

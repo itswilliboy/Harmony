@@ -7,11 +7,7 @@ from jwt import decode
 
 from . import Context
 
-__all__ = (
-    "argument_or_reference",
-    "progress_bar",
-    "try_get_ani_id",
-)
+__all__ = ("argument_or_reference", "progress_bar", "try_get_ani_id", "plural")
 
 
 def _check(ctx: Context) -> str:
@@ -44,3 +40,16 @@ async def try_get_ani_id(pool: Any, value: str | int) -> Optional[int]:
 
     uid = decode(jwt, options={"verify_signature": False})["sub"]
     return int(uid)
+
+
+class plural:
+    def __init__(self, value: int) -> None:
+        self.value = value
+
+    def __format__(self, format_spec: str) -> str:
+        singular, _, plural = format_spec.partition("|")
+        plural = plural or f"{singular}s"
+
+        if abs(self.value) != 1:
+            return plural
+        return singular
