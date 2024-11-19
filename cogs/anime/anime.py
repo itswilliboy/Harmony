@@ -409,7 +409,9 @@ class Media:
         if entry and not entry["private"]:
             desc = [
                 f"↪ Status: **{self._get_wording(entry["status"]).title()}**",
-                f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes}**" if self.type == MediaType.MANGA else "",
+                f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes or "TBA"}**"
+                if self.type == MediaType.MANGA
+                else "",
                 f"↪ Progress: **{entry['progress']}"
                 + " / "
                 + (str(self.episodes) if self.type == MediaType.ANIME else str(self.chapters))
