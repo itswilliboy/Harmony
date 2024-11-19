@@ -441,7 +441,7 @@ class Media:
 
                 if entry["repeat"]:
                     wording = "Rewatches" if self.type == MediaType.ANIME else "Rereads"
-                    desc.append(f"↪ {wording.title()}: **{entry['repeat']}**")
+                    desc.append(f"↪ {wording}: **{entry['repeat']}**")
 
             desc = [i for i in desc if i != ""]
 
