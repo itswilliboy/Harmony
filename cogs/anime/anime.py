@@ -1,4 +1,3 @@
-# TODO: Add docstrings to all(?) class properties
 from __future__ import annotations
 
 import datetime
@@ -100,14 +99,16 @@ class MinifiedMedia:
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
+        """Returns the name of the media."""
         if self.is_adult:
             return f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {self.title['romaji']}"
         else:
             return self.title["romaji"]
 
     @property
-    def small_info(self):
+    def small_info(self) -> str:
+        """Return a string with some information about the media."""
         fmt: list[str] = []
 
         if self.format:
@@ -313,6 +314,7 @@ class Media:
 
     @property
     def hashtags(self) -> list[str]:
+        """Returns a list of hashtags that are linked with the media."""
         return self._hashtags.split() if self._hashtags else []
 
     @property
@@ -330,10 +332,12 @@ class Media:
 
     @property
     def url(self) -> str:
+        """Returns the site url of the media."""
         return f"https://anilist.co/{str(self.type.lower())}/{self.id}"
 
     @property
     def embed(self) -> discord.Embed:
+        """Returns the main informational embed of the media."""
         title = str(self)
 
         embed = discord.Embed(title=title, description=self.description, color=self.colour, url=self.url)
@@ -400,6 +404,7 @@ class Media:
         return str(status)
 
     def status_embed(self, user: Optional[User] = None) -> Optional[discord.Embed]:
+        """Returns the embed giving information about watching/reading status."""
         status = self.following_statuses
         entry = self.list_entry
 

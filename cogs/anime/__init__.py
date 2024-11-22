@@ -366,7 +366,7 @@ class AniList(BaseCog, name="Anime"):
 
         view: Optional[discord.ui.View] = None
         id = await try_get_ani_id(ctx.pool, ctx.author.id)
-        if id and id == user.id and False:
+        if id and id == user.id and False:  # TODO: Implement.
             view = ProfileManagementView(self, user)
 
         await ctx.send(embed=embed, view=view or discord.utils.MISSING)
