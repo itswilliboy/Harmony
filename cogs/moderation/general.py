@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import BannedMember, BaseCog, ErrorEmbed, GenericError, SuccessEmbed
+from utils import BannedMember, BaseCog, ErrorEmbed, GenericError, SuccessEmbed, plural
 from utils.autocomplete import ban_entry_autocomplete
 
 if TYPE_CHECKING:
@@ -178,7 +178,7 @@ class General(BaseCog):
         except Exception:
             pass
 
-    @commands.bot_has_permissions(manage_messages=True, read_message_history=True)
+    @commands.bot_has_permissions(read_message_history=True)
     @commands.guild_only()
     @commands.hybrid_command()
     @app_commands.describe(amount="Amount of messages to clean up")
@@ -195,13 +195,18 @@ class General(BaseCog):
         prefixes = await ctx.bot.get_prefix(ctx.message)
 
         def check(msg: discord.Message) -> bool:
-            # fmt: off
-            return (msg.author == ctx.bot.user or msg.content.startswith(tuple(prefixes))) \
-                and msg.created_at.replace(tzinfo=None) > datetime.datetime.now() - datetime.timedelta(weeks=2)
-            # fmt: on
+            recent = msg.created_at.replace(tzinfo=None) > datetime.datetime.now() - datetime.timedelta(weeks=2)
+            is_bot = msg.author == ctx.bot.user
+
+            assert isinstance(ctx.me, discord.Member)
+            if ctx.channel.permissions_for(ctx.me).is_superset(discord.Permissions(manage_messages=True)):
+                return is_bot or msg.content.startswith(tuple(prefixes)) and recent
+
+            else:
+                return is_bot and recent
 
         if TYPE_CHECKING:
             assert isinstance(ctx.channel, discord.TextChannel)
 
         deleted = await ctx.channel.purge(limit=limit, check=check, before=ctx.message)
-        await ctx.send(f"Deleted **{len(deleted)}** messages", delete_after=5)
+        await ctx.send(f"Deleted **{len(deleted)}** {plural(len(deleted)):message}", delete_after=5)
