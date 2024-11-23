@@ -31,7 +31,7 @@ def progress_bar(percentage: float, *, length: int = 10) -> str:
 
 
 async def try_get_ani_id(pool: Any, value: str | int) -> Optional[int]:
-    """Returns a AniList user ID from a JWT-token or a Discord user ID"""
+    """Returns an AniList user ID from a JWT-token or a Discord user ID"""
     if isinstance(value, int):
         if jwt := await pool.fetchval("SELECT token FROM anilist_tokens WHERE user_id = $1", value):
             jwt = jwt

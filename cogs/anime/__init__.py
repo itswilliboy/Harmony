@@ -6,7 +6,7 @@ from collections import ChainMap
 from typing import Annotated, Any, Literal, Optional, cast
 
 import discord
-from discord.app_commands import describe
+from discord.app_commands import allowed_contexts, allowed_installs, describe
 from discord.ext import commands
 
 from bot import Harmony
@@ -306,24 +306,31 @@ class AniList(BaseCog, name="Anime"):
             await ctx.send("Opted out of inline search.")
 
     @commands.hybrid_command(aliases=["a"])
+    @allowed_installs(guilds=True, users=True)
+    @allowed_contexts(guilds=True, dms=True, private_channels=True)
     @describe(search="The anime to search for")
     async def anime(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific anime."""
         await self.search(ctx, search, MediaType.ANIME)
 
     @commands.hybrid_command(aliases=["m"])
+    @allowed_installs(guilds=True, users=True)
+    @allowed_contexts(guilds=True, dms=True, private_channels=True)
     @describe(search="The manga to search for")
     async def manga(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific manga."""
         await self.search(ctx, search, MediaType.MANGA)
 
     @commands.hybrid_group(invoke_without_command=True, aliases=["al"])
+    @allowed_installs(guilds=True, users=True)
+    @allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def anilist(self, ctx: Context):
         await ctx.send_help(ctx.command)
 
     @describe(user="AniList username")
     @anilist.command(aliases=["p"])
     async def profile(self, ctx: Context, user: AniUserConv = aniuser):
+        """Shows information about someone's profile on AniList."""
         embed = PrimaryEmbed(title=user.name, url=user.url)
         embed.set_thumbnail(url=user.avatar_url)
 
@@ -490,6 +497,7 @@ class AniList(BaseCog, name="Anime"):
 
     @anilist.command(aliases=["recent"])
     async def activity(self, ctx: Context, user: AniUserConv = aniuser):
+        """Shows somebody's recent activity on AniList."""
         activities = await self.client.fetch_user_activity(user.id)
 
         if not activities:

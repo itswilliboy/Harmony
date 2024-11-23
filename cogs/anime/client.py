@@ -518,7 +518,7 @@ class AniListClient:
     async def fetch_media_collections(
         self, *users: str | int, type: MediaType, status: MediaListStatus, user_id: Optional[int] = None
     ) -> dict[str, MediaListCollection]:
-        """Fetches multiple users' anime-or manga lists via their user ID or username."""
+        """Fetches multiple users' anime- or manga lists via their user ID or username."""
 
         variables: dict[str, str | int] = {"type": type, "status": status}
         for c, user in enumerate(users):

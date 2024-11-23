@@ -56,3 +56,12 @@ class General(BaseCog):
                 if msg.author == ctx.bot.user:
                     await msg.delete()
                     break
+
+    @commands.command()
+    async def sync(self, ctx: Context):
+        try:
+            synced = await self.bot.tree.sync()
+            await ctx.send(f"Synced {len(synced)} commands.")
+        except Exception:
+            await ctx.message.add_reaction("\N{CROSS MARK}")
+            raise
