@@ -187,19 +187,21 @@ class General(BaseCog):
 
         assert isinstance(ctx.author, discord.Member)
         if ctx.channel.permissions_for(ctx.author).is_superset(discord.Permissions(manage_messages=True)):
-            limit = min(max(2, amount), 250)
+            limit = min(max(2, amount), 100)
 
         else:
             limit = min(max(2, amount), 25)
 
         prefixes = await ctx.bot.get_prefix(ctx.message)
 
+        assert isinstance(ctx.me, discord.Member)
+        has_perms = ctx.channel.permissions_for(ctx.me).is_superset(discord.Permissions(manage_messages=True))
+
         def check(msg: discord.Message) -> bool:
             recent = msg.created_at.replace(tzinfo=None) > datetime.datetime.now() - datetime.timedelta(weeks=2)
             is_bot = msg.author == ctx.bot.user
 
-            assert isinstance(ctx.me, discord.Member)
-            if ctx.channel.permissions_for(ctx.me).is_superset(discord.Permissions(manage_messages=True)):
+            if has_perms:
                 return is_bot or msg.content.startswith(tuple(prefixes)) and recent
 
             else:
@@ -208,5 +210,15 @@ class General(BaseCog):
         if TYPE_CHECKING:
             assert isinstance(ctx.channel, discord.TextChannel)
 
-        deleted = await ctx.channel.purge(limit=limit, check=check, before=ctx.message)
-        await ctx.send(f"Deleted **{len(deleted)}** {plural(len(deleted)):message}", delete_after=5)
+        if has_perms:
+            deleted = len(await ctx.channel.purge(limit=limit, check=check, before=ctx.message))
+
+        else:
+            deleted = 0
+            async for message in ctx.channel.history(limit=limit, before=ctx.message):
+                if not check(message):
+                    continue
+                await message.delete()
+                deleted += 1
+
+        await ctx.send(f"Deleted **{deleted}** {plural(deleted):message}", delete_after=5)

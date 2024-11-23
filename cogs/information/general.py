@@ -215,9 +215,11 @@ class General(BaseCog):
         if user := self.bot.get_user(OWNER_IDS[0]):
             embed.set_author(name=f"@{user.name}", icon_url=user.display_avatar.url)
 
+        app = await self.bot.application_info()
         embed.add_field(name="Started", value=discord.utils.format_dt(self.bot.started_at, "R"))
-        embed.add_field(name="Servers", value=len(self.bot.guilds))
-        embed.add_field(name="Users", value=f"{len(self.bot.users):,}")
+        embed.add_field(
+            name="Installs", value=f"{len(self.bot.guilds)} servers\n╰ {app.approximate_user_install_count} individual users"
+        )
 
         embed.add_field(name="Latest Changes", value="\n".join(self.get_latest_commits(5)), inline=False)
 
