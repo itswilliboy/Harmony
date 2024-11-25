@@ -102,7 +102,8 @@ class Prefix(BaseCog):
         embed = PrimaryEmbed(description=f"Here is a list of the server-prefixes:\n* {f' {nl}* '.join(formatted)}")
         embed.set_author(name=f"Get started with {ctx.clean_prefix}help !")
 
-        if ctx.author.guild_permissions.manage_guild:  # type: ignore
+        assert isinstance(ctx.author, discord.Member)
+        if ctx.author.guild_permissions.manage_guild:
             embed.set_footer(text=f"You can add another prefix with '{ctx.clean_prefix}prefix add <prefix>'")
 
         await ctx.send(embed=embed)

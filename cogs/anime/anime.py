@@ -462,6 +462,8 @@ class Media:
         if status:
             information: list[str] = []
             status.sort(key=lambda st: st["status"])
+
+            length = 0
             for st in status:
                 user_: Any = st["user"]
 
@@ -478,6 +480,10 @@ class Media:
                     f"{st['progress']} / {total_progress} "
                     f"{f'{plural(self.chapters or 0):chapter}' if self.type == MediaType.MANGA else f'{plural(self.episodes or 0):episode}'}"
                 )
+
+                length += len(desc)
+                if length > 1000:  # Make sure we don't exceed the embed-field value limit.
+                    break
 
                 information.append(desc)
 
