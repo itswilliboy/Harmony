@@ -139,7 +139,7 @@ class RelationView(BaseView):
                         emoji="\N{MOVIE CAMERA}",
                         label=edge.title[:100],
                         value=value,
-                        description="Adaptation",
+                        description=f"Adaptation - {edge.format.title()} - {edge.status.title()}",
                     )
                 )
 

@@ -96,6 +96,8 @@ MEDIA_QUERY = """
                 edges {
                     node {
                     id
+                        format
+                        status
                         title {
                             romaji
                         }

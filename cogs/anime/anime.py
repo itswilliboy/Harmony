@@ -219,7 +219,9 @@ class Media:
                 node = edge["node"]
                 title_ = MediaTitle(node["title"])
                 list_entry_ = MediaList(node["mediaListEntry"]) if node.get("mediaListEntry") else None
-                relations.append(Edge(node["id"], title_["romaji"], edge["relationType"], list_entry_))
+                relations.append(
+                    Edge(node["id"], title_["romaji"], edge["relationType"], list_entry_, node["format"], node["status"])
+                )
 
         list_entry = MediaList(data["mediaListEntry"]) if data.get("mediaListEntry") else None
 

@@ -116,6 +116,8 @@ class Edge(NamedTuple):
     title: str
     type: MediaRelation
     list_entry: Optional[MediaList]
+    format: MediaFormat
+    status: MediaStatus
 
 
 class Object(TypedDict):
