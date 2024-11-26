@@ -219,8 +219,15 @@ class Media:
                 node = edge["node"]
                 title_ = MediaTitle(node["title"])
                 list_entry_ = MediaList(node["mediaListEntry"]) if node.get("mediaListEntry") else None
+
+                year = node["seasonYear"] or FuzzyDate(node["startDate"])["year"]
+                if TYPE_CHECKING:
+                    assert isinstance(year, int)
+
                 relations.append(
-                    Edge(node["id"], title_["romaji"], edge["relationType"], list_entry_, node["format"], node["status"])
+                    Edge(
+                        node["id"], title_["romaji"], edge["relationType"], list_entry_, node["format"], node["status"], year
+                    )
                 )
 
         list_entry = MediaList(data["mediaListEntry"]) if data.get("mediaListEntry") else None

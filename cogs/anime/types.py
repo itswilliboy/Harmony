@@ -118,6 +118,7 @@ class Edge(NamedTuple):
     list_entry: Optional[MediaList]
     format: MediaFormat
     status: MediaStatus
+    year: int
 
 
 class Object(TypedDict):

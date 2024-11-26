@@ -136,10 +136,7 @@ class RelationView(BaseView):
             elif edge.type == MediaRelation.ADAPTATION:
                 adaptation_options.append(
                     discord.SelectOption(
-                        emoji="\N{MOVIE CAMERA}",
-                        label=edge.title[:100],
-                        value=value,
-                        description=f"Adaptation - {edge.format.title()} - {edge.status.title()}",
+                        emoji="\N{MOVIE CAMERA}", label=edge.title[:100], value=value, description=self.get_edge_data(edge)
                     )
                 )
 
@@ -149,7 +146,7 @@ class RelationView(BaseView):
                         emoji="\N{TWISTED RIGHTWARDS ARROWS}",
                         label=edge.title[:100],
                         value=value,
-                        description="Side Story",
+                        description=self.get_edge_data(edge),
                     )
                 )
 
@@ -159,7 +156,7 @@ class RelationView(BaseView):
                         emoji="\N{TWISTED RIGHTWARDS ARROWS}",
                         label=edge.title[:100],
                         value=value,
-                        description="Alternative",
+                        description=self.get_edge_data(edge),
                     )
                 )
 
@@ -169,7 +166,7 @@ class RelationView(BaseView):
                         emoji="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}",
                         label=edge.title[:100],
                         value=value,
-                        description="Spin Off",
+                        description=self.get_edge_data(edge),
                     )
                 )
 
@@ -186,6 +183,17 @@ class RelationView(BaseView):
     def _sort_relations(edge: Edge) -> int:
         enums = [enum.value for enum in MediaRelation]
         return enums.index(edge.type)
+
+    @staticmethod
+    def get_edge_data(edge: Edge) -> str:
+        format = (edge.format or "N/A").title().replace("_", " ")
+        status = (edge.status or "N/A").title().replace("_", " ")
+        type = str(edge.type).title().replace("_", " ")
+
+        if len(format) <= 3:  # Capitalise TV, OVA, & ONA
+            format = format.upper()
+
+        return f"{type} - {format} {f'({edge.year})' if edge.year else ""} - {status}"
 
 
 class CodeModal(ui.Modal, title="Enter OAuth Code"):

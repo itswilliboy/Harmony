@@ -98,6 +98,10 @@ MEDIA_QUERY = """
                     id
                         format
                         status
+                        seasonYear
+                        startDate {
+                            year
+                        }
                         title {
                             romaji
                         }
