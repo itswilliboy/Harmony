@@ -229,7 +229,9 @@ class AniList(BaseCog, name="Anime"):
 
         if len(embed.fields) == 1:
             media = found[0]
-            embed.set_thumbnail(url=media.cover["extraLarge"])
+
+            if not media.is_adult:
+                embed.set_thumbnail(url=media.cover["extraLarge"])
 
             if media.cover["color"]:
                 embed.color = discord.Colour.from_str(media.cover["color"])
