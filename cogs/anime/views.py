@@ -20,9 +20,6 @@ if TYPE_CHECKING:
 
     Interaction = discord.Interaction[Harmony]
 
-PIXEL_LINE_URL = "https://i.imgur.com/IfBmnOp.png"  # For making multiple embeds the same width
-
-
 async def callback(cog: AniList, id: int, interaction: discord.Interaction, user: Optional[User] = None):
     media = await cog.client.fetch_media(id, user_id=interaction.user.id)
 
