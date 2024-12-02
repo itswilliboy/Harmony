@@ -110,7 +110,7 @@ class General(BaseCog):
             fetched = await self.bot.fetch_user(user.id)
 
         except discord.NotFound:
-            raise commands.BadArgument("Couldn't find that user")
+            raise commands.BadArgument("Couldn't find that user") from None
 
         if fetched.banner is None:
             raise GenericError(f"{user.mention} doesn't have a banner.")
@@ -332,7 +332,7 @@ class General(BaseCog):
             "start_timestamp": int((spotify.created_at or discord.utils.utcnow()).timestamp()),
             "artists": spotify.artists,
         }
-        headers = dict(Authorization=f"Bearer {JEYY_API}")
+        headers = {"Authorization": f"Bearer {JEYY_API}"}
 
         await ctx.typing()
 

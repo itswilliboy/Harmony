@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import importlib
+from inspect import getsource
+from io import BytesIO
+from traceback import format_exception
 from typing import TYPE_CHECKING, Annotated, Optional
 
+import discord
+import jishaku
+import jishaku.codeblocks
+import jishaku.repl
 from discord.ext import commands
-from jishaku.codeblocks import Codeblock
-from jishaku.codeblocks import codeblock_converter as CodeblockConverter
 
 from utils import BaseCog
 
@@ -18,8 +24,34 @@ class General(BaseCog):
         super().__init__(bot)
 
     @commands.command(aliases=["e"])
-    async def eval(self, ctx: Context, *, code: Annotated[Codeblock, CodeblockConverter]):
+    async def eval(
+        self, ctx: Context, *, code: Annotated[jishaku.codeblocks.Codeblock, jishaku.codeblocks.codeblock_converter]
+    ):
         await ctx.invoke(self.bot.get_command("jishaku python"), argument=code)  # type: ignore
+
+    @commands.command(aliases=["ee"])
+    async def eval2(
+        self, ctx: Context, *, code: Annotated[jishaku.codeblocks.Codeblock, jishaku.codeblocks.codeblock_converter]
+    ):
+        args: dict[str, object] = {
+            "ctx": ctx,
+            "bot": ctx.bot,
+            "client": ctx.bot.cogs["anime"].client,  # type: ignore
+            "author": ctx.author,
+            "me": ctx.guild.me,
+            "channel": ctx.channel,
+            "guild": ctx.guild,
+            "ref": ctx.message.reference and ctx.message.reference.resolved,
+        }
+
+        try:
+            async for x in jishaku.repl.AsyncCodeExecutor(code.content, arg_dict=args):
+                if x is not None:
+                    return await ctx.send(x)
+                await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+
+        except Exception as exc:
+            await ctx.author.send(f"You fucked up: ```py\n{'\n'.join(format_exception(exc))}\n```")
 
     @commands.command(aliases=["r"])
     async def reload(self, ctx: Context, extension: Optional[str] = None):
@@ -65,3 +97,32 @@ class General(BaseCog):
         except Exception:
             await ctx.message.add_reaction("\N{CROSS MARK}")
             raise
+
+    @staticmethod
+    def _resolve(name: str):
+        n, *parts = name.split(".")
+        module = importlib.import_module(n)
+
+        current_module = f"{n}"
+        for part in parts:
+            current_module += f".{part}"
+
+            obj = getattr(module, part, None)
+            if obj is None:
+                module = importlib.import_module(current_module)
+            else:
+                module = obj
+
+        return module
+
+    @commands.command(aliases=["gs"])
+    async def getsource(self, ctx: Context, path: str):
+        func = self._resolve(path)
+        source = getsource(func)
+
+        if len(source) > 2000:
+            buf = BytesIO(source.encode())
+
+            return await ctx.send(file=discord.File(buf, filename="source.py"))
+
+        await ctx.send(f"```py\n{source}\n```")

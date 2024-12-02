@@ -378,8 +378,8 @@ class AniListClient:
             try:
                 json = await resp.json()
 
-            except (ContentTypeError, JSONDecodeError):
-                raise ApiExecption()
+            except (ContentTypeError, JSONDecodeError) as exc:
+                raise ApiExecption() from exc
 
             try:
                 data_ = json["data"]
@@ -495,8 +495,8 @@ class AniListClient:
                 try:
                     json = await resp.json()
 
-                except (ContentTypeError, JSONDecodeError):
-                    raise ApiExecption()
+                except (ContentTypeError, JSONDecodeError) as exc:
+                    raise ApiExecption() from exc
 
                 return json
 
@@ -514,8 +514,8 @@ class AniListClient:
             try:
                 json = await resp.json()
 
-            except (ContentTypeError, JSONDecodeError):
-                raise ApiExecption()
+            except (ContentTypeError, JSONDecodeError) as exc:
+                raise ApiExecption() from exc
 
             data = json["data"]["MediaListCollection"]
             collection: MediaListCollection = data
@@ -551,8 +551,8 @@ class AniListClient:
                 try:
                     json = await resp.json()
 
-                except (ContentTypeError, JSONDecodeError):
-                    raise ApiExecption()
+                except (ContentTypeError, JSONDecodeError) as exc:
+                    raise ApiExecption() from exc
 
                 data = json["data"]
 

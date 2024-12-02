@@ -26,6 +26,6 @@ assert DEFAULT_PREFIX
 assert POSTGRES_CONNECTION_URI
 
 if None in (ANILIST_ID, ANILIST_SECRET):
-    warn("AniList ID or secret is not present in config, using AniList OAuth services won't be possible.")
+    warn("AniList ID or secret is not present in config, using AniList OAuth services won't be possible.", stacklevel=1)
 
 del getenv, warn

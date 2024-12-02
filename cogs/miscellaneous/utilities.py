@@ -73,10 +73,12 @@ class Utilities(BaseCog):
                     image = await resp.read()
 
             except InvalidURL:
-                raise GenericError("The URL is invalid, make sure it's valid.")
+                raise GenericError("The URL is invalid, make sure it's valid.") from None
 
             except ClientConnectionError:
-                raise GenericError("Something went wrong when to trying to resolve the URL, make sure it exists.", True)
+                raise GenericError(
+                    "Something went wrong when to trying to resolve the URL, make sure it exists.", True
+                ) from None
 
             parsed = urljoin(emoji, urlparse(emoji).path)
             try:
@@ -87,7 +89,7 @@ class Utilities(BaseCog):
                 raise GenericError(
                     "Needs to be a valid file URL (eg. `https://cdn.discordapp.com/emojis/744346239075877518.gif`)",
                     True,
-                )
+                ) from None
 
             try:
                 created = await guild.create_custom_emoji(name=name_, image=image, reason=reason)
@@ -100,7 +102,7 @@ class Utilities(BaseCog):
                 raise GenericError(
                     "Something went wrong when trying to create the emoji. Make sure the file is less than 256 kB in size.",
                     True,
-                )
+                ) from None
 
     @commands.hybrid_command()
     @describe(text="The text to view raw")

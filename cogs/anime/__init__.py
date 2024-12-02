@@ -129,18 +129,17 @@ class AniUser(commands.UserConverter):
         except commands.BadArgument:
             pass
 
-        finally:
-            cog = cast(AniList, ctx.bot.cogs["anime"])
-            if u := cog.user_cache.get(arg or argument):
-                return u
+        cog = cast(AniList, ctx.bot.cogs["anime"])
+        if u := cog.user_cache.get(arg or argument):
+            return u
 
-            user = await cog.client.oauth.get_user(arg or argument, use_cache=False)
+        user = await cog.client.oauth.get_user(arg or argument, use_cache=False)
 
-            if not user:
-                raise commands.BadArgument("Couldn't find a user with that name")
+        if not user:
+            raise commands.BadArgument("Couldn't find a user with that name")
 
-            cog.user_cache[arg or argument] = user
-            return user
+        cog.user_cache[arg or argument] = user
+        return user
 
 
 async def _default(ctx: Context) -> Optional[User]:

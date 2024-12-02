@@ -24,8 +24,8 @@ class Prefix(BaseCog):
     async def check_prefixes(self) -> None:
         await self.bot.wait_until_ready()
         prefixes = await self.bot.pool.fetch("SELECT * FROM prefixes")
-        guild_ids = set([i.id for i in self.bot.guilds])
-        db_ids = set([i["guild_id"] for i in prefixes])
+        guild_ids = {i.id for i in self.bot.guilds}
+        db_ids = {i["guild_id"] for i in prefixes}
 
         if len(guild_ids) > len(db_ids):
             for id in guild_ids:

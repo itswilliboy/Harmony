@@ -35,7 +35,7 @@ class BlacklistItem:
     @property
     def guild_ids(self) -> list[int]:
         """Returns the ID of any guilds the user if blacklisted in."""
-        return [i for i in self._guild_ids] if self._guild_ids else []
+        return self._guild_ids or []
 
     @property
     def user_id(self) -> int:

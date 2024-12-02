@@ -4,7 +4,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 ignore = ["E731"]
-extend-select = ["I"]
+extend-select = ["I", "B", "C4"]
 
 [tool.pyright]
 pythonVersion = "3.12"

@@ -21,7 +21,7 @@ class BaseCogMeta(commands.CogMeta):
         owner_only = kwargs.pop("owner_only", False)
 
         if hidden:
-            kwargs["command_attrs"] = dict(hidden=True)
+            kwargs["command_attrs"] = {"hidden": True}
 
         inst: Any = super().__new__(cls, *args, **kwargs)
 
@@ -50,4 +50,4 @@ class BaseCog(commands.Cog, metaclass=BaseCogMeta):
 
     def is_hidden(self) -> bool:
         """Returns `True` if the cog is hidden."""
-        return self.hidden or all([cmd.hidden for cmd in self.get_commands()])
+        return self.hidden or all(cmd.hidden for cmd in self.get_commands())

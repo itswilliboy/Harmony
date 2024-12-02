@@ -21,7 +21,7 @@ class BannedMember(commands.Converter[Any]):
                 return await ctx.guild.fetch_ban(discord.Object(id))
 
             except discord.NotFound:
-                raise commands.BadArgument("That member is not banned.")
+                raise commands.BadArgument("That member is not banned.") from None
 
         user = await discord.utils.find(lambda u: str(u.user) == argument, ctx.guild.bans(limit=None))
         if user is None:

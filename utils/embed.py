@@ -10,7 +10,7 @@ class PrimaryEmbed(Embed):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         colour = Colour.from_str("#6441A5")
-        super().__init__(colour=colour, *args, **kwargs)
+        super().__init__(*args, **kwargs, colour=colour)
 
 
 class SuccessEmbed(Embed):
@@ -18,7 +18,7 @@ class SuccessEmbed(Embed):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         colour = Colour.from_str("#1DB954")
-        super().__init__(colour=colour, *args, **kwargs)
+        super().__init__(*args, **kwargs, colour=colour)
 
 
 class ErrorEmbed(Embed):
@@ -26,4 +26,4 @@ class ErrorEmbed(Embed):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         colour = Colour.from_str("#FF0000")
-        super().__init__(colour=colour, *args, **kwargs)
+        super().__init__(*args, **kwargs, colour=colour)

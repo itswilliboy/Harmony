@@ -33,7 +33,7 @@ class HelpCommand(commands.HelpCommand):
     context: Context
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(verify_checks=False, *args, **kwargs)
+        super().__init__(*args, **kwargs, verify_checks=False)
         self.verify_checks = False
 
     async def send_bot_help(self, mapping: Mapping[Optional[BaseCog], list[Command]]) -> None:

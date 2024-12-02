@@ -113,7 +113,7 @@ class General(BaseCog):
             await ctx.send(embed=embed)
 
         except discord.HTTPException:
-            raise GenericError("Something went wrong when trying to unban that user.")
+            raise GenericError("Something went wrong when trying to unban that user.") from None
 
     @app_commands.guild_only()
     @app_commands.command(name="unban")

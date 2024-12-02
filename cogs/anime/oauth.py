@@ -283,8 +283,8 @@ class OAuth:
             try:
                 json = await resp.json()
 
-            except (ContentTypeError, JSONDecodeError):
-                raise ApiExecption()
+            except (ContentTypeError, JSONDecodeError) as exc:
+                raise ApiExecption() from exc
 
             token = json.get("access_token", None)
 
@@ -306,7 +306,7 @@ class OAuth:
                 json = await resp.json()
 
             except (ContentTypeError, JSONDecodeError):
-                raise ApiExecption()
+                raise ApiExecption() from None
 
             user = User.from_json(json["data"]["Viewer"])
             self.client.user_cache[id_] = user
@@ -330,7 +330,7 @@ class OAuth:
                 json = await resp.json()
 
             except (ContentTypeError, JSONDecodeError):
-                raise ApiExecption()
+                raise ApiExecption() from None
 
             try:
                 u = User.from_json(json["data"]["User"])
