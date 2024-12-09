@@ -38,6 +38,9 @@ async def try_get_ani_id(pool: Any, value: str | int) -> Optional[int]:
     else:
         jwt = value
 
+    if jwt is None:
+        return None
+
     uid = decode(jwt, options={"verify_signature": False})["sub"]
     return int(uid)
 
