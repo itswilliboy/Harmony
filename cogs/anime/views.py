@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
     Interaction = discord.Interaction[Harmony]
 
+
 async def callback(cog: AniList, id: int, interaction: discord.Interaction, user: Optional[User] = None):
     media = await cog.client.fetch_media(id, user_id=interaction.user.id)
 

@@ -220,13 +220,28 @@ class Media:
                 title_ = MediaTitle(node["title"])
                 list_entry_ = MediaList(node["mediaListEntry"]) if node.get("mediaListEntry") else None
 
-                year = node["seasonYear"] or FuzzyDate(node["startDate"])["year"]
+                year: Optional[int]
+                if season_year := node.get("seasonYear"):
+                    year = season_year
+
+                elif start_date := node.get("startDate"):
+                    year = FuzzyDate(start_date).get("year")
+
+                else:
+                    year = None
+
                 if TYPE_CHECKING:
                     assert isinstance(year, int)
 
                 relations.append(
                     Edge(
-                        node["id"], title_["romaji"], edge["relationType"], list_entry_, node["format"], node["status"], year
+                        node["id"],
+                        title_["romaji"],
+                        edge.get("relationType"),
+                        list_entry_,
+                        node.get("format"),
+                        node.get("status"),
+                        year,
                     )
                 )
 
@@ -278,7 +293,7 @@ class Media:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
             # it will be more convenient to be able to call the .timestamp() on datetime.datetime object.
             return datetime.datetime(year=date["year"] or 0, month=date["month"] or 0, day=date["day"] or 0)
-        except ValueError:
+        except (ValueError, TypeError):
             return None
 
     @property
