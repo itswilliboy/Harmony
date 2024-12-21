@@ -292,7 +292,7 @@ class Media:
         try:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
             # it will be more convenient to be able to call the .timestamp() on datetime.datetime object.
-            return datetime.datetime(year=date["year"] or 0, month=date["month"] or 0, day=date["day"] or 0)
+            return datetime.datetime(year=date.get("year") or 0, month=date.get("month") or 0, day=date.get("day") or 0)
         except (ValueError, TypeError):
             return None
 
