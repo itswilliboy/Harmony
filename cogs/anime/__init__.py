@@ -163,7 +163,8 @@ class AniList(BaseCog, name="Anime"):
         self.user_cache = self.client.user_cache
 
     async def cog_check(self, ctx: Context) -> bool:
-        await ctx.typing()
+        if ctx.command.name != "login":
+            await ctx.typing()
         return True
 
     @commands.Cog.listener()
@@ -380,7 +381,7 @@ class AniList(BaseCog, name="Anime"):
         await ctx.send(embed=embed, view=view or discord.utils.MISSING)
 
     @describe(user="AniList username")
-    @anilist.command()
+    @anilist.command(aliases=["l"])
     async def list(self, ctx: Context, user: AniUserConv = aniuser):
         """View someone's anime list on AniList."""
 
@@ -392,7 +393,7 @@ class AniList(BaseCog, name="Anime"):
     @anilist.command(aliases=["auth"])
     async def login(self, ctx: Context):
         """Log in with an AniList account."""
-        query = "SELECT expiry FROM anilist_tokens WHERE user_id = $1"
+        query = "SELECT expiry FROM anilist_tokens_new WHERE user_id = $1"
         expiry: Optional[datetime.datetime] = await self.bot.pool.fetchval(
             query,
             ctx.author.id,
@@ -405,24 +406,29 @@ class AniList(BaseCog, name="Anime"):
 
         embed = PrimaryEmbed(
             title="Authorise with Anilist",
-            description="Copy the code from the link below, and then press the green button for the next step.",
+            description="Press the button below to start the authorisation flow.",
         )
 
-        await ctx.send(
-            embed=embed,
-            view=LoginView(ctx.bot, ctx.author, self.client),
-        )
+        try:
+            await ctx.author.send(
+                embed=embed,
+                view=LoginView(ctx.bot, ctx.author, self.client),
+            )
+            await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+
+        except discord.Forbidden:
+            await ctx.send("Couldn't send a DM, are they open?")
 
     @anilist.command()
     async def logout(self, ctx: Context):
         """Logs you out."""
-        query = "SELECT EXISTS(SELECT 1 FROM anilist_tokens WHERE user_id = $1)"
+        query = "SELECT EXISTS(SELECT 1 FROM anilist_tokens_new WHERE user_id = $1)"
         exists = await self.bot.pool.fetchval(query, ctx.author.id)
 
         if not exists:
             raise GenericError("You are not logged in.")
 
-        query = "DELETE FROM anilist_tokens WHERE user_id = $1"
+        query = "DELETE FROM anilist_tokens_new WHERE user_id = $1"
         await self.bot.pool.execute(query, ctx.author.id)
 
         await ctx.send(
@@ -437,7 +443,7 @@ class AniList(BaseCog, name="Anime"):
         user4="The fourth user to compare",
         user5="The fifth user to compare",
     )
-    @anilist.command()
+    @anilist.command(aliases=["c"])
     async def compare(
         self,
         ctx: Context,
@@ -496,7 +502,7 @@ class AniList(BaseCog, name="Anime"):
 
         await Paginator(pages, ctx.author).start(ctx)
 
-    @anilist.command(aliases=["recent"])
+    @anilist.command(aliases=["recent", "r", "a"])
     async def activity(self, ctx: Context, user: AniUserConv = aniuser):
         """Shows somebody's recent activity on AniList."""
         activities = await self.client.fetch_user_activity(user.id)

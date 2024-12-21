@@ -12,7 +12,7 @@ import jishaku.codeblocks
 import jishaku.repl
 from discord.ext import commands
 
-from utils import BaseCog
+from utils import BaseCog, GenericError
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -117,8 +117,17 @@ class General(BaseCog):
 
     @commands.command(aliases=["gs"])
     async def getsource(self, ctx: Context, path: str):
-        func = self._resolve(path)
-        source = getsource(func)
+        try:
+            func = self._resolve(path)
+
+        except ModuleNotFoundError as exc:
+            raise GenericError(f"Module not found: `{exc.name}`") from exc
+
+        try:
+            source = getsource(func)
+
+        except TypeError as exc:
+            raise GenericError(f"Unexpected Type: `{exc.args[0]}`") from exc
 
         if len(source) > 2000:
             buf = BytesIO(source.encode())

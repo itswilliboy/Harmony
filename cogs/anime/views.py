@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import re
+from os import urandom
 from typing import TYPE_CHECKING, Any, Optional, Self
 
 import discord
 from discord import ui
 
-from config import ANILIST_URL
-from utils import BaseView, ErrorEmbed, SuccessEmbed
+from utils import BaseView
 
 from .anime import Media
 from .oauth import User
@@ -220,56 +220,15 @@ class LoginView(BaseView):
         self.bot = bot
         self.client = client
 
+        random = urandom(16).hex()
+        self.client.random_store[self.author.id] = random
         self._children.insert(
             0,
             ui.Button(
-                url=ANILIST_URL,
-                label="Get Code",
+                url=f"https://harmony.itswilli.dev/login?id={self.author.id}&r={random}",
+                label="Login with Anilist",
             ),
         )
-
-    async def check_login(
-        self,
-        code: Optional[str],
-    ) -> bool:
-        if code is None:
-            return False
-
-        resp = await self.client.oauth.get_access_token(code)
-        if resp is None:
-            return False
-
-        token, refresh, expires_in = resp
-
-        query = "INSERT INTO anilist_tokens VALUES ($1, $2, $3, $4)"
-        await self.bot.pool.execute(
-            query,
-            self.author.id,
-            token,
-            refresh,
-            expires_in,
-        )
-
-        return True
-
-    @ui.button(label="Enter Code", style=discord.ButtonStyle.green)
-    async def modal(self, interaction: discord.Interaction, _):
-        modal = CodeModal()
-        await interaction.response.send_modal(modal)
-        await modal.wait()
-
-        is_logged_in = await self.check_login(modal.code)
-        if is_logged_in:
-            await interaction.edit_original_response(
-                embed=SuccessEmbed(description="Successfully logged you in."),
-                view=None,
-            )
-        else:
-            await interaction.followup.send(
-                embed=ErrorEmbed(description="Invalid code, try again."),
-                ephemeral=True,
-            )
-
 
 class Delete(discord.ui.DynamicItem[discord.ui.Button[discord.ui.View]], template=r"DELETE:(?P<USER_ID>\d+)"):
     def __init__(self, user_id: int):

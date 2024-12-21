@@ -267,13 +267,13 @@ class OAuth:
         return headers
 
     async def get_access_token(self, auth_code: str) -> Optional[AccessToken]:
-        """Converts an Authorization Code to an Access Token"""
+        """Converts an Authorisation Code to an Access Token"""
 
         json = {
             "grant_type": "authorization_code",
             "client_id": ANILIST_ID,
             "client_secret": ANILIST_SECRET,
-            "redirect_uri": "https://anilist.co/api/v2/oauth/pin",
+            "redirect_uri": "https://harmony.itswilli.dev/authorise",
             "code": auth_code,
         }
 
