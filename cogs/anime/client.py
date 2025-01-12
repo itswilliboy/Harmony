@@ -8,7 +8,7 @@ from cachetools import TTLCache
 
 from .anime import Media, MinifiedMedia
 from .oauth import AccessToken, ApiExecption, OAuth, User
-from .types import ActivityType, ListActivity, MediaListCollection, MediaListStatus, MediaType
+from .types import ActivityType, ListActivity, MediaListCollection, MediaListStatus, MediaType, SearchMedia
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -134,6 +134,20 @@ MEDIA_QUERY = """
             }
             updatedAt
             createdAt
+        }
+    }
+"""
+
+SEARCH_QUERY = """
+    query ($search: String) {
+        Page(perPage: 25) {
+            media (search: $search, sort: POPULARITY_DESC) {
+                id
+                type
+                title {
+                    romaji
+                }
+            }
         }
     }
 """
@@ -403,6 +417,26 @@ class AniListClient:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
         media = Media.from_json(data, following_status or {}), user
+        return media
+
+    async def search_many(self, search: str) -> list[SearchMedia]:
+        """Searches for media and returns the first 25 results."""
+
+        variables = {"search": search}
+
+        async with self.bot.session.post(self.URL, json={"query": SEARCH_QUERY, "variables": variables}) as resp:
+            try:
+                json = await resp.json()
+
+            except (ContentTypeError, JSONDecodeError) as exc:
+                raise ApiExecption() from exc
+
+            if not json:
+                return []
+
+            data_ = json["data"]
+            media: list[SearchMedia] = data_["Page"]["media"]
+
         return media
 
     async def search_minified_media(self, search: str, *, type: MediaType) -> Optional[MinifiedMedia]:

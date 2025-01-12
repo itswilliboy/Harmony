@@ -11,7 +11,7 @@ from utils import BaseView, ErrorEmbed, SuccessEmbed
 
 from .anime import Media
 from .oauth import User
-from .types import Edge, MediaRelation
+from .types import Edge, MediaRelation, SearchMedia
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -374,3 +374,22 @@ class ProfileManagementView(BaseView):
     @ui.button(label="Logout", style=discord.ButtonStyle.red)
     async def logout(self, interaction: Interaction, _):
         await interaction.response.send_message("logged out")
+
+class SearchSelect(ui.Select["SearchView"]):
+    def __init__(self, cog: AniList, media: list[SearchMedia]) -> None:
+        options = [discord.SelectOption(label=m["title"]["romaji"][:100], description=m["type"].title(), value=str(m["id"])) for m in media]
+        super().__init__(options=options, min_values=1, max_values=1)
+
+        self.cog = cog
+
+    async def callback(self, interaction: Interaction):
+        media = await self.cog.client.fetch_media(int(self.values[0]))
+        assert media
+
+        await interaction.response.edit_message(view=None, embed=media.embed)
+
+class SearchView(BaseView):
+    def __init__(self, cog: AniList, media: list[SearchMedia], author: Optional[discord.abc.Snowflake] = None) -> None:
+        super().__init__(author)
+
+        self.add_item(SearchSelect(cog, media))

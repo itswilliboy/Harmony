@@ -227,6 +227,11 @@ class ListActivity(TypedDict):
     media: dict[str, Any]  # --
     likes: list[dict[str, Any]]  # --
 
+class SearchMedia(TypedDict):
+    id: int
+    type: MediaType
+    title: MediaTitle
+
 
 class Regex:
     ANIME_REGEX = re.compile(r"\{\{(.*?)\}\}")

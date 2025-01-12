@@ -18,7 +18,7 @@ from .client import AniListClient
 from .media_list import MediaList
 from .oauth import Favourites, User
 from .types import FavouriteType, ListActivity, MediaListStatus, MediaType, Regex, _Media
-from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView
+from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView, SearchView
 
 
 def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False) -> None:
@@ -272,6 +272,17 @@ class AniList(BaseCog, name="Anime"):
 
         view.message = await ctx.send(embed=media.embed, view=view)
 
+    async def search_many(
+        self,
+        ctx: Context,
+        search: str,
+    ) -> None:
+        media = await self.client.search_many(search)
+
+        view = SearchView(self, media, author=ctx.author)
+        view.message = await ctx.send(f"Showing results for search: `{search}`", view=view)
+
+
     async def get_user(self, ctx: Context, user: Optional[str | int] = None) -> User:
         if user is None:
             token = await self.client.get_token(ctx.author.id)
@@ -321,6 +332,14 @@ class AniList(BaseCog, name="Anime"):
     async def manga(self, ctx: Context, *, search: str):
         """Searches and returns information on a specific manga."""
         await self.search(ctx, search, MediaType.MANGA)
+
+    @commands.hybrid_command(name="search", aliases=["s"])
+    @allowed_installs(guilds=True, users=True)
+    @allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def search_(self, ctx: Context, *, search: str):
+        """Searches and returns the first 10 results on a media."""
+
+        await self.search_many(ctx, search)
 
     @commands.hybrid_group(invoke_without_command=True, aliases=["al"])
     @allowed_installs(guilds=True, users=True)

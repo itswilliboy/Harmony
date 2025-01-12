@@ -220,15 +220,12 @@ class Media:
                 title_ = MediaTitle(node["title"])
                 list_entry_ = MediaList(node["mediaListEntry"]) if node.get("mediaListEntry") else None
 
-                year: Optional[int]
+                year: Optional[int] = None
                 if season_year := node.get("seasonYear"):
                     year = season_year
 
                 elif start_date := node.get("startDate"):
                     year = FuzzyDate(start_date).get("year")
-
-                else:
-                    year = None
 
                 if TYPE_CHECKING:
                     assert isinstance(year, int)
@@ -292,7 +289,7 @@ class Media:
         try:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
             # it will be more convenient to be able to call the .timestamp() on datetime.datetime object.
-            return datetime.datetime(year=date.get("year") or 0, month=date.get("month") or 0, day=date.get("day") or 0)
+            return datetime.datetime(year=date.get("year") or 1, month=date.get("month") or 1, day=date.get("day") or 1)
         except (ValueError, TypeError):
             return None
 
