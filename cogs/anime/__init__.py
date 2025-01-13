@@ -405,7 +405,7 @@ class AniList(BaseCog, name="Anime"):
 
         embed = PrimaryEmbed(
             title="Authorise with Anilist",
-            description="Copy the code from the link below, and then press the green button for the next step.",
+            description="Press the button below to start the authorisation flow.",
         )
 
         await ctx.send(

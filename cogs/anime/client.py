@@ -360,6 +360,7 @@ class AniListClient:
         self.bot = bot
         self.oauth = OAuth(bot.session, self)
         self.user_cache: TTLCache[str | int, User] = TTLCache(maxsize=100, ttl=600)
+        self.random_store: TTLCache[int, str] = TTLCache(maxsize=100, ttl=300)
 
     async def search_media(
         self, search: str, *, type: MediaType, user_id: Optional[int] = None
