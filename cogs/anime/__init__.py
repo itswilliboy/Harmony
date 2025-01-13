@@ -392,7 +392,7 @@ class AniList(BaseCog, name="Anime"):
     @anilist.command(aliases=["auth"])
     async def login(self, ctx: Context):
         """Log in with an AniList account."""
-        query = "SELECT expiry FROM anilist_tokens WHERE user_id = $1"
+        query = "SELECT expiry FROM anilist_tokens_new WHERE user_id = $1"
         expiry: Optional[datetime.datetime] = await self.bot.pool.fetchval(
             query,
             ctx.author.id,
@@ -416,13 +416,13 @@ class AniList(BaseCog, name="Anime"):
     @anilist.command()
     async def logout(self, ctx: Context):
         """Logs you out."""
-        query = "SELECT EXISTS(SELECT 1 FROM anilist_tokens WHERE user_id = $1)"
+        query = "SELECT EXISTS(SELECT 1 FROM anilist_tokens_new WHERE user_id = $1)"
         exists = await self.bot.pool.fetchval(query, ctx.author.id)
 
         if not exists:
             raise GenericError("You are not logged in.")
 
-        query = "DELETE FROM anilist_tokens WHERE user_id = $1"
+        query = "DELETE FROM anilist_tokens_new WHERE user_id = $1"
         await self.bot.pool.execute(query, ctx.author.id)
 
         await ctx.send(

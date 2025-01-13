@@ -7,7 +7,7 @@ import discord
 from discord import ui
 
 from config import ANILIST_URL
-from utils import BaseView, ErrorEmbed, SuccessEmbed
+from utils import BaseView, ErrorEmbed, SuccessEmbed, utils
 
 from .anime import Media
 from .oauth import User
@@ -241,11 +241,12 @@ class LoginView(BaseView):
 
         token, refresh, expires_in = resp
 
-        query = "INSERT INTO anilist_tokens VALUES ($1, $2, $3, $4)"
+        encrypted = utils.encrypt(token)
+        query = "INSERT INTO anilist_tokens_new VALUES ($1, $2, $3, $4)"
         await self.bot.pool.execute(
             query,
             self.author.id,
-            token,
+            encrypted,
             refresh,
             expires_in,
         )

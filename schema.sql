@@ -35,9 +35,16 @@ CREATE TABLE IF NOT EXISTS guild_blacklist(
     timestamp TIMESTAMP DEFAULT current_timestamp
 );
 
-CREATE TABLE IF NOT EXISTS anilist_tokens(
+/* CREATE TABLE IF NOT EXISTS anilist_tokens(
     user_id BIGINT PRIMARY KEY,
     token TEXT NOT NULL,
+    refresh TEXT NOT NULL,
+    expiry TIMESTAMP NOT NULL
+); */
+
+CREATE TABLE IF NOT EXISTS anilist_tokens_new(
+    user_id BIGINT PRIMARY KEY,
+    token BYTEA NOT NULL,
     refresh TEXT NOT NULL,
     expiry TIMESTAMP NOT NULL
 );

@@ -141,7 +141,7 @@ class ErrorHandler(BaseCog):
                     "Either log in via the button below or run the command again to keep yourself logged out."
                 )
             )
-            await ctx.pool.execute("DELETE FROM anilist_tokens WHERE user_id = $1", ctx.author.id)
+            await ctx.pool.execute("DELETE FROM anilist_tokens_new WHERE user_id = $1", ctx.author.id)
 
             view = discord.ui.View()
             button: discord.ui.Button[discord.ui.View] = discord.ui.Button(label="Log in", style=discord.ButtonStyle.green)
