@@ -163,7 +163,8 @@ class AniList(BaseCog, name="Anime"):
         self.user_cache = self.client.user_cache
 
     async def cog_check(self, ctx: Context) -> bool:
-        await ctx.typing()
+        if ctx.command.name != "login":
+            await ctx.typing()
         return True
 
     @commands.Cog.listener()
