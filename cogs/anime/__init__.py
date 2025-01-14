@@ -408,10 +408,14 @@ class AniList(BaseCog, name="Anime"):
             description="Press the button below to start the authorisation flow.",
         )
 
-        await ctx.send(
-            embed=embed,
-            view=LoginView(ctx.bot, ctx.author, self.client),
-        )
+        try:
+            await ctx.author.send(
+                embed=embed,
+                view=LoginView(ctx.bot, ctx.author, self.client),
+            )
+
+        except discord.Forbidden:
+            await ctx.send("Couldn't send a DM, are they open?")
 
     @anilist.command()
     async def logout(self, ctx: Context):

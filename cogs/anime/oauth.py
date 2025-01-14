@@ -273,7 +273,7 @@ class OAuth:
             "grant_type": "authorization_code",
             "client_id": ANILIST_ID,
             "client_secret": ANILIST_SECRET,
-            "redirect_uri": "https://harmony.itswilli.dev/login",
+            "redirect_uri": "https://harmony.itswilli.dev/authorise",
             "code": auth_code,
         }
 
