@@ -413,6 +413,7 @@ class AniList(BaseCog, name="Anime"):
                 embed=embed,
                 view=LoginView(ctx.bot, ctx.author, self.client),
             )
+            await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
         except discord.Forbidden:
             await ctx.send("Couldn't send a DM, are they open?")
