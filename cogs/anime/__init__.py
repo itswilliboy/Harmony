@@ -380,7 +380,7 @@ class AniList(BaseCog, name="Anime"):
         await ctx.send(embed=embed, view=view or discord.utils.MISSING)
 
     @describe(user="AniList username")
-    @anilist.command()
+    @anilist.command(aliases=["l"])
     async def list(self, ctx: Context, user: AniUserConv = aniuser):
         """View someone's anime list on AniList."""
 
@@ -437,7 +437,7 @@ class AniList(BaseCog, name="Anime"):
         user4="The fourth user to compare",
         user5="The fifth user to compare",
     )
-    @anilist.command()
+    @anilist.command(aliases=["c"])
     async def compare(
         self,
         ctx: Context,
@@ -496,7 +496,7 @@ class AniList(BaseCog, name="Anime"):
 
         await Paginator(pages, ctx.author).start(ctx)
 
-    @anilist.command(aliases=["recent"])
+    @anilist.command(aliases=["recent", "r", "a"])
     async def activity(self, ctx: Context, user: AniUserConv = aniuser):
         """Shows somebody's recent activity on AniList."""
         activities = await self.client.fetch_user_activity(user.id)
