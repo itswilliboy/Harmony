@@ -284,8 +284,11 @@ class Media:
         return following_statuses
 
     @staticmethod
-    def _to_datetime(date: FuzzyDate) -> Optional[datetime.datetime]:
+    def _to_datetime(date: Optional[FuzzyDate]) -> Optional[datetime.datetime]:
         """Converts the date-type given by the API to a `datetime.datetime` object."""
+        if date is None:
+            return None
+
         try:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
             # it will be more convenient to be able to call the .timestamp() on datetime.datetime object.

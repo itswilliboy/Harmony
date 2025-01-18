@@ -1,6 +1,7 @@
 asyncache
 asyncpg
 asyncpg-stubs
+cryptography
 Pillow
 psutil
 pygit2 == 1.15.1

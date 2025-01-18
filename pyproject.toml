@@ -16,5 +16,7 @@ reportUnnecessaryTypeIgnoreComment = "warning"
 reportMissingTypeStubs = "warning"
 reportFunctionMemberAccess = "none"
 ignore = ["config.py"]
+venv = ".venv"
+venvPath = "./"
 
 stubPath = "./typings"

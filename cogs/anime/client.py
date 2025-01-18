@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, Optional
 from aiohttp import ContentTypeError
 from cachetools import TTLCache
 
+from utils import decrypt
+
 from .anime import Media, MinifiedMedia
 from .oauth import AccessToken, ApiExecption, OAuth, User
 from .types import ActivityType, ListActivity, MediaListCollection, MediaListStatus, MediaType, SearchMedia
@@ -372,6 +374,7 @@ class AniListClient:
         self.bot = bot
         self.oauth = OAuth(bot.session, self)
         self.user_cache: TTLCache[str | int, User] = TTLCache(maxsize=100, ttl=600)
+        self.random_store: TTLCache[int, str] = TTLCache(maxsize=100, ttl=300)
 
     async def search_media(
         self, search: str, *, type: MediaType, user_id: Optional[int] = None
@@ -604,14 +607,14 @@ class AniListClient:
             return []
 
     async def get_token(self, user_id: int) -> Optional[AccessToken]:
-        query = "SELECT * FROM anilist_tokens WHERE user_id = $1"
+        query = "SELECT * FROM anilist_tokens_new WHERE user_id = $1"
         resp = await self.bot.pool.fetchrow(query, user_id)
 
         if not resp:
             return None
 
         return AccessToken(
-            resp["token"],
+            decrypt(resp["token"]),
             resp["refresh"],
             resp["expiry"],
         )
