@@ -377,7 +377,7 @@ class Media:
             f"↪ Studio: **[{self.studio['name']}]({self.studio['siteUrl']})**" if self.studio else "",
             (
                 f"↪ Episodes: **{self.episodes}"
-                f"{f' | {(self.episodes*self.duration)/60:.1f} hours' if self.duration else ''}**"
+                f"{f' | {(self.episodes * self.duration) / 60:.1f} hours' if self.duration else ''}**"
                 if self.episodes
                 else ""
             ),
@@ -437,8 +437,8 @@ class Media:
 
         if entry and not entry["private"]:
             desc = [
-                f"↪ Status: **{self._get_wording(entry["status"]).title()}**",
-                f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes or "TBA"}**"
+                f"↪ Status: **{self._get_wording(entry['status']).title()}**",
+                f"↪ Volumes: **{entry['progressVolumes']} / {self.volumes or 'TBA'}**"
                 if self.type == MediaType.MANGA
                 else "",
                 f"↪ Progress: **{entry['progress']}"
@@ -500,7 +500,7 @@ class Media:
                 desc = (
                     f"↪ **[{user_['name']}]({user_['siteUrl']}) - "
                     f"{st['score']} / 10**\n"
-                    f"╰ `{self._get_wording(st["status"]).title()}:` "
+                    f"╰ `{self._get_wording(st['status']).title()}:` "
                     f"{st['progress']} / {total_progress} "
                     f"{f'{plural(self.chapters or 0):chapter}' if self.type == MediaType.MANGA else f'{plural(self.episodes or 0):episode}'}"
                 )

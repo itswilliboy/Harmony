@@ -48,7 +48,7 @@ class ErrorHandler(BaseCog):
             nl = "\n"
             description = f"""
                 You are missing the following permissions to use this command:
-                * {f' {nl}* '.join(to_list)}
+                * {f" {nl}* ".join(to_list)}
             """
 
             embed = ErrorEmbed(title="Missing Permissions", description=description)
@@ -59,7 +59,7 @@ class ErrorHandler(BaseCog):
             nl = "\n"
             description = f"""
                 I am missing the following permissions:
-                * {f' {nl}* '.join(to_list)}
+                * {f" {nl}* ".join(to_list)}
             """
 
             embed = ErrorEmbed(title="Bot Missing Permissions", description=description)

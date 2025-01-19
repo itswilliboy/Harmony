@@ -103,9 +103,7 @@ class MediaList(Paginator[discord.Embed]):
             if type == MediaListStatus.CURRENT and format == MediaType.MANGA:
                 type_ = "Reading"
 
-            list_url = (
-                "https://anilist.co/user/" f"{self.collection['user']['name']}/" f"{str(format).lower()}list/" f"{type_}"
-            )
+            list_url = f"https://anilist.co/user/{self.collection['user']['name']}/{str(format).lower()}list/{type_}"
 
             embed = PrimaryEmbed(title=f"{self.collection['user']['name']}'s {type_} {format.title()}", url=list_url)
             desc: list[str] = []

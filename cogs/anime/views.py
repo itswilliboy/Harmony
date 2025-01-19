@@ -120,7 +120,7 @@ class RelationView(BaseView):
         for edge in relations:
             value = f"{edge.title}\u200b{edge.id}"
             if len(value) > 100:
-                value = f"{edge.title[:100-len(value)]}\u200b{edge.id}"  # Shorten value to 100 characters, but keep ID
+                value = f"{edge.title[: 100 - len(value)]}\u200b{edge.id}"  # Shorten value to 100 characters, but keep ID
 
             if edge.type == MediaRelation.SOURCE:
                 self.add_item(RelationButton(self.cog, edge, "Source", "\N{OPEN BOOK}", user=user))
@@ -191,7 +191,7 @@ class RelationView(BaseView):
         if len(format) <= 3:  # Capitalise TV, OVA, & ONA
             format = format.upper()
 
-        return f"{type} - {format} {f'({edge.year})' if edge.year else ""} - {status}"
+        return f"{type} - {format} {f'({edge.year})' if edge.year else ''} - {status}"
 
 
 class CodeModal(ui.Modal, title="Enter OAuth Code"):

@@ -256,7 +256,7 @@ class Blacklist(BaseCog):
                 title="Blacklisted",
                 description=f"""
             Globally: `{item.is_global}`
-            {f'Servers:{nl}* {f" {nl}* ".join(guild_names)}' if not item.is_global else ''}
+            {f"Servers:{nl}* {f' {nl}* '.join(guild_names)}" if not item.is_global else ""}
             """,
             )
             .set_thumbnail(url=user.display_avatar.url)

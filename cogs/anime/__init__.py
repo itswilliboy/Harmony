@@ -515,7 +515,7 @@ class AniList(BaseCog, name="Anime"):
             Page(
                 embed=PrimaryEmbed(
                     title=f"Common Media: {status.upper()}",
-                    description=f"2. {f'{nl}2. '.join([get_title(i["title"]) for i in to_list])}",
+                    description=f"2. {f'{nl}2. '.join([get_title(i['title']) for i in to_list])}",
                 ).set_author(name=" - ".join([str(u) for u in users]))
             ),
         )

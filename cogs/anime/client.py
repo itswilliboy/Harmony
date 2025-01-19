@@ -428,7 +428,9 @@ class AniListClient:
         variables = {"search": search}
         headers = await self.get_headers(user_id) if user_id else {}
 
-        async with self.bot.session.post(self.URL, json={"query": SEARCH_QUERY, "variables": variables}, headers=headers) as resp:
+        async with self.bot.session.post(
+            self.URL, json={"query": SEARCH_QUERY, "variables": variables}, headers=headers
+        ) as resp:
             try:
                 json = await resp.json()
 
