@@ -221,14 +221,11 @@ class Media:
                 list_entry_ = MediaList(node["mediaListEntry"]) if node.get("mediaListEntry") else None
 
                 year: Optional[int] = None
-                if season_year := node.get("seasonYear"):
-                    year = season_year
+                if season_year_ := node.get("seasonYear"):
+                    year = season_year_
 
-                elif start_date := node.get("startDate"):
-                    year = FuzzyDate(start_date).get("year")
-
-                if TYPE_CHECKING:
-                    assert isinstance(year, int)
+                elif _start_date := node.get("startDate"):
+                    year = FuzzyDate(_start_date).get("year")
 
                 relations.append(
                     Edge(
@@ -292,14 +289,15 @@ class Media:
         try:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
             # it will be more convenient to be able to call the .timestamp() on datetime.datetime object.
-            return datetime.datetime(year=date.get("year") or 1970, month=date.get("month") or 1, day=date.get("day") or 2)
+            return datetime.datetime(year=date["year"], month=date["month"], day=date["day"])  # type: ignore
         except (ValueError, TypeError):
             return None
 
     @property
     def start_date(self) -> Optional[datetime.datetime]:
         """Returns the date when the media started."""
-        return self._to_datetime(self._start_date)
+        a = self._to_datetime(self._start_date)
+        return a
 
     @property
     def end_date(self) -> Optional[datetime.datetime]:
