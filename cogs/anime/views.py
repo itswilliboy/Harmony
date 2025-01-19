@@ -230,6 +230,7 @@ class LoginView(BaseView):
             ),
         )
 
+
 class Delete(discord.ui.DynamicItem[discord.ui.Button[discord.ui.View]], template=r"DELETE:(?P<USER_ID>\d+)"):
     def __init__(self, user_id: int):
         self.user_id = user_id
@@ -334,21 +335,44 @@ class ProfileManagementView(BaseView):
     async def logout(self, interaction: Interaction, _):
         await interaction.response.send_message("logged out")
 
+
 class SearchSelect(ui.Select["SearchView"]):
-    def __init__(self, cog: AniList, media: list[SearchMedia]) -> None:
-        options = [discord.SelectOption(label=m["title"]["romaji"][:100], description=m["type"].title(), value=str(m["id"])) for m in media]
+    def __init__(
+        self,
+        cog: AniList,
+        media: list[SearchMedia],
+        user: Optional[User] = None,
+        author: Optional[discord.abc.Snowflake] = None,
+    ) -> None:
+        options = [
+            discord.SelectOption(label=m["title"]["romaji"][:100], description=m["type"].title(), value=str(m["id"]))
+            for m in media
+        ]
         super().__init__(options=options, min_values=1, max_values=1)
 
         self.cog = cog
+        self.user = user
+        self.author = author
 
     async def callback(self, interaction: Interaction):
-        media = await self.cog.client.fetch_media(int(self.values[0]))
+        media = await self.cog.client.fetch_media(int(self.values[0]), user_id=self.author.id if self.author else None)
         assert media
 
-        await interaction.response.edit_message(view=None, embed=media.embed)
+        view = EmbedRelationView(self.cog, media, self.user, self.author)
+
+        await interaction.response.edit_message(view=view, embed=media.embed)
+
 
 class SearchView(BaseView):
-    def __init__(self, cog: AniList, media: list[SearchMedia], author: Optional[discord.abc.Snowflake] = None) -> None:
+    def __init__(
+        self,
+        cog: AniList,
+        media: list[SearchMedia],
+        author: Optional[discord.abc.Snowflake] = None,
+        user: Optional[User] = None,
+    ) -> None:
         super().__init__(author)
 
-        self.add_item(SearchSelect(cog, media))
+        self.user = user
+
+        self.add_item(SearchSelect(cog, media, user, author))

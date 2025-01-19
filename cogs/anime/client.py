@@ -422,12 +422,13 @@ class AniListClient:
         media = Media.from_json(data, following_status or {}), user
         return media
 
-    async def search_many(self, search: str) -> list[SearchMedia]:
+    async def search_many(self, search: str, user_id: Optional[int] = None) -> tuple[list[SearchMedia], Optional[User]]:
         """Searches for media and returns the first 25 results."""
 
         variables = {"search": search}
+        headers = await self.get_headers(user_id) if user_id else {}
 
-        async with self.bot.session.post(self.URL, json={"query": SEARCH_QUERY, "variables": variables}) as resp:
+        async with self.bot.session.post(self.URL, json={"query": SEARCH_QUERY, "variables": variables}, headers=headers) as resp:
             try:
                 json = await resp.json()
 
@@ -435,12 +436,16 @@ class AniListClient:
                 raise ApiExecption() from exc
 
             if not json:
-                return []
+                return [], None
 
             data_ = json["data"]
             media: list[SearchMedia] = data_["Page"]["media"]
 
-        return media
+        user: Optional[User] = None
+        if headers:
+            user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
+
+        return media, user
 
     async def search_minified_media(self, search: str, *, type: MediaType) -> Optional[MinifiedMedia]:
         """Searchs and returns a "minified" media via a search query."""

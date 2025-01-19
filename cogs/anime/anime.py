@@ -286,13 +286,13 @@ class Media:
     @staticmethod
     def _to_datetime(date: Optional[FuzzyDate]) -> Optional[datetime.datetime]:
         """Converts the date-type given by the API to a `datetime.datetime` object."""
-        if date is None:
+        if date is None or any(val is None for val in date.values()):
             return None
 
         try:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
             # it will be more convenient to be able to call the .timestamp() on datetime.datetime object.
-            return datetime.datetime(year=date.get("year") or 1, month=date.get("month") or 1, day=date.get("day") or 1)
+            return datetime.datetime(year=date.get("year") or 1970, month=date.get("month") or 1, day=date.get("day") or 2)
         except (ValueError, TypeError):
             return None
 

@@ -273,34 +273,33 @@ class AniList(BaseCog, name="Anime"):
 
         view.message = await ctx.send(embed=media.embed, view=view)
 
-    async def search_many(
-        self,
-        ctx: Context,
-        search: str,
-    ) -> None:
-        media = await self.client.search_many(search)
+    async def search_many(self, ctx: Context, search: str) -> None:
+        media, user = await self.client.search_many(search, ctx.author.id)
 
-        view = SearchView(self, media, author=ctx.author)
+        view = SearchView(self, media, author=ctx.author, user=user)
         view.message = await ctx.send(f"Showing results for search: `{search}`", view=view)
-
 
     async def get_user(self, ctx: Context, user: Optional[str | int] = None) -> User:
         if user is None:
             token = await self.client.get_token(ctx.author.id)
+
             if token is None:
                 cp = ctx.clean_prefix
                 raise commands.BadArgument(
                     message=f"You need to pass an AniList username or log in with {cp}anilist login to view yourself."
                 )
+
             elif token.expiry < datetime.datetime.now():
                 raise GenericError(
                     f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login.",
                 )
 
             return await self.client.oauth.get_current_user(token.token)
+
         else:
             if isinstance(user, str) and user.isnumeric():
                 user = int(user)
+
             user_ = await self.client.oauth.get_user(user)
 
             if user_ is None:
@@ -339,7 +338,6 @@ class AniList(BaseCog, name="Anime"):
     @allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def search_(self, ctx: Context, *, search: str):
         """Searches and returns the first 10 results on a media."""
-
         await self.search_many(ctx, search)
 
     @commands.hybrid_group(invoke_without_command=True, aliases=["al"])

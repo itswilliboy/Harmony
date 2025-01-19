@@ -67,11 +67,13 @@ class plural:
             return plural
         return singular
 
+
 def encrypt(text: str) -> bytes:
     """Encrypts with fernet and returns the encrypted value in bytes"""
-    fernet = Fernet(environ['FERNET_KEY'])
+    fernet = Fernet(environ["FERNET_KEY"])
 
     return fernet.encrypt(text.encode())
+
 
 def decrypt(encrypted: bytes) -> str:
     """Decrypts with fernet and returns the decrypted value as a string."""
