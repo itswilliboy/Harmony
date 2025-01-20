@@ -80,7 +80,7 @@ class Paginator(BaseView, Generic[T]):
     message: discord.Message
 
     def __init__(self, items: list[T], user: Optional[discord.abc.Snowflake] = None) -> None:
-        super().__init__(user)
+        BaseView.__init__(self, user)
 
         self.items = items
         self.count = len(self)
@@ -94,6 +94,10 @@ class Paginator(BaseView, Generic[T]):
     def __len__(self) -> int:
         return len(self.items)
 
+    async def on_page_switch(self) -> None:
+        """Called on every page switch before the message is updated."""
+        raise NotImplementedError
+
     async def go_to(self, interaction: Interaction, page: int) -> None:
         """Goes to a specific page."""
 
@@ -103,6 +107,7 @@ class Paginator(BaseView, Generic[T]):
         self.page = page
         self.current = self.items[page]
 
+        await self.on_page_switch()
         self.update_buttons()
         await self.update(interaction)
 

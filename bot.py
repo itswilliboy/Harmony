@@ -46,6 +46,7 @@ class Harmony(commands.Bot):
             help_command=None,
             activity=discord.CustomActivity(f"{DEFAULT_PREFIX}help"),
             allowed_mentions=discord.AllowedMentions.none(),
+            case_insensitive=True,
         )
         self._BotBase__cogs = _CaseInsensitiveDict()  # Hacky way to allow lowercase cog arguments in help command
 

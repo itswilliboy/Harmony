@@ -102,9 +102,9 @@ class MinifiedMedia:
     def name(self) -> str:
         """Returns the name of the media."""
         if self.is_adult:
-            return f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {self.title['romaji']}"
+            return f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {self.title['english'] or self.title['romaji']}"
         else:
-            return self.title["romaji"]
+            return self.title["english"] or self.title["romaji"]
 
     @property
     def small_info(self) -> str:
@@ -112,7 +112,12 @@ class MinifiedMedia:
         fmt: list[str] = []
 
         if self.format:
-            fmt.append(f"{str(self.format).replace('_', ' ').title()}")
+            format = self.format.title()
+
+            if len(format) <= 3:  # Capitalise TV, OVA, & ONA
+                format = format.upper()
+
+            fmt.append(f"{format.replace('_', ' ')}")
 
         if self.season and self.season_year:
             fmt.append(f"{str(self.season).title()} {self.season_year}")
@@ -121,11 +126,11 @@ class MinifiedMedia:
             fmt.append(str(self.status).title())
 
         if self.episodes:
-            fmt.append(f"{self.episodes} episode{'' if self.episodes == 1 else 's'}")
+            fmt.append(f"{self.episodes} {plural(self.episodes or 0):episode}")
 
-        if self.chapters and self.volumes:
+        if self.chapters or self.volumes:
             fmt.append(
-                f"{self.volumes} volume{'' if self.volumes == 1 else 's'} ({self.chapters} chapter{'' if self.chapters == 1 else 's'})"
+                f"{self.volumes} {plural(self.volumes or 0):volume} ({self.chapters or 0} {plural(self.chapters):chapter})"
             )
 
         fmt.append(f"[AL](<https://anilist.co/{self.type.lower()}/{self.id}>)")
@@ -134,7 +139,7 @@ class MinifiedMedia:
 
         genres = ""
         if self.genres:
-            genres = f"\nGenre{'' if len(self.genres) == 1 else 's'}: " + (", ".join(self.genres))
+            genres = f"\n╰ {plural(len(self.genres)):Genre}: " + (", ".join(self.genres))
 
         return " \N{EM DASH} ".join(fmt) + genres
 

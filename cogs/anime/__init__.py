@@ -190,8 +190,8 @@ class AniList(BaseCog, name="Anime"):
         content = Regex.CB_REGEX.sub(" ", content)
         content = Regex.HL_REGEX.sub(" ", content)
 
-        anime = list(set(Regex.ANIME_REGEX.findall(content)))
-        manga = list(set(Regex.MANGA_REGEX.findall(content)))
+        anime = Regex.ANIME_REGEX.findall(content)
+        manga = Regex.MANGA_REGEX.findall(content)
 
         if not anime and not manga:
             return
@@ -201,17 +201,22 @@ class AniList(BaseCog, name="Anime"):
         async with message.channel.typing():
             embed = PrimaryEmbed()
 
+            # TODO: Do one big query instead of looping through and sending multiple requests
             for name in anime:
                 media = await self.client.search_minified_media(name, type=MediaType.ANIME)
                 if media and media not in found:
                     found.append(media)
-                    embed.add_field(name=f"**__{media.name}__**", value=media.small_info, inline=False)
+                    embed.add_field(
+                        name=f"**__{media.name}__** (**{media.mean_score}%**)", value=media.small_info, inline=False
+                    )
 
             for name in manga:
                 media = await self.client.search_minified_media(name, type=MediaType.MANGA)
                 if media and media not in found:
                     found.append(media)
-                    embed.add_field(name=f"**__{media.name}__**", value=media.small_info, inline=False)
+                    embed.add_field(
+                        name=f"**__{media.name}__** (**{media.mean_score}%**)", value=media.small_info, inline=False
+                    )
 
         if not embed.fields:
             try:

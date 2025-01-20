@@ -163,6 +163,8 @@ class UserStatistics(NamedTuple):
     chapters_read: int
     volumes_read: int
 
+    def __bool__(self) -> bool:
+        return any((self.count, self.episodes_watched, self.chapters_read))
 
 class PartialNode(NamedTuple):
     name: str

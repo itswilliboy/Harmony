@@ -64,4 +64,16 @@ CREATE TABLE IF NOT EXISTS inline_search_optout(
     user_id BIGINT
 );
 
+CREATE TABLE IF NOT EXISTS error_reports(
+    id SERIAL PRIMARY KEY,
+    guild_id BIGINT,
+    channel_id BIGINT NOT NULL,
+    message_id BIGINT NOT NULL,
+    message_content TEXT NOT NULL,
+    author_id BIGINT NOT NULL,
+    traceback TEXT NOT NULL,
+    timestamp TIMESTAMPTZ DEFAULT current_timestamp,
+    status BOOLEAN
+);
+
 COMMIT;

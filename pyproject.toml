@@ -15,7 +15,7 @@ reportPrivateUsage = "none"
 reportUnnecessaryTypeIgnoreComment = "warning"
 reportMissingTypeStubs = "warning"
 reportFunctionMemberAccess = "none"
-ignore = ["config.py"]
+ignore = ["config.py", ".venv"]
 venv = ".venv"
 venvPath = "./"
 

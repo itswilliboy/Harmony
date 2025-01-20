@@ -360,7 +360,7 @@ class SearchSelect(ui.Select["SearchView"]):
 
         view = EmbedRelationView(self.cog, media, self.user, self.author)
 
-        await interaction.response.edit_message(view=view, embed=media.embed)
+        await interaction.response.edit_message(view=view, embed=media.embed, content=None)
 
 
 class SearchView(BaseView):
