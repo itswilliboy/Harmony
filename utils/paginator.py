@@ -80,7 +80,7 @@ class Paginator(BaseView, Generic[T]):
     message: discord.Message
 
     def __init__(self, items: list[T], user: Optional[discord.abc.Snowflake] = None) -> None:
-        super().__init__(user)
+        BaseView.__init__(self, user)
 
         self.items = items
         self.count = len(self)

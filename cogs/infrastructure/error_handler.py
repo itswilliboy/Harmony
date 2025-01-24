@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, cast
 
 import discord
 from discord.ext import commands
 
 from cogs.anime.client import InvalidToken
+from cogs.infrastructure.reporting import Reporting
 from utils import BaseCog, ErrorEmbed, GenericError, get_command_signature
 
 if TYPE_CHECKING:
@@ -31,7 +32,7 @@ class ErrorHandler(BaseCog):
         return f"{text}\n{underline}"
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: Context, error: Any):
+    async def on_command_error(self, ctx: Context, error: Exception):
         if ctx.is_blacklisted():
             return
 
@@ -157,8 +158,11 @@ class ErrorHandler(BaseCog):
             return await ctx.send(embed=embed, view=view)
 
         else:
-            embed = ErrorEmbed(description="An unknown error occurred")
-            self.bot.log.error("In %s: %s", ctx.command, error, exc_info=error)
+            s = cast(Reporting, self)  # :/
+            id = await s.create_report(ctx, error)
+
+            embed = ErrorEmbed(description="An unknown error occurred").set_footer(text=f"ID: {id}")
+            self.bot.log.error("In '%s' (Logged with ID %s): %s", ctx.command, id, error, exc_info=error)
 
         if not embed.footer:
             if isinstance(error, GenericError) and error.footer:
