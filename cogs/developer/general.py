@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import importlib
+from contextlib import redirect_stdout
 from inspect import getsource
-from io import BytesIO
+from io import BytesIO, StringIO
 from traceback import format_exception
 from typing import TYPE_CHECKING, Annotated, Optional
 
@@ -27,7 +28,11 @@ class General(BaseCog):
     async def eval(
         self, ctx: Context, *, code: Annotated[jishaku.codeblocks.Codeblock, jishaku.codeblocks.codeblock_converter]
     ):
-        await ctx.invoke(self.bot.get_command("jishaku python"), argument=code)  # type: ignore
+        buf = StringIO()
+        with redirect_stdout(buf) as out:
+            await ctx.invoke(self.bot.get_command("jishaku python"), argument=code)  # type: ignore
+
+        await ctx.send(out.getvalue())
 
     @commands.command(aliases=["ee"])
     async def eval2(
