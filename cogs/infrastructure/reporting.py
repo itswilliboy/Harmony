@@ -228,6 +228,10 @@ class Reporting(BaseCog):
         reports = await self.get_reports()
 
         embeds = [report.embed() for report in reports]
+
+        if not embeds:
+            raise GenericError("There aren't any reports to display.")
+
         await ReportPaginator(reports, embeds, ctx.author).start(ctx)
 
     @error.command()
