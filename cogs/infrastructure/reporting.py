@@ -146,9 +146,19 @@ class StatusView(BaseView):
 
 class ReportPaginator(Paginator[discord.Embed], StatusView):
     def __init__(self, reports: list[ErrorReport], embeds: list[discord.Embed], author: discord.abc.Snowflake) -> None:
+        self.reports = reports
+        self.author = author
+
         StatusView.__init__(self, reports[0], author)
         Paginator.__init__(self, embeds, author)  # type: ignore
 
+        self.position_items()
+
+    async def on_page_switch(self):
+        StatusView.__init__(self, self.reports[self.page], self.author)
+        self.position_items()
+
+    def position_items(self) -> None:
         for i, item in enumerate(self.children):
             if i < 3:
                 item._row = 4
@@ -195,7 +205,7 @@ class Reporting(BaseCog):
             )
             return [ErrorReport.from_record(self.bot, record) for record in records]
 
-    async def get_next(self, status: Literal[Status.IDLE] | Literal[Status.IN_PROGRESS]) -> Optional[ErrorReport]:
+    async def get_next(self, status: Literal[Status.IDLE, Status.IN_PROGRESS]) -> Optional[ErrorReport]:
         query = f"""
             SELECT * FROM error_reports
             WHERE
