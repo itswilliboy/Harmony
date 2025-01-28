@@ -12,6 +12,7 @@ if ids := getenv("OWNER_IDS"):
 
 JEYY_API = getenv("JEYY_API")
 TOP_GG = getenv("TOP_GG")
+DBL = getenv("DBL")
 
 ANILIST_ID = getenv("ANILIST_ID")
 ANILIST_SECRET = getenv("ANILIST_SECRET")

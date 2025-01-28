@@ -51,10 +51,11 @@ class HelpCommand(commands.HelpCommand):
         for category in categories:
             embed.add_field(name=category.cog, value=category.commands, inline=False)
 
-
         view = BaseView()
         view.add_item(ui.Button(url="https://top.gg/bot/741592089342640198/vote", label="Vote on Top.gg!"))
-        view.add_item(ui.Button(url="https://discordbotlist.com/bots/harmony-8285/upvote", label="Vote on Discord Bot List!"))
+        view.add_item(
+            ui.Button(url="https://discordbotlist.com/bots/harmony-8285/upvote", label="Vote on Discord Bot List!")
+        )
 
         await self.get_destination().send(embed=embed, view=view)
 

@@ -13,7 +13,7 @@ import jishaku.codeblocks
 import jishaku.repl
 from discord.ext import commands
 
-from config import TOP_GG
+from config import DBL, TOP_GG
 from utils import BaseCog, GenericError
 
 if TYPE_CHECKING:
@@ -144,7 +144,7 @@ class General(BaseCog):
         await ctx.send(f"```py\n{source}\n```")
 
     @commands.command()
-    async def postservers(self, ctx: Context, site: Literal["topgg", "dbl"] ) -> None:
+    async def postservers(self, ctx: Context, site: Literal["topgg", "dbl"] | str) -> None:
         if self.bot.user.id != 741592089342640198:
             raise GenericError("Inapplicable bot ID.")
 
@@ -153,6 +153,11 @@ class General(BaseCog):
                 url = "https://top.gg/api/bots/741592089342640198/stats"
                 json = {"server_count": len(self.bot.guilds)}
                 headers = {"Authorization": TOP_GG or ""}  # for typing
+
+            case "dbl":
+                url = "https://discordbotlist.com/api/v1/bots/741592089342640198/stats"
+                json = {"guilds": len(self.bot.guilds)}
+                headers = {"Authorization": DBL or ""}
 
             case _:
                 raise GenericError("Site not found.")
