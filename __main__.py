@@ -1,15 +1,14 @@
 import asyncio
 import sys
+from os import environ
 
-import jishaku
 from discord import Intents
 
 from bot import Harmony
 from config import TOKEN
 
-jishaku.Flags.NO_UNDERSCORE = True
-jishaku.Flags.FORCE_PAGINATOR = True
-
+environ["JISHAKU_NO_UNDERSCORE"] = "True"
+environ["JISHAKU_FORCE_PAGINATOR"] = "True"
 
 initial_extensions = [
     "jishaku",
