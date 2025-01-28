@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, cast
 
 import discord
 from discord.app_commands import describe
@@ -18,7 +18,7 @@ class Statistics(BaseCog):
 
     @commands.Cog.listener()
     async def on_command_completion(self, ctx: Context):
-        if ctx.guild is None:
+        if cast(Optional[discord.Guild], ctx.guild) is None:
             return
 
         await ctx.pool.execute(

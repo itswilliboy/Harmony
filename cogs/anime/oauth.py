@@ -166,6 +166,7 @@ class UserStatistics(NamedTuple):
     def __bool__(self) -> bool:
         return any((self.count, self.episodes_watched, self.chapters_read))
 
+
 class PartialNode(NamedTuple):
     name: str
     site_url: str
