@@ -11,6 +11,7 @@ if ids := getenv("OWNER_IDS"):
     OWNER_IDS = tuple(int(id) for id in ids.split(","))
 
 JEYY_API = getenv("JEYY_API")
+TOP_GG = getenv("TOP_GG")
 
 ANILIST_ID = getenv("ANILIST_ID")
 ANILIST_SECRET = getenv("ANILIST_SECRET")

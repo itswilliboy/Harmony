@@ -5,7 +5,7 @@ from contextlib import redirect_stdout
 from inspect import getsource
 from io import BytesIO, StringIO
 from traceback import format_exception
-from typing import TYPE_CHECKING, Annotated, Optional
+from typing import TYPE_CHECKING, Annotated, Literal, Optional
 
 import discord
 import jishaku
@@ -13,6 +13,7 @@ import jishaku.codeblocks
 import jishaku.repl
 from discord.ext import commands
 
+from config import TOP_GG
 from utils import BaseCog, GenericError
 
 if TYPE_CHECKING:
@@ -143,4 +144,21 @@ class General(BaseCog):
         await ctx.send(f"```py\n{source}\n```")
 
     @commands.command()
-    async def postservers(self, )
+    async def postservers(self, ctx: Context, site: Literal["topgg", "dbl"] ) -> None:
+        if self.bot.user.id != 741592089342640198:
+            raise GenericError("Inapplicable bot ID.")
+
+        match site:
+            case "topgg":
+                url = "https://top.gg/api/bots/741592089342640198/stats"
+                json = {"server_count": len(self.bot.guilds)}
+                headers = {"Authorization": TOP_GG or ""}  # for typing
+
+            case _:
+                raise GenericError("Site not found.")
+
+        async with self.bot.session.post(url, json=json, headers=headers) as resp:
+            if not resp.ok:
+                raise Exception(await resp.text())
+
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
