@@ -3,17 +3,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional, cast
 
-from discord import Embed, utils
+from discord import Embed, ui, utils
 from discord.ext import commands
 
-from utils import (
-    BaseCog,
-    BaseCogMeta,
-    ErrorEmbed,
-    Paginator,
-    PrimaryEmbed,
-    get_command_signature,
-)
+from utils import BaseCog, BaseCogMeta, BaseView, ErrorEmbed, Paginator, PrimaryEmbed, get_command_signature
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -58,7 +51,12 @@ class HelpCommand(commands.HelpCommand):
         for category in categories:
             embed.add_field(name=category.cog, value=category.commands, inline=False)
 
-        await self.get_destination().send(embed=embed)
+
+        view = BaseView()
+        view.add_item(ui.Button(url="https://top.gg/bot/741592089342640198/vote", label="Vote on Top.gg!"))
+        view.add_item(ui.Button(url="https://discordbotlist.com/bots/harmony-8285/upvote", label="Vote on Discord Bot List!"))
+
+        await self.get_destination().send(embed=embed, view=view)
 
     async def send_command_help(self, command: Command) -> None:
         embed = PrimaryEmbed(title=command.name.title())
