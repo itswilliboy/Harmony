@@ -32,7 +32,8 @@ class General(BaseCog):
         with redirect_stdout(buf) as out:
             await ctx.invoke(self.bot.get_command("jishaku python"), argument=code)  # type: ignore
 
-        await ctx.send(out.getvalue())
+        if value := out.getvalue():
+            await ctx.send(value)
 
     @commands.command(aliases=["ee"])
     async def eval2(
@@ -140,3 +141,6 @@ class General(BaseCog):
             return await ctx.send(file=discord.File(buf, filename="source.py"))
 
         await ctx.send(f"```py\n{source}\n```")
+
+    @commands.command()
+    async def postservers(self, )
