@@ -442,7 +442,7 @@ class AniList(BaseCog, name="Anime"):
             await ctx.send("Couldn't send a DM, are they open?")
 
         except discord.NotFound:
-            pass
+            await ctx.send("\N{WHITE HEAVY CHECK MARK}", ephemeral=True)
 
     @anilist.command()
     async def logout(self, ctx: Context):
