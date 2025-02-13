@@ -441,6 +441,9 @@ class AniList(BaseCog, name="Anime"):
         except discord.Forbidden:
             await ctx.send("Couldn't send a DM, are they open?")
 
+        except discord.NotFound:
+            pass
+
     @anilist.command()
     async def logout(self, ctx: Context):
         """Logs you out."""
