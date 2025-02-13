@@ -96,7 +96,7 @@ class Paginator(BaseView, Generic[T]):
 
     async def on_page_switch(self) -> None:
         """Called on every page switch before the message is updated."""
-        raise NotImplementedError
+        return None
 
     async def go_to(self, interaction: Interaction, page: int) -> None:
         """Goes to a specific page."""
