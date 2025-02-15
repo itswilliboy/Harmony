@@ -150,7 +150,7 @@ class ReportPaginator(Paginator[discord.Embed], StatusView):
         self.author = author
 
         StatusView.__init__(self, reports[0], author)
-        Paginator.__init__(self, embeds, author)  # type: ignore
+        Paginator[discord.Embed].__init__(self, embeds, author)
 
         self.position_items()
 
