@@ -283,10 +283,11 @@ class AniList(BaseCog, name="Anime"):
         view.message = await ctx.send(embed=media.embed, view=view)
 
     async def search_many(self, ctx: Context, search: str) -> None:
-        is_nsfw = (
-            not isinstance(ctx.channel, discord.DMChannel | discord.GroupChannel | discord.PartialMessageable)
-            and ctx.channel.is_nsfw()
-        )
+        is_nsfw = True
+
+        if not isinstance(ctx.channel, discord.DMChannel | discord.GroupChannel | discord.PartialMessageable):
+            is_nsfw = ctx.channel.is_nsfw()
+
         media, user = await self.client.search_many(search, ctx.author.id, include_adult=is_nsfw)
 
         if not media:
