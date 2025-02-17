@@ -89,6 +89,9 @@ def decrypt(encrypted: bytes) -> str:
 
 def get_score(score: float, format: ScoreFormat) -> str:
     """Returns the score in the appropriate scoring system."""
+    if score == 0:
+        return "Unrated"
+
     match format:
         case "POINT_10":
             return f"{score // 10} / 10"
@@ -104,10 +107,7 @@ def get_score(score: float, format: ScoreFormat) -> str:
             return f"{new} / 5"
 
         case "POINT_3":
-            if score == 0:
-                return "Unrated"
-
-            elif score <= 35:
+            if score <= 35:
                 return "\N{WHITE FROWNING FACE}\N{VARIATION SELECTOR-16}"
 
             elif score <= 60:
