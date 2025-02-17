@@ -249,6 +249,7 @@ class SearchMedia(TypedDict):
     id: int
     type: MediaType
     title: MediaTitle
+    isAdult: bool
 
 
 class MediaListOptions(TypedDict):

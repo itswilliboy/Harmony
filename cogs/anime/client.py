@@ -157,6 +157,7 @@ SEARCH_QUERY = """
                 title {
                     romaji
                 }
+                isAdult
             }
         }
     }
@@ -444,7 +445,9 @@ class AniListClient:
         media = Media.from_json(data, following_status or {}), user
         return media
 
-    async def search_many(self, search: str, user_id: Optional[int] = None) -> tuple[list[SearchMedia], Optional[User]]:
+    async def search_many(
+        self, search: str, user_id: Optional[int] = None, *, include_adult: bool = True
+    ) -> tuple[list[SearchMedia], Optional[User]]:
         """Searches for media and returns the first 25 results."""
 
         variables = {"search": search}
@@ -469,7 +472,9 @@ class AniListClient:
         if headers:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
-        return media, user
+        if include_adult is True:
+            return media, user
+        return [m for m in media if not m["isAdult"]], user
 
     async def search_minified_media(self, search: str, *, type: MediaType) -> Optional[MinifiedMedia]:
         """Searchs and returns a "minified" media via a search query."""

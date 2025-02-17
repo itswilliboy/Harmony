@@ -283,7 +283,14 @@ class AniList(BaseCog, name="Anime"):
         view.message = await ctx.send(embed=media.embed, view=view)
 
     async def search_many(self, ctx: Context, search: str) -> None:
-        media, user = await self.client.search_many(search, ctx.author.id)
+        is_nsfw = (
+            not isinstance(ctx.channel, discord.DMChannel | discord.GroupChannel | discord.PartialMessageable)
+            and ctx.channel.is_nsfw()
+        )
+        media, user = await self.client.search_many(search, ctx.author.id, include_adult=is_nsfw)
+
+        if not media:
+            raise GenericError("Couldn't find any results for this search, if it is NSFW, use an NSFW channel.")
 
         view = SearchView(self, media, author=ctx.author, user=user)
         view.message = await ctx.send(f"Showing results for search: `{search}`", view=view)
