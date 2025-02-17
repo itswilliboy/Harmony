@@ -249,7 +249,6 @@ class AniList(BaseCog, name="Anime"):
         search: str,
         search_type: MediaType,
     ) -> None:
-        assert not isinstance(ctx.channel, discord.PartialMessageable | discord.GroupChannel)
 
         media, user = await self.client.search_media(
             search,
@@ -260,7 +259,7 @@ class AniList(BaseCog, name="Anime"):
         if media is None:
             raise GenericError(f"Couldn't find any {search_type.value.lower()} with that name.")
 
-        if media.is_adult and not (
+        if not isinstance(ctx.channel, discord.GroupChannel | discord.PartialMessageable) and media.is_adult and not (
             isinstance(
                 ctx.channel,
                 discord.DMChannel,
