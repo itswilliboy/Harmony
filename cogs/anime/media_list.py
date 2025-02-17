@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional, Self
+from typing import TYPE_CHECKING, Literal, Optional, Self, cast
 
 import discord
 from discord import ui
 
-from utils import Paginator, PrimaryEmbed
+from utils import Paginator, PrimaryEmbed, get_score
 
-from .types import MediaFormat, MediaListCollection, MediaListStatus, MediaType
+from .types import MediaFormat, MediaListCollection, MediaListStatus, MediaType, ScoreFormat
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -89,6 +89,8 @@ class MediaList(Paginator[discord.Embed]):
         await interaction.response.edit_message(embed=self.current, view=self)
 
     def embeds(self, type: MediaListStatus) -> list[discord.Embed]:
+        score_format = cast(ScoreFormat, self.collection["user"]["mediaListOptions"]["scoreFormat"])  # type: ignore
+
         try:
             list_ = [i for i in self.collection["lists"] if i["status"] == type][0]
 
@@ -130,9 +132,10 @@ class MediaList(Paginator[discord.Embed]):
                     backlog_text = f"`({episode_backlog} episode{plural} behind)`" if episode_backlog else ""
 
                 wording = "Rewatches" if format == MediaType.ANIME else "Rereads"
+                print("entry", entry)
                 info = field(
                     f"### [{title}]({url})",
-                    f"↪ Score: **{entry['score']}**",
+                    f"↪ Score: **{get_score(entry['score'], score_format)}**",
                     f"↪ Progress: **{entry['progress']} / {total}** {backlog_text}",
                     entry["repeat"] and f"╰ {wording}: **{entry['repeat']}**",
                 )

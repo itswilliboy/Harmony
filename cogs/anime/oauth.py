@@ -9,7 +9,7 @@ from aiohttp import ContentTypeError
 from config import ANILIST_ID, ANILIST_SECRET
 from utils import GenericError, try_get_ani_id
 
-from .types import FavouriteType
+from .types import FavouriteType, MediaListOptions
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -46,6 +46,9 @@ USER_FRAGMENT = """
                 chaptersRead
                 volumesRead
             }
+        }
+        mediaListOptions {
+            scoreFormat
         }
         favourites {
             anime {
@@ -191,6 +194,7 @@ class User:
         anime_stats: UserStatistics,
         manga_stats: UserStatistics,
         favourites: list[Favourites],
+        media_list_options: MediaListOptions,
     ) -> None:
         self.name = name
         self.id = id
@@ -202,6 +206,7 @@ class User:
         self.anime_stats = anime_stats
         self.manga_stats = manga_stats
         self.favourites = favourites
+        self.media_list_options = media_list_options
 
     def __str__(self) -> str:
         return self.name
@@ -245,6 +250,7 @@ class User:
             anime_stats,
             manga_stats,
             favourites,
+            data["mediaListOptions"],
         )
 
     @property

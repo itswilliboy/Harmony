@@ -1,16 +1,21 @@
+from __future__ import annotations
+
 import logging
 from os import environ
 from types import NoneType
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import discord
 from cryptography.fernet import Fernet
 from discord.ext import commands
 from jwt import decode
 
+if TYPE_CHECKING:
+    from cogs.anime.types import ScoreFormat
+
 from . import Context
 
-__all__ = ("argument_or_reference", "progress_bar", "try_get_ani_id", "plural", "encrypt", "decrypt")
+__all__ = ("argument_or_reference", "progress_bar", "try_get_ani_id", "plural", "encrypt", "decrypt", "get_score")
 
 logger = logging.Logger(__name__)
 
@@ -80,3 +85,36 @@ def decrypt(encrypted: bytes) -> str:
     fernet = Fernet(environ["FERNET_KEY"])
 
     return fernet.decrypt(encrypted).decode("utf-8")
+
+
+def get_score(score: float, format: ScoreFormat) -> str:
+    """Returns the score in the appropriate scoring system."""
+    match format:
+        case "POINT_10":
+            return f"{score // 10} / 10"
+
+        case "POINT_10_DECIMAL":
+            return f"{score / 10} / 10.0"
+
+        case "POINT_100":
+            return f"{score} / 100"
+
+        case "POINT_5":
+            new = (score * 5) // 100
+            return f"{new} / 5"
+
+        case "POINT_3":
+            if score == 0:
+                return "Unrated"
+
+            elif score <= 35:
+                return "\N{WHITE FROWNING FACE}\N{VARIATION SELECTOR-16}"
+
+            elif score <= 60:
+                return "\N{NEUTRAL FACE}"
+
+            else:
+                return "\N{SLIGHTLY SMILING FACE}"
+
+        case _:
+            return "N/A"  # Should never trigger

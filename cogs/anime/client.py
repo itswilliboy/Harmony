@@ -118,7 +118,7 @@ MEDIA_QUERY = """
 
     fragment listEntry on Media {
         mediaListEntry {
-            score(format: POINT_10_DECIMAL)
+            score(format: POINT_100)
             status
             progress
             progressVolumes
@@ -136,6 +136,14 @@ MEDIA_QUERY = """
             }
             updatedAt
             createdAt
+            user {
+                siteUrl
+                name
+                id
+                mediaListOptions {
+                    scoreFormat
+                }
+            }
         }
     }
 """
@@ -158,7 +166,7 @@ MEDIA_LIST_FRAGMENT = """
     fragment mediaListFragment on MediaListCollection {
         lists {
             entries {
-                score(format: POINT_10_DECIMAL)
+                score(format: POINT_100)
                 status
                 progress
                 progressVolumes
@@ -252,7 +260,7 @@ MEDIA_LIST_FRAGMENT = """
 
     fragment listEntry on Media {
         mediaListEntry {
-            score(format: POINT_10_DECIMAL)
+            score(format: POINT_100)
             status
             progress
             progressVolumes
@@ -271,14 +279,25 @@ MEDIA_LIST_FRAGMENT = """
             updatedAt
             createdAt
             repeat
+            user {
+                mediaListOptions {
+                    scoreFormat
+                }
+            }
         }
     }
 """
 
+# TODO:
 MEDIA_LIST_QUERY = """
     query ($userName: String, $userId: Int $type: MediaType) {{
         MediaListCollection(userName: $userName, userId: $userId, type: $type, sort: SCORE_DESC) {{
             ...mediaListFragment
+            user {{
+                mediaListOptions {{
+                    scoreFormat
+                }}
+            }}
         }}
     }}
 
@@ -304,7 +323,7 @@ FOLLOWING_QUERY = """
         Page(page: $page, perPage: $perPage) {
             mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
                 status
-                score(format: POINT_10_DECIMAL)
+                score(format: POINT_100)
                 progress
                 repeat
                 media {
@@ -315,6 +334,9 @@ FOLLOWING_QUERY = """
                     siteUrl
                     name
                     id
+                    mediaListOptions {
+                        scoreFormat
+                    }
                 }
             }
         }

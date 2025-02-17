@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional, Self
 
 import discord
 
-from utils import plural, progress_bar
+from utils import get_score, plural, progress_bar
 
 from .types import (
     Edge,
@@ -453,7 +453,7 @@ class Media:
                     else f" {plural(self.chapters or 0):chapter}"
                 )
                 + "**",
-                f"↪ Score: **{entry['score']} / 10**",
+                f"↪ Score: **{get_score(entry['score'], entry['user']['mediaListOptions']['scoreFormat'])}**",
             ]
 
             if entry["startedAt"] or entry["completedAt"]:
@@ -502,7 +502,7 @@ class Media:
 
                 desc = (
                     f"↪ **[{user_['name']}]({user_['siteUrl']}) - "
-                    f"{st['score']} / 10**\n"
+                    f"{get_score(st['score'], st['user']['mediaListOptions']['scoreFormat'])} **\n"
                     f"╰ `{self._get_wording(st['status']).title()}:` "
                     f"{st['progress']} / {total_progress} "
                     f"{f'{plural(self.chapters or 0):chapter}' if self.type == MediaType.MANGA else f'{plural(self.episodes or 0):episode}'}"

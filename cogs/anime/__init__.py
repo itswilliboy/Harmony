@@ -3,15 +3,14 @@ from __future__ import annotations
 import asyncio
 import datetime
 from collections import ChainMap
-from typing import Annotated, Any, Literal, Optional, cast
+from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional, cast
 
 import discord
 from discord.app_commands import allowed_contexts, allowed_installs, describe
 from discord.ext import commands
 
-from bot import Harmony
-from utils import BaseCog, Context, GenericError, PrimaryEmbed, SuccessEmbed, try_get_ani_id
-from utils.paginator import Page, Paginator
+from utils import BaseCog, Context, GenericError, Page, Paginator, PrimaryEmbed, SuccessEmbed
+from utils.utils import try_get_ani_id
 
 from .anime import Media, MinifiedMedia
 from .client import AniListClient
@@ -19,6 +18,9 @@ from .media_list import MediaList
 from .oauth import Favourites, User
 from .types import FavouriteType, ListActivity, MediaListStatus, MediaTitle, MediaType, Regex, _Media
 from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView, SearchView
+
+if TYPE_CHECKING:
+    from bot import Harmony
 
 
 def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False) -> None:
@@ -249,7 +251,6 @@ class AniList(BaseCog, name="Anime"):
         search: str,
         search_type: MediaType,
     ) -> None:
-
         media, user = await self.client.search_media(
             search,
             type=search_type,
@@ -259,12 +260,16 @@ class AniList(BaseCog, name="Anime"):
         if media is None:
             raise GenericError(f"Couldn't find any {search_type.value.lower()} with that name.")
 
-        if not isinstance(ctx.channel, discord.GroupChannel | discord.PartialMessageable) and media.is_adult and not (
-            isinstance(
-                ctx.channel,
-                discord.DMChannel,
+        if (
+            not isinstance(ctx.channel, discord.GroupChannel | discord.PartialMessageable)
+            and media.is_adult
+            and not (
+                isinstance(
+                    ctx.channel,
+                    discord.DMChannel,
+                )
+                or ctx.channel.is_nsfw()
             )
-            or ctx.channel.is_nsfw()
         ):
             raise GenericError(
                 (

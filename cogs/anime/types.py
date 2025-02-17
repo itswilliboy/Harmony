@@ -86,6 +86,14 @@ class ActivityType(StrEnum):
     MEDIA_LIST = "MEDIA_LIST"
 
 
+class ScoreFormat(StrEnum):
+    POINT_100 = "POINT_100"
+    POINT_10_DECIMAL = "POINT_10_DECIMAL"
+    POINT_10 = "POINT_10"
+    POINT_5 = "POINT_5"
+    POINT_3 = "POINT_3"
+
+
 class MediaTitle(TypedDict):
     """The official titles of the media in various languages."""
 
@@ -126,6 +134,13 @@ class Object(TypedDict):
     siteUrl: str
 
 
+class FollowingStatusUser(TypedDict):
+    siteUrl: str
+    name: str
+    id: int
+    mediaListOptions: MediaListOptions
+
+
 class TResponse(TypedDict):
     episodes: Optional[int]
     chapters: Optional[int]
@@ -136,7 +151,7 @@ class FollowingStatus(TypedDict):
     score: int
     progress: int
     media: TResponse
-    user: Object
+    user: FollowingStatusUser
 
 
 class AiringSchedule(TypedDict):
@@ -154,6 +169,7 @@ class MediaList(TypedDict):
     completedAt: FuzzyDate
     updatedAt: int
     createdAt: int
+    user: FollowingStatusUser
 
 
 class _Media(TypedDict):
@@ -192,6 +208,7 @@ class MediaListEntry(TypedDict):
     updatedAt: int  # timestamp
     createdAt: int  # timestamp
     media: _Media
+    user: FollowingStatusUser
 
 
 class _MediaList(TypedDict):
@@ -232,6 +249,10 @@ class SearchMedia(TypedDict):
     id: int
     type: MediaType
     title: MediaTitle
+
+
+class MediaListOptions(TypedDict):
+    scoreFormat: ScoreFormat
 
 
 class Regex:
