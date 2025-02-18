@@ -89,7 +89,7 @@ def decrypt(encrypted: bytes) -> str:
 
 def get_score(score: float, format: ScoreFormat) -> str:
     """Returns the score in the appropriate scoring system."""
-    if score == 0:
+    if int(score) == 0:
         return "Unrated"
 
     match format:
