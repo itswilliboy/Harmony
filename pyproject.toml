@@ -1,3 +1,27 @@
+[project]
+name = "Harmony"
+version = "1.0.0"
+description = "A multipurpose Discord bot with various features."
+readme = "README.md"
+dependencies = [
+    "asyncache>=0.3.1",
+    "asyncpg>=0.30.0",
+    "asyncpg-stubs>=0.30.0",
+    "cryptography>=44.0.1",
+    "cutlet>=0.5.0",
+    "discord-py[speed]>=2.5.0<2.6.0",
+    "jishaku",
+    "langcodes",
+    "pillow>=11.1.0",
+    "psutil>=7.0.0",
+    "pygit2==1.15.1",
+    "pyjwt>=2.10.1",
+    "types-cachetools>=5.5.0.20240820",
+    "types-pillow>=10.2.0.20240822",
+    "unidic-lite>=1.0.8",
+]
+requires-python = ">=3.12"
+
 [tool.ruff]
 line-length = 125
 target-version = "py312"
@@ -20,3 +44,6 @@ venv = ".venv"
 venvPath = "./"
 
 stubPath = "./typings"
+
+[tool.uv.sources]
+jishaku = { git = "https://github.com/scarletcafe/jishaku", rev = "49374cf" }
