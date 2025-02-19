@@ -1,19 +1,18 @@
-FROM python:3.12.3-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm
+COPY --from=ghcr.io/astral-sh/uv:0.6.1 /uv /uvx /bin/
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV UV_LINK_MODE=copy
 
+ADD . /app
 WORKDIR /app
 
 RUN apt-get -y update
 RUN apt-get -y install git
 
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install -U -r requirements.txt
-
-COPY . .
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen
 
 EXPOSE 8013
 
-ENTRYPOINT [ "python3", "." ]
+ENTRYPOINT [ "uv", "run", "." ]
