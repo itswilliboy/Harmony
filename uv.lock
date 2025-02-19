@@ -347,15 +347,11 @@ wheels = [
 
 [[package]]
 name = "discord-py"
-version = "2.5.0"
-source = { registry = "https://pypi.org/simple" }
+version = "2.6.0a5175+g47032349"
+source = { git = "https://github.com/Rapptz/discord.py?rev=4703234#470323493e7e3b790cb1f9d74bf45dd02df5f578" }
 dependencies = [
     { name = "aiohttp" },
     { name = "audioop-lts", marker = "python_full_version >= '3.13'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/59/7e/a778257411e86d834c94ea6d67abacca8f0efac62996882898d55e475748/discord_py-2.5.0.tar.gz", hash = "sha256:f6827909b87ea89bdb2cc49d475cb1fada2e73235a3e4568fc8b113660340c73", size = 1054589 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/d5/2f54c110f6707bf563957349f8ca9cdf883f420699cd61ec8b48018754bb/discord.py-2.5.0-py3-none-any.whl", hash = "sha256:8e1e3b3ff5a112a4ab3a615059a285238eea34edff6de8737db6e1f72ea05195", size = 1154805 },
 ]
 
 [package.optional-dependencies]
@@ -454,7 +450,7 @@ requires-dist = [
     { name = "asyncpg-stubs", specifier = ">=0.30.0" },
     { name = "cryptography", specifier = ">=44.0.1" },
     { name = "cutlet", specifier = ">=0.5.0" },
-    { name = "discord-py", extras = ["speed"], specifier = ">=2.5.0,<2.6.0" },
+    { name = "discord-py", extras = ["speed"], git = "https://github.com/Rapptz/discord.py?rev=4703234" },
     { name = "jishaku", git = "https://github.com/scarletcafe/jishaku?rev=49374cf" },
     { name = "langcodes" },
     { name = "pillow", specifier = ">=11.1.0" },

@@ -58,9 +58,10 @@ class PageModal(ui.Modal, title="Hop to page"):
     async def on_submit(self, interaction: Interaction) -> None:
         val = self.page.value
         if not val.isnumeric() or int(val) not in range(self.min, self.max + 1):
-            return await interaction.response.send_message(
+            await interaction.response.send_message(
                 f"The page number needs to be between {self.min} and {self.max}, not {val}.", ephemeral=True
             )
+            return
 
         await self.switch_page(interaction)
 
@@ -102,7 +103,8 @@ class Paginator(BaseView, Generic[T]):
         """Goes to a specific page."""
 
         if (page + 1) > self.count or page < 0:
-            return await interaction.response.send_message("a")
+            await interaction.response.send_message("Something went wrong when switching page, please try again", ephemeral=True)
+            return
 
         self.page = page
         self.current = self.items[page]
@@ -261,7 +263,8 @@ class DynamicPaginator(BaseView, Generic[T]):
 
     async def go_to(self, interaction: Interaction, page: int) -> None:
         if (page + 1) > self.count or page < 0:
-            return await interaction.response.send_message("a")
+            await interaction.response.send_message("Something went wrong when switching page, please try again", ephemeral=True)
+            return
 
         self.page = page
         page += 1
