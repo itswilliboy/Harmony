@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import random
 from collections import ChainMap
 from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional, cast
 
@@ -16,7 +17,7 @@ from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import Favourites, User
-from .types import FavouriteType, ListActivity, MediaListStatus, MediaTitle, MediaType, Regex, _Media
+from .types import FavouriteType, ListActivity, MediaListEntry, MediaListStatus, MediaTitle, MediaType, Regex, _Media
 from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView, SearchView
 
 if TYPE_CHECKING:
@@ -148,8 +149,14 @@ async def _default(ctx: Context) -> Optional[User]:
     return await AniUser().convert(ctx, str(ctx.author.id))
 
 
+class AnilistRandomFlags(commands.FlagConverter):
+    mediatype: MediaType = MediaType.ANIME
+    status: MediaListStatus = MediaListStatus.PLANNING
+
+
 aniuser = commands.parameter(default=_default, converter=AniUser, displayed_name="AniList user")
 AniUserConv = Annotated[User, AniUser]
+anilistrandomflagconverter = commands.parameter(converter=AnilistRandomFlags)
 
 
 class AniList(BaseCog, name="Anime"):
@@ -565,6 +572,31 @@ class AniList(BaseCog, name="Anime"):
             embeds.append(embed)
 
         await Paginator(embeds, ctx.author).start(ctx)
+
+    @anilist.command()
+    async def random(
+        self, ctx: Context, user: AniUserConv = aniuser, query_type: AnilistRandomFlags = anilistrandomflagconverter
+    ):
+        collection = await self.client.fetch_media_collection(user.id, type=query_type.mediatype)
+
+        medialistentries: list[MediaListEntry] = []
+        for medialist in collection["lists"]:
+            medialistentries.extend(medialist["entries"])
+
+        random_media = random.choice([entry for entry in medialistentries if entry["status"] == query_type.status])
+
+        following_status = (
+            await self.client.fetch_following_status(
+                random_media["media"]["id"],
+                ctx.author.id,
+            )
+            or {}
+        )
+        print(following_status)
+
+        media = Media.from_json(dict(random_media["media"]), following_status=following_status)
+
+        await ctx.reply(embed=media.embed, view=EmbedRelationView(self, media, user, ctx.author))
 
 
 async def setup(bot: Harmony) -> None:
