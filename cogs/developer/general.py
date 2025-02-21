@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import datetime
 import importlib
 from contextlib import redirect_stdout
 from inspect import getsource
 from io import BytesIO, StringIO
 from traceback import format_exception
-from typing import TYPE_CHECKING, Annotated, Literal, Optional
+from typing import TYPE_CHECKING, Annotated, Literal, Optional, Self
 
 import discord
 import jishaku
@@ -14,12 +15,20 @@ import jishaku.repl
 from discord.ext import commands
 
 from config import DBL, TOP_GG
-from utils import BaseCog, GenericError
+from utils import BaseCog, BaseView, GenericError, encrypt
 
 if TYPE_CHECKING:
     from bot import Harmony
     from utils import Context
 
+
+class TokenModal(discord.ui.Modal, title="Developer Token Insertion"):
+    token = discord.ui.TextInput[Self](label="Token", style=discord.TextStyle.paragraph)
+
+
+    async def on_submit(self, interaction: discord.Interaction[Harmony]):
+        await interaction.response.send_message("Continuing...", ephemeral=True)
+        self.stop()
 
 class General(BaseCog):
     def __init__(self, bot: Harmony) -> None:
@@ -167,3 +176,29 @@ class General(BaseCog):
                 raise Exception(await resp.text())
 
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+
+    @commands.command()
+    async def insert_anilist_token(self, ctx: Context, user_id: int):
+        """Inserts an AniList tokens into the database for testing purposes."""
+        modal = TokenModal()
+
+        button = discord.ui.Button[BaseView](label="Enter Token")
+        async def callback(interaction: discord.Interaction[Harmony]):
+            await interaction.response.send_modal(modal)
+
+        button.callback = callback
+
+        view = BaseView(ctx.author)
+        view.add_item(button)
+
+        await ctx.send(view=view)
+        await modal.wait()
+
+        crypted = encrypt(modal.token.value)
+        year_from_now = datetime.datetime.now() + datetime.timedelta(weeks=52)
+        query = """
+            INSERT INTO anilist_tokens_new (user_id, token, refresh, expiry)
+                VALUES ($1, $2, $3, $4)
+        """
+        await self.bot.pool.execute(query, user_id, crypted, "", year_from_now)
+        await ctx.send("Successful.")
