@@ -150,13 +150,13 @@ async def _default(ctx: Context) -> Optional[User]:
 
 
 class AnilistRandomFlags(commands.FlagConverter):
-    mediatype: MediaType = MediaType.ANIME
+    type: MediaType = MediaType.ANIME
     status: MediaListStatus = MediaListStatus.PLANNING
 
 
 aniuser = commands.parameter(default=_default, converter=AniUser, displayed_name="AniList user")
 AniUserConv = Annotated[User, AniUser]
-anilistrandomflagconverter = commands.parameter(converter=AnilistRandomFlags)
+anilist_random_flag_converter = commands.parameter(converter=AnilistRandomFlags)
 
 
 class AniList(BaseCog, name="Anime"):
@@ -573,17 +573,17 @@ class AniList(BaseCog, name="Anime"):
 
         await Paginator(embeds, ctx.author).start(ctx)
 
-    @anilist.command()
+    @anilist.command(aliases=["ra"])
     async def random(
-        self, ctx: Context, user: AniUserConv = aniuser, query_type: AnilistRandomFlags = anilistrandomflagconverter
+        self, ctx: Context, user: AniUserConv = aniuser, query_type: AnilistRandomFlags = anilist_random_flag_converter
     ):
-        collection = await self.client.fetch_media_collection(user.id, type=query_type.mediatype)
+        collection = await self.client.fetch_media_collection(user.id, type=query_type.type)
 
-        medialistentries: list[MediaListEntry] = []
+        media_list_entries: list[MediaListEntry] = []
         for medialist in collection["lists"]:
-            medialistentries.extend(medialist["entries"])
+            media_list_entries.extend(medialist["entries"])
 
-        random_media = random.choice([entry for entry in medialistentries if entry["status"] == query_type.status])
+        random_media = random.choice([entry for entry in media_list_entries if entry["status"] == query_type.status])
 
         following_status = (
             await self.client.fetch_following_status(
@@ -592,7 +592,6 @@ class AniList(BaseCog, name="Anime"):
             )
             or {}
         )
-        print(following_status)
 
         media = Media.from_json(dict(random_media["media"]), following_status=following_status)
 
