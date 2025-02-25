@@ -22,6 +22,7 @@ ANILIST_URL = (
     "&redirect_uri=https://anilist.co/api/v2/oauth/pin"
     "&response_type=code"
 )
+ANILIST_REDIRECT = getenv("ANILIST_REDIRECT")
 
 assert TOKEN
 assert DEFAULT_PREFIX

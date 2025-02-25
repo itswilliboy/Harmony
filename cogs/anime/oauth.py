@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Optional, Self, Typ
 
 from aiohttp import ContentTypeError
 
-from config import ANILIST_ID, ANILIST_SECRET
+from config import ANILIST_ID, ANILIST_REDIRECT, ANILIST_SECRET
 from utils import GenericError, try_get_ani_id
 
 from .types import FavouriteType, MediaListOptions
@@ -282,7 +282,7 @@ class OAuth:
             "grant_type": "authorization_code",
             "client_id": ANILIST_ID,
             "client_secret": ANILIST_SECRET,
-            "redirect_uri": "https://harmony.itswilli.dev/authorise",
+            "redirect_uri": ANILIST_REDIRECT,
             "code": auth_code,
         }
 

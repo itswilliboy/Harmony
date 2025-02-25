@@ -103,7 +103,9 @@ class Paginator(BaseView, Generic[T]):
         """Goes to a specific page."""
 
         if (page + 1) > self.count or page < 0:
-            await interaction.response.send_message("Something went wrong when switching page, please try again", ephemeral=True)
+            await interaction.response.send_message(
+                "Something went wrong when switching page, please try again", ephemeral=True
+            )
             return
 
         self.page = page
@@ -263,7 +265,9 @@ class DynamicPaginator(BaseView, Generic[T]):
 
     async def go_to(self, interaction: Interaction, page: int) -> None:
         if (page + 1) > self.count or page < 0:
-            await interaction.response.send_message("Something went wrong when switching page, please try again", ephemeral=True)
+            await interaction.response.send_message(
+                "Something went wrong when switching page, please try again", ephemeral=True
+            )
             return
 
         self.page = page
