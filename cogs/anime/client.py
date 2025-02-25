@@ -245,6 +245,7 @@ MEDIA_LIST_FRAGMENT = """
                     ...listEntry
                     nextAiringEpisode {
                     episode
+                    airingAt
                     }
                 }
             }

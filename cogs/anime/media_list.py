@@ -120,19 +120,24 @@ class MediaList(Paginator[discord.Embed]):
                 url = f"https://anilist.co/{(media['type']).lower()}/{media['id']}"
 
                 backlog_text = ""
-                if (
-                    (next_episode := media["nextAiringEpisode"])
-                    and next_episode
-                    and entry["progress"]
-                    and (entry["status"] in (MediaListStatus.CURRENT, MediaListStatus.REPEATING))
-                ):
+                if (next_episode := media["nextAiringEpisode"]) and next_episode and entry["progress"]:
                     current_ep = next_episode["episode"] - 1
                     episode_backlog = current_ep - entry["progress"]
+
                     plural = "s" if episode_backlog > 1 else ""
-                    backlog_text = f"`({episode_backlog} episode{plural} behind)`" if episode_backlog else ""
+
+                    backlog_text = (
+                        (f"`({episode_backlog} episode{plural} behind)`")
+                        if episode_backlog and (entry["status"] in (MediaListStatus.CURRENT, MediaListStatus.REPEATING))
+                        else ""
+                    )
+
+                    backlog_text += (
+                        f"\n-# ╰ Next episode <t:{next_episode['airingAt']}:R> (<t:{next_episode['airingAt']}:f>)"
+                    )
 
                 wording = "Rewatches" if format == MediaType.ANIME else "Rereads"
-                print("entry", entry)
+
                 info = field(
                     f"### [{title}]({url})",
                     f"↪ Score: **{get_score(entry['score'], score_format)}**",
