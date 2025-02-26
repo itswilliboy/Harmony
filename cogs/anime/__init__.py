@@ -114,6 +114,10 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
             value = f"Dropped {linked}"
             add_item(value, timestamp)
 
+        case "rewatched":
+            value = f"Rewatched {linked}"
+            add_item(value, timestamp)
+
         case _:
             print(status)
             add_item(f"{status.title()} | {linked}", timestamp)
