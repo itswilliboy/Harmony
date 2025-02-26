@@ -156,6 +156,7 @@ class FollowingStatus(TypedDict):
 
 class AiringSchedule(TypedDict):
     episode: int
+    airingAt: int
 
 
 class MediaList(TypedDict):
