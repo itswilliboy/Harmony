@@ -151,9 +151,11 @@ MEDIA_QUERY = """
 SEARCH_QUERY = """
     query ($search: String) {
         Page(perPage: 25) {
-            media (search: $search, sort: POPULARITY_DESC) {
+            media(search: $search, sort: POPULARITY_DESC) {
                 id
                 type
+                format
+                seasonYear
                 title {
                     romaji
                 }

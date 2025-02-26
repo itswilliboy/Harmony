@@ -345,7 +345,13 @@ class SearchSelect(ui.Select["SearchView"]):
         author: Optional[discord.abc.Snowflake] = None,
     ) -> None:
         options = [
-            discord.SelectOption(label=m["title"]["romaji"][:100], description=m["type"].title(), value=str(m["id"]))
+            discord.SelectOption(
+                label=m["title"]["romaji"][:100],
+                description=f"{m['type'].title()} | {m['format'].title()} | {m['seasonYear']}",  # TODO: Normalise this with a function.
+                value=str(
+                    m["id"],
+                ),
+            )
             for m in media
         ]
         super().__init__(options=options, min_values=1, max_values=1)

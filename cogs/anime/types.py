@@ -6,6 +6,8 @@ from typing import Any, NamedTuple, Optional, TypedDict
 
 
 class MediaType(StrEnum):
+    """The type of media."""
+
     ANIME = "ANIME"
     MANGA = "MANGA"
 
@@ -55,6 +57,8 @@ class MediaRelation(StrEnum):
 
 
 class MediaSeason(StrEnum):
+    """The releasing season of the media."""
+
     WINTER = "WINTER"
     SPRING = "SPRING"
     SUMMER = "SUMMER"
@@ -62,6 +66,8 @@ class MediaSeason(StrEnum):
 
 
 class MediaListStatus(StrEnum):
+    """The status of the media on the user's list."""
+
     CURRENT = "CURRENT"
     PLANNING = "PLANNING"
     COMPLETED = "COMPLETED"
@@ -71,6 +77,8 @@ class MediaListStatus(StrEnum):
 
 
 class FavouriteType(StrEnum):
+    """The type of favourite."""
+
     ANIME = "ANIME"
     MANGA = "MANGA"
     CHARACTERS = "CHARACTERS"
@@ -79,6 +87,8 @@ class FavouriteType(StrEnum):
 
 
 class ActivityType(StrEnum):
+    """The type of activity."""
+
     TEXT = "TEXT"
     ANIME_LIST = "ANIME_LIST"
     MANGA_LIST = "MANGA_LIST"
@@ -87,6 +97,8 @@ class ActivityType(StrEnum):
 
 
 class ScoreFormat(StrEnum):
+    """The user's preferred scoring system."""
+
     POINT_100 = "POINT_100"
     POINT_10_DECIMAL = "POINT_10_DECIMAL"
     POINT_10 = "POINT_10"
@@ -120,6 +132,8 @@ class MediaCoverImage(TypedDict):
 
 
 class Edge(NamedTuple):
+    """A media connection edge."""
+
     id: int
     title: str
     type: MediaRelation
@@ -160,6 +174,8 @@ class AiringSchedule(TypedDict):
 
 
 class MediaList(TypedDict):
+    """A user's media list."""
+
     score: float
     status: MediaListStatus
     progress: int
@@ -174,6 +190,8 @@ class MediaList(TypedDict):
 
 
 class _Media(TypedDict):
+    """A media (anime or manga)."""
+
     id: int
     idMal: Optional[int]
     type: MediaType
@@ -247,13 +265,19 @@ class ListActivity(TypedDict):
 
 
 class SearchMedia(TypedDict):
+    """A dumbed down versionb of Media used for searching."""
+
     id: int
     type: MediaType
+    format: MediaFormat
+    seasonYear: int
     title: MediaTitle
     isAdult: bool
 
 
 class MediaListOptions(TypedDict):
+    """The user's options for their media list."""
+
     scoreFormat: ScoreFormat
 
 
