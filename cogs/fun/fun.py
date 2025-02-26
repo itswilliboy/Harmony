@@ -86,14 +86,19 @@ class Fun(BaseCog):
 
     @commands.hybrid_command()
     async def cat(self, ctx: Context):
-        """Sends a random picture of a cat"""
+        """Sends a random picture of a cat."""
         await ctx.typing()
         async with ctx.session.get("https://cataas.com/cat?json=true") as resp:
             json = await resp.json()
 
-        url = f"https://cataas.com/cat/{json['_id']}"
+        url = f"https://cataas.com/cat/{json['id']}"
         embed = PrimaryEmbed().set_image(url=url)
         await ctx.send(embed=embed)
+
+    @commands.hybrid_command()
+    async def http(self, ctx: Context, code: int = 418):
+        """Sends a cat image from http.cat for an HTTP status code."""
+        await ctx.send(f"https://http.cat/{code}")
 
     @commands.hybrid_command()
     async def meme(self, ctx: Context):
