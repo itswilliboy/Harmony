@@ -46,5 +46,4 @@ venvPath = "./"
 stubPath = "./typings"
 
 [tool.uv.sources]
-discord-py = { git = "https://github.com/Rapptz/discord.py", rev = "4703234" }
 jishaku = { git = "https://github.com/scarletcafe/jishaku", rev = "49374cf" }
