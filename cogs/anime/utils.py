@@ -1,9 +1,14 @@
+from __future__ import annotations
+
 import datetime
+from typing import TYPE_CHECKING
 
 import discord
 
-from .oauth import Favourites, User
-from .types import FavouriteType, ListActivity
+if TYPE_CHECKING:
+    from .anime import Media, MinifiedMedia
+    from .oauth import Favourites, User
+    from .types import FavouriteType, ListActivity
 
 
 def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False) -> None:
@@ -105,3 +110,10 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
             add_item(f"{status.title()} | {linked}", timestamp)
 
     return value, timestamp
+
+
+def get_title(media: Media | MinifiedMedia) -> str:
+    """Gets the title of a media (english > romaji > native)."""
+    return (
+        media.title["english"] or media.title["romaji"] or media.title["native"] or "<No Title>"
+    )  # Title should never not exist

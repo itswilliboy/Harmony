@@ -18,12 +18,13 @@ from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import User
-from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaTitle, MediaType, Regex, _Media
+from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaT, MediaTitle, MediaType, Regex
 from .utils import get_activity_message, get_favourites
 from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView, SearchView
 
 if TYPE_CHECKING:
     from bot import Harmony
+
 
 class AniUser(commands.UserConverter):
     async def convert(self, ctx: Context, argument: str) -> Optional[User]:
@@ -368,7 +369,6 @@ class AniList(BaseCog, name="Anime"):
         finally:
             await ctx.send("\N{WHITE HEAVY CHECK MARK}", ephemeral=True)
 
-
     @anilist.command()
     async def logout(self, ctx: Context):
         """Logs you out."""
@@ -414,7 +414,7 @@ class AniList(BaseCog, name="Anime"):
             user_id=ctx.author.id,
         )
 
-        entries: list[dict[int, _Media]] = []
+        entries: list[dict[int, MediaT]] = []
 
         for item in cols.values():
             entries.append({i["media"]["id"]: i["media"] for i in item["lists"][0]["entries"]})

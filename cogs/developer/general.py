@@ -11,6 +11,7 @@ import discord
 import jishaku
 import jishaku.codeblocks
 import jishaku.repl
+from asyncpg import UniqueViolationError
 from discord.ext import commands
 
 from cogs.anime import AniList
@@ -178,7 +179,7 @@ class General(BaseCog):
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
     @commands.command()
-    async def insert_anilist_token(self, ctx: Context, user_id: int):
+    async def insert_anilist_token(self, ctx: Context, user: discord.User = commands.Author):
         """Inserts an AniList tokens into the database for testing purposes."""
         modal = TokenModal()
 
@@ -199,7 +200,7 @@ class General(BaseCog):
             "&response_type=code"
         )
 
-        await ctx.send(url, view=view, suppress_embeds=True)
+        message = await ctx.send(url, view=view, suppress_embeds=True)
         await modal.wait()
 
         code = modal.token.value
@@ -215,5 +216,10 @@ class General(BaseCog):
             INSERT INTO anilist_tokens_new (user_id, token, refresh, expiry)
                 VALUES ($1, $2, $3, $4)
         """
-        await self.bot.pool.execute(query, user_id, crypted, token.refresh, token.expiry)
-        await ctx.send("Successful.")
+        try:
+            await self.bot.pool.execute(query, user.id, crypted, token.refresh, token.expiry)
+
+        except UniqueViolationError:
+            raise GenericError("User is already logged in.") from None
+
+        await message.edit(content="Successful.", view=None)

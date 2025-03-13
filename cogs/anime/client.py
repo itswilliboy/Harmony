@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 class InvalidToken(Exception): ...
 
+
 class NotFound(Exception): ...
 
 
@@ -394,6 +395,7 @@ ACTIVITY_QUERY = """
     }
 """
 
+
 class MediaReturn[T](NamedTuple):
     media: Optional[T]
     user: Optional[User]
@@ -401,7 +403,6 @@ class MediaReturn[T](NamedTuple):
     @classmethod
     def none(cls) -> Self:
         return cls(None, None)
-
 
 
 class AniListClient:
@@ -413,9 +414,7 @@ class AniListClient:
         self.user_cache: TTLCache[str | int, User] = TTLCache(maxsize=100, ttl=600)
         self.random_store: TTLCache[int, str] = TTLCache(maxsize=100, ttl=300)
 
-    async def search_media(
-        self, search: str, *, type: MediaType, user_id: Optional[int] = None
-    ) -> MediaReturn[Media]:
+    async def search_media(self, search: str, *, type: MediaType, user_id: Optional[int] = None) -> MediaReturn[Media]:
         """Searches and returns a media via a search query."""
 
         variables = {"search": search, "type": type}
