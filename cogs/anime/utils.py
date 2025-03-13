@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 import discord
 
 if TYPE_CHECKING:
-    from .anime import Media, MinifiedMedia
     from .oauth import Favourites, User
-    from .types import FavouriteType, ListActivity
+    from .types import FavouriteType, ListActivity, MediaTitle
 
 
 def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False) -> None:
@@ -54,8 +53,7 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
     media = act["media"]
     timestamp = datetime.datetime.fromtimestamp(act["createdAt"])
 
-    t = media["title"]
-    title = t["english"] or t["romaji"] or t["native"]
+    title = get_title(media["title"])
     linked = f"**[{title}]({media['siteUrl']})**"
 
     status = act["status"]
@@ -112,8 +110,8 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
     return value, timestamp
 
 
-def get_title(media: Media | MinifiedMedia) -> str:
+def get_title(title: MediaTitle) -> str:
     """Gets the title of a media (english > romaji > native)."""
     return (
-        media.title["english"] or media.title["romaji"] or media.title["native"] or "<No Title>"
+        title["english"] or title["romaji"] or title["native"] or "<No Title>"
     )  # Title should never not exist

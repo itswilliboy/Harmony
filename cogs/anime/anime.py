@@ -103,7 +103,7 @@ class MinifiedMedia:
     @property
     def name(self) -> str:
         """Returns the name of the media."""
-        title = get_title(self)
+        title = get_title(self.title)
 
         if self.is_adult:
             title = f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {title}"
@@ -207,7 +207,7 @@ class Media:
         return f"<Media id={self.id} name='{self!s}' type={self.type}>"
 
     def __str__(self) -> str:
-        return get_title(self)
+        return get_title(self.title)
 
     @classmethod
     def from_json(cls, data: dict[str, Any], following_status: dict[str, Any]) -> Self:

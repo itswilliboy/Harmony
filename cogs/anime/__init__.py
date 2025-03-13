@@ -18,8 +18,8 @@ from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import User
-from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaT, MediaTitle, MediaType, Regex
-from .utils import get_activity_message, get_favourites
+from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaT, MediaType, Regex
+from .utils import get_activity_message, get_favourites, get_title
 from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView, SearchView
 
 if TYPE_CHECKING:
@@ -437,15 +437,12 @@ class AniList(BaseCog, name="Anime"):
 
             pages.append(Page(embeds=embeds))
 
-        def get_title(title: MediaTitle) -> str:
-            return title["english"] or title["romaji"] or title["native"] or "<No title>"
-
         pages.insert(
             0,
             Page(
                 embed=PrimaryEmbed(
                     title=f"Common Media: {status.upper()}",
-                    description=f"2. {f'{nl}2. '.join([get_title(i['title']) for i in to_list])}",
+                    description=f"2. {f'{nl}2. '.join([get_title(i["title"]) for i in to_list])}",
                 ).set_author(name=" - ".join([str(u) for u in users]))
             ),
         )
