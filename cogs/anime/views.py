@@ -23,12 +23,6 @@ if TYPE_CHECKING:
 
 async def callback(cog: AniList, id: int, interaction: discord.Interaction, user: Optional[User] = None):
     media = await cog.client.fetch_media(id, user_id=interaction.user.id)
-
-    if media is None:
-        return await interaction.response.send_message(
-            "Something went wrong when trying to fetch that media", ephemeral=True
-        )
-
     view = EmbedRelationView(cog, media, user, author=interaction.user)
 
     await interaction.response.edit_message(embed=media.embed, view=view)
