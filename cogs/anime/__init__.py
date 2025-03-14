@@ -18,7 +18,7 @@ from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import User
-from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaType, Regex, MediaT
+from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaT, MediaType, Regex
 from .utils import get_activity_message, get_favourites, get_title
 from .views import Delete, EmbedRelationView, LoginView, SearchView
 
@@ -438,7 +438,7 @@ class AniList(BaseCog, name="Anime"):
             Page(
                 embed=PrimaryEmbed(
                     title=f"Common Media: {status.upper()}",
-                    description=f"2. {f'{nl}2. '.join([get_title(i["title"]) for i in to_list])}",
+                    description=f"2. {f'{nl}2. '.join([get_title(i['title']) for i in to_list])}",
                 ).set_author(name=" - ".join([str(u) for u in users]))
             ),
         )
