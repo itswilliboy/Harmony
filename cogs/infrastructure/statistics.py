@@ -18,7 +18,7 @@ class Statistics(BaseCog):
 
     @commands.Cog.listener()
     async def on_command_completion(self, ctx: Context):
-        if cast(Optional[discord.Guild], ctx.guild) is None:
+        if cast("Optional[discord.Guild]", ctx.guild) is None:
             return
 
         await ctx.pool.execute(

@@ -13,7 +13,7 @@ from jwt import decode
 if TYPE_CHECKING:
     from cogs.anime.types import ScoreFormat
 
-from . import Context
+    from . import Context
 
 __all__ = ("argument_or_reference", "progress_bar", "try_get_ani_id", "plural", "encrypt", "decrypt", "get_score")
 
@@ -21,9 +21,8 @@ logger = logging.Logger(__name__)
 
 
 def _check(ctx: Context) -> str:
-    if ref := ctx.message.reference:
-        if not isinstance(ref.resolved, (discord.DeletedReferencedMessage, NoneType)):
-            return ref.resolved.content
+    if (ref := ctx.message.reference) and not isinstance(ref.resolved, (discord.DeletedReferencedMessage, NoneType)):
+        return ref.resolved.content
 
     return ""
 
@@ -60,7 +59,7 @@ async def try_get_ani_id(pool: Any, value: str | int) -> Optional[int]:
     return int(uid)
 
 
-class plural:
+class plural:  # noqa: N801
     def __init__(self, value: int) -> None:
         self.value = value
 
@@ -110,11 +109,10 @@ def get_score(score: float, format: ScoreFormat) -> str:
             if score <= 35:
                 return "\N{WHITE FROWNING FACE}\N{VARIATION SELECTOR-16}"
 
-            elif score <= 60:
+            if score <= 60:
                 return "\N{NEUTRAL FACE}"
 
-            else:
-                return "\N{SLIGHTLY SMILING FACE}"
+            return "\N{SLIGHTLY SMILING FACE}"
 
         case _:
             return "N/A"  # Should never trigger
