@@ -49,9 +49,6 @@ def get_favourites(favourites: list[Favourites], type: FavouriteType) -> list[tu
     if favs is None:
         return []
 
-    # to_return: list[tuple[str, str]] = []
-    # for fav in favs["items"]:
-    #     to_return.append((fav.name, fav.site_url))
     return [(fav.name, fav.site_url) for fav in favs["items"]]
 
 def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime]:
