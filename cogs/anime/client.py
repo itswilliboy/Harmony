@@ -638,9 +638,7 @@ class AniListClient:
                 except (ContentTypeError, JSONDecodeError) as exc:
                     raise ApiExecption() from exc
 
-                data = json["data"]
-
-                return data
+                return json["data"]
             return {}
 
     async def fetch_user_activity(self, user_id: int, *, type: ActivityType = ActivityType.MEDIA_LIST) -> list[ListActivity]:

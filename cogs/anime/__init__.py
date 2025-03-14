@@ -18,9 +18,9 @@ from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import User
-from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaT, MediaType, Regex
+from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaType, Regex, MediaT
 from .utils import get_activity_message, get_favourites, get_title
-from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView, SearchView
+from .views import Delete, EmbedRelationView, LoginView, SearchView
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -37,7 +37,7 @@ class AniUser(commands.UserConverter):
         except commands.BadArgument:
             pass
 
-        cog = cast(AniList, ctx.bot.cogs["anime"])
+        cog = cast("AniList", ctx.bot.cogs["anime"])
         if u := cog.user_cache.get(arg or argument):
             return u
 
@@ -219,23 +219,22 @@ class AniList(BaseCog, name="Anime"):
                     message=f"You need to pass an AniList username or log in with {cp}anilist login to view yourself."
                 )
 
-            elif token.expiry < datetime.datetime.now():
+            if token.expiry < datetime.datetime.now():
                 raise GenericError(
                     f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login.",
                 )
 
             return await self.client.oauth.get_current_user(token.token)
 
-        else:
-            if isinstance(user, str) and user.isnumeric():
-                user = int(user)
+        if isinstance(user, str) and user.isnumeric():
+            user = int(user)
 
-            user_ = await self.client.oauth.get_user(user)
+        user_ = await self.client.oauth.get_user(user)
 
-            if user_ is None:
-                raise GenericError("Couldn't find any user with that name.")
+        if user_ is None:
+            raise GenericError("Couldn't find any user with that name.")
 
-            return user_
+        return user_
 
     @commands.hybrid_command(hidden=True)
     async def optout(self, ctx: Context):
@@ -322,9 +321,9 @@ class AniList(BaseCog, name="Anime"):
             embed.add_field(name="Recent Activity", value="\n".join(fmtd), inline=False)
 
         view: Optional[discord.ui.View] = None
-        id = await try_get_ani_id(ctx.pool, ctx.author.id)
-        if id and id == user.id and False:  # TODO: Implement.
-            view = ProfileManagementView(self, user)
+        # id = await try_get_ani_id(ctx.pool, ctx.author.id)
+        # if id and id == user.id and False:  # TODO: Implement.
+        #     view = ProfileManagementView(self, user)
 
         await ctx.send(embed=embed, view=view or discord.utils.MISSING)
 
@@ -403,21 +402,18 @@ class AniList(BaseCog, name="Anime"):
     ) -> None:
         """Compares up to five different peoples' anime lists with a specific status."""
         users: list[AniUserConv] = [user1, user2]
-        for u in (user3, user4, user5):
-            if u:
-                users.append(u)
+        users.extend([u for u in (user3, user4, user5) if u])
 
         cols = await self.client.fetch_media_collections(
-            *[u.id for u in users],
+            *(u.id for u in users),
             type=MediaType.ANIME,
             status=MediaListStatus[status.upper()],
             user_id=ctx.author.id,
         )
 
-        entries: list[dict[int, MediaT]] = []
-
-        for item in cols.values():
-            entries.append({i["media"]["id"]: i["media"] for i in item["lists"][0]["entries"]})
+        entries: list[dict[int, MediaT]] = [
+            {i["media"]["id"]: i["media"] for i in item["lists"][0]["entries"]} for item in cols.values()
+        ]
 
         total = ChainMap(*entries)
         shared = set(total).intersection(*entries)

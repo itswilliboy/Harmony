@@ -7,11 +7,11 @@ import discord
 from discord.ext import commands
 
 from cogs.anime.client import InvalidToken
-from cogs.infrastructure.reporting import Reporting
 from utils import BaseCog, ErrorEmbed, GenericError, get_command_signature
 
 if TYPE_CHECKING:
     from bot import Harmony
+    from cogs.infrastructure.reporting import Reporting
     from utils import Context
 
 
@@ -34,7 +34,7 @@ class ErrorHandler(BaseCog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx: Context, error: Exception):
         if ctx.is_blacklisted():
-            return
+            return None
 
         command = ctx.command
 
@@ -43,7 +43,7 @@ class ErrorHandler(BaseCog):
         if isinstance(error, commands.CommandNotFound):
             return await ctx.message.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
 
-        elif isinstance(error, commands.MissingPermissions):
+        if isinstance(error, commands.MissingPermissions):
             missing = error.missing_permissions
             to_list = [f"`{i.replace('_', ' ').title()}`" for i in missing]
             nl = "\n"
@@ -115,7 +115,7 @@ class ErrorHandler(BaseCog):
             embed = ErrorEmbed(description="This command can only be used inside of a server.")
 
         elif isinstance(error, commands.CheckFailure) and str(error) == "The global check once functions failed.":
-            return
+            return None
 
         elif isinstance(error, commands.RangeError):
             embed = ErrorEmbed(
@@ -158,14 +158,13 @@ class ErrorHandler(BaseCog):
             return await ctx.send(embed=embed, view=view)
 
         else:
-            s = cast(Reporting, self)  # :/
+            s = cast("Reporting", self)  # :/
             id = await s.create_report(ctx, error)
 
             embed = ErrorEmbed(description="An unknown error occurred").set_footer(text=f"ID: {id}")
             self.bot.log.error("In '%s' (Logged with ID %s): %s", ctx.command, id, error, exc_info=error)
 
-        if not embed.footer:
-            if isinstance(error, GenericError) and error.footer:
-                embed.set_footer(text=f"If this was unexpected, please contact the developer ({ctx.clean_prefix}support).")
+        if not embed.footer and isinstance(error, GenericError) and error.footer:
+            embed.set_footer(text=f"If this was unexpected, please contact the developer ({ctx.clean_prefix}support).")
 
         await ctx.send(embed=embed)

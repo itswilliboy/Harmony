@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional, cast, overload
 
-import discord
-from aiohttp import ClientSession
-from asyncpg import Pool
 from discord.ext import commands
 
 from config import DEFAULT_PREFIX
 
 if TYPE_CHECKING:
-    from asyncpg import Record
+    import discord
+    from aiohttp import ClientSession
+    from asyncpg import Pool, Record
 
     from bot import Harmony  # noqa: F401
 
@@ -35,8 +34,7 @@ class Context(commands.Context["Harmony"]):
 
             return clean
 
-        else:
-            return DEFAULT_PREFIX
+        return DEFAULT_PREFIX
 
     @property
     def session(self) -> ClientSession:
@@ -55,10 +53,9 @@ class Context(commands.Context["Harmony"]):
 
         blacklist = self.bot.blacklist
 
-        guild = cast(Optional[discord.Guild], self.guild)
-        if guild is not None:
-            if guild.id in self.bot.guild_blacklist:
-                return True
+        guild = cast("Optional[discord.Guild]", self.guild)
+        if guild is not None and guild.id in self.bot.guild_blacklist:
+            return True
 
         if self.author.id in blacklist:
             item = blacklist[self.author.id]
@@ -66,9 +63,8 @@ class Context(commands.Context["Harmony"]):
             if item.is_global:
                 return True
 
-            if guild is not None:
-                if self.guild.id in item.guild_ids:
-                    return True
+            if guild is not None and self.guild.id in item.guild_ids:
+                return True
 
         return False
 

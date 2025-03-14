@@ -90,7 +90,7 @@ class MediaList(Paginator[discord.Embed]):
         await interaction.response.edit_message(embed=self.current, view=self)
 
     def embeds(self, type: MediaListStatus) -> list[discord.Embed]:
-        score_format = cast(ScoreFormat, self.collection["user"]["mediaListOptions"]["scoreFormat"])  # type: ignore
+        score_format = cast("ScoreFormat", self.collection["user"]["mediaListOptions"]["scoreFormat"])  # type: ignore
 
         try:
             list_ = [i for i in self.collection["lists"] if i["status"] == type][0]

@@ -283,8 +283,7 @@ class Media:
     def parse_following_statuses(data: dict[str, Any]) -> list[FollowingStatus]:
         following_statuses: list[FollowingStatus] = []
         following_users = data.get("data", {}).get("Page", {}).get("mediaList", [])
-        for user in following_users:
-            following_statuses.append(FollowingStatus(user))
+        following_statuses.extend([FollowingStatus(user) for user in following_users])
 
         return following_statuses
 
@@ -497,9 +496,8 @@ class Media:
             for st in status:
                 user_: Any = st["user"]
 
-                if user is not None:
-                    if user_["id"] == user.id:
-                        continue
+                if user is not None and user_["id"] == user.id:
+                    continue
 
                 total_progress = st["media"]["episodes"] or st["media"]["chapters"]
 

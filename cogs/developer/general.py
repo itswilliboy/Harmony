@@ -5,7 +5,7 @@ from contextlib import redirect_stdout
 from inspect import getsource
 from io import BytesIO, StringIO
 from traceback import format_exception
-from typing import TYPE_CHECKING, Annotated, Literal, Optional, Self, cast
+from typing import TYPE_CHECKING, Annotated, Optional, Self, cast
 
 import discord
 import jishaku
@@ -14,12 +14,12 @@ import jishaku.repl
 from asyncpg import UniqueViolationError
 from discord.ext import commands
 
-from cogs.anime import AniList
 from config import ANILIST_ID, DBL, TOP_GG
 from utils import BaseCog, BaseView, GenericError, encrypt
 
 if TYPE_CHECKING:
     from bot import Harmony
+    from cogs.anime import AniList
     from utils import Context
 
 
@@ -125,10 +125,7 @@ class General(BaseCog):
             current_module += f".{part}"
 
             obj = getattr(module, part, None)
-            if obj is None:
-                module = importlib.import_module(current_module)
-            else:
-                module = obj
+            module = importlib.import_module(current_module) if obj is None else obj
 
         return module
 
@@ -154,7 +151,7 @@ class General(BaseCog):
         await ctx.send(f"```py\n{source}\n```")
 
     @commands.command()
-    async def postservers(self, ctx: Context, site: Literal["topgg", "dbl"] | str) -> None:
+    async def postservers(self, ctx: Context, site: str) -> None:
         if self.bot.user.id != 741592089342640198:
             raise GenericError("Inapplicable bot ID.")
 
@@ -204,7 +201,7 @@ class General(BaseCog):
         await modal.wait()
 
         code = modal.token.value
-        oauth = cast(AniList, self.bot.cogs["anime"]).client.oauth
+        oauth = cast("AniList", self.bot.cogs["anime"]).client.oauth
 
         token = await oauth.get_access_token(code)
         if token is None:

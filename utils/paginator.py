@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from math import ceil
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, Self, TypeVar
 
 import discord
-from asyncpg import Pool, Record
 from discord import ui
 from discord.utils import MISSING
 
 from .view import BaseView
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from asyncpg import Pool, Record
+
     from bot import Harmony
 
     Interaction = discord.Interaction[Harmony]
@@ -97,7 +99,7 @@ class Paginator(BaseView, Generic[T]):
 
     async def on_page_switch(self) -> None:
         """Called on every page switch before the message is updated."""
-        return None
+        return
 
     async def go_to(self, interaction: Interaction, page: int) -> None:
         """Goes to a specific page."""
@@ -230,9 +232,7 @@ class DynamicPaginator(BaseView, Generic[T]):
         return len(self.items)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        if self.user == interaction.user:
-            return True
-        return False
+        return self.user == interaction.user
 
     async def on_timeout(self) -> None:
         self.stop()
