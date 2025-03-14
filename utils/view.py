@@ -44,3 +44,7 @@ class BaseView(ui.View):
                 await self.message.edit(view=None)
             except Exception:
                 pass
+
+    async def remove(self) -> None:
+        """Stops the views and updates the message (if it has been set) to remove it."""
+        await self.on_timeout()

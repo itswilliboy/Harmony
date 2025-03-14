@@ -38,7 +38,7 @@ class Events(
         @wraps(func)
         async def decorator(self: Self, *args: P.args, **kwargs: P.kwargs) -> None:
             if hasattr(args[0], "guild"):
-                first = cast(Any, args[0])
+                first = cast("Any", args[0])
 
                 if first.guild:
                     config = await self.get_guild_config(first.guild)

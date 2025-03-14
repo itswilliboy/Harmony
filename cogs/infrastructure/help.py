@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional, cast
 
 from discord import Embed, ui, utils
@@ -9,6 +8,8 @@ from discord.ext import commands
 from utils import BaseCog, BaseCogMeta, BaseView, ErrorEmbed, Paginator, PrimaryEmbed, get_command_signature
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from bot import Harmony
     from utils import Context
 
@@ -63,7 +64,7 @@ class HelpCommand(commands.HelpCommand):
         embed = PrimaryEmbed(title=command.name.title())
         embed.description = command.short_doc
 
-        cog = cast(BaseCogMeta, command.cog)
+        cog = cast("BaseCogMeta", command.cog)
         ctx = self.context
         if (hasattr(cog, "owner_only") and cog.owner_only) and not await ctx.bot.is_owner(ctx.author):
             return await self.context.message.add_reaction("\N{CROSS MARK}")
@@ -118,7 +119,7 @@ class HelpCommand(commands.HelpCommand):
         formatted: list[str] = []
         formatted.append(get_command_signature((self.context.clean_prefix, group)))
         for cmd in group.commands:
-            formatted.append(get_command_signature((self.context.clean_prefix, cmd)))
+            formatted.append(get_command_signature((self.context.clean_prefix, cmd)))  # noqa: PERF401
 
         nl = "\n"
         embed.add_field(name="Commands", value=f"```\n{nl.join(formatted)}\n```")

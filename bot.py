@@ -69,9 +69,8 @@ class Harmony(commands.Bot):
         if prefixes is not None:
             return commands.when_mentioned_or(*prefixes)(self, message)
 
-        else:
-            self.log.warning("Prefix not found for guild with ID %s, using default prefix", message.guild.id)
-            return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
+        self.log.warning("Prefix not found for guild with ID %s, using default prefix", message.guild.id)
+        return commands.when_mentioned_or(DEFAULT_PREFIX)(self, message)
 
     async def get_context(self, origin: discord.Message | discord.Interaction, *, cls: Any = Context) -> Context:
         return await super().get_context(origin, cls=cls)

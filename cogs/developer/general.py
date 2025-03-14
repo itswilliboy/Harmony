@@ -5,20 +5,21 @@ from contextlib import redirect_stdout
 from inspect import getsource
 from io import BytesIO, StringIO
 from traceback import format_exception
-from typing import TYPE_CHECKING, Annotated, Literal, Optional, Self, cast
+from typing import TYPE_CHECKING, Annotated, Optional, Self, cast
 
 import discord
 import jishaku
 import jishaku.codeblocks
 import jishaku.repl
+from asyncpg import UniqueViolationError
 from discord.ext import commands
 
-from cogs.anime import AniList
 from config import ANILIST_ID, DBL, TOP_GG
 from utils import BaseCog, BaseView, GenericError, encrypt
 
 if TYPE_CHECKING:
     from bot import Harmony
+    from cogs.anime import AniList
     from utils import Context
 
 
@@ -124,10 +125,7 @@ class General(BaseCog):
             current_module += f".{part}"
 
             obj = getattr(module, part, None)
-            if obj is None:
-                module = importlib.import_module(current_module)
-            else:
-                module = obj
+            module = importlib.import_module(current_module) if obj is None else obj
 
         return module
 
@@ -153,7 +151,7 @@ class General(BaseCog):
         await ctx.send(f"```py\n{source}\n```")
 
     @commands.command()
-    async def postservers(self, ctx: Context, site: Literal["topgg", "dbl"] | str) -> None:
+    async def postservers(self, ctx: Context, site: str) -> None:
         if self.bot.user.id != 741592089342640198:
             raise GenericError("Inapplicable bot ID.")
 
@@ -178,7 +176,7 @@ class General(BaseCog):
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
     @commands.command()
-    async def insert_anilist_token(self, ctx: Context, user_id: int):
+    async def insert_anilist_token(self, ctx: Context, user: discord.User = commands.Author):
         """Inserts an AniList tokens into the database for testing purposes."""
         modal = TokenModal()
 
@@ -199,11 +197,11 @@ class General(BaseCog):
             "&response_type=code"
         )
 
-        await ctx.send(url, view=view, suppress_embeds=True)
+        message = await ctx.send(url, view=view, suppress_embeds=True)
         await modal.wait()
 
         code = modal.token.value
-        oauth = cast(AniList, self.bot.cogs["anime"]).client.oauth
+        oauth = cast("AniList", self.bot.cogs["anime"]).client.oauth
 
         token = await oauth.get_access_token(code)
         if token is None:
@@ -215,5 +213,10 @@ class General(BaseCog):
             INSERT INTO anilist_tokens_new (user_id, token, refresh, expiry)
                 VALUES ($1, $2, $3, $4)
         """
-        await self.bot.pool.execute(query, user_id, crypted, token.refresh, token.expiry)
-        await ctx.send("Successful.")
+        try:
+            await self.bot.pool.execute(query, user.id, crypted, token.refresh, token.expiry)
+
+        except UniqueViolationError:
+            raise GenericError("User is already logged in.") from None
+
+        await message.edit(content="Successful.", view=None)

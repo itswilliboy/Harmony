@@ -169,8 +169,7 @@ class General(BaseCog):
         def get_color(ping: int) -> str:
             if ping <= 500:
                 return f"```diff\n+ {ping} ms\n```"
-            else:
-                return f"```diff\n- {ping} ms\n```"
+            return f"```diff\n- {ping} ms\n```"
 
         start = time.perf_counter()
         await ctx.pool.fetch("SELECT 1")
@@ -308,7 +307,7 @@ class General(BaseCog):
 
         with Image.open(buffer) as image:
             pixels = image.load()
-            colour = cast(tuple[int, int], pixels[255, 0])
+            colour = cast("tuple[int, int]", pixels[255, 0])
             colour = list(colour)
             del colour[3]  # Delete the alpha value
 

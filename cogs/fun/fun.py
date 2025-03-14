@@ -6,13 +6,14 @@ from random import randint
 from typing import TYPE_CHECKING, Any, Optional
 
 import discord
-from aiohttp import ClientSession
 from discord.app_commands import describe
 from discord.ext import commands
 
 from utils import BaseCog, GenericError, Paginator, PrimaryEmbed
 
 if TYPE_CHECKING:
+    from aiohttp import ClientSession
+
     from bot import Harmony
     from utils import Context
 

@@ -40,9 +40,7 @@ class Prefix(BaseCog):
 
     async def get_custom_prefixes(self, message: discord.Message) -> list[str]:
         if message.guild:
-            prefixes = await self.bot.pool.fetchval("SELECT prefixes FROM prefixes WHERE guild_id = $1", message.guild.id)
-
-            return prefixes
+            return await self.bot.pool.fetchval("SELECT prefixes FROM prefixes WHERE guild_id = $1", message.guild.id)
         return []
 
     async def add_custom_prefix(self, guild: discord.abc.Snowflake, prefix: str) -> None:
@@ -82,12 +80,11 @@ class Prefix(BaseCog):
 
     @commands.Cog.listener("on_message")
     async def prefix_listener(self, message: discord.Message) -> None:
-        if match := MENTION_REGEX.fullmatch(message.content):
-            if match and match.group(1) == str(self.bot.user.id):
-                ctx = await self.bot.get_context(message)
-                cmd = self.bot.get_command("prefix")
+        if (match := MENTION_REGEX.fullmatch(message.content)) and match and match.group(1) == str(self.bot.user.id):
+            ctx = await self.bot.get_context(message)
+            cmd = self.bot.get_command("prefix")
 
-                await ctx.invoke(cmd)  # type: ignore
+            await ctx.invoke(cmd)  # type: ignore
 
     @commands.guild_only()
     @commands.group(invoke_without_command=True)

@@ -4,12 +4,13 @@ import datetime
 from typing import TYPE_CHECKING, Optional, Self
 
 import discord
-from asyncpg import Record
 from discord.ext import commands
 
 from utils import BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
 
 if TYPE_CHECKING:
+    from asyncpg import Record
+
     from bot import Harmony
     from utils import Context
 
@@ -71,7 +72,7 @@ class BlacklistItem:
         if self.is_global:
             raise ValueError("Can't remove guilds from a global blacklist item.")
 
-        elif guild.id not in self.guild_ids:
+        if guild.id not in self.guild_ids:
             raise ValueError("User is not blacklisted in that guild.")
 
         await self.cog.bot.pool.execute(
@@ -230,7 +231,7 @@ class Blacklist(BaseCog):
         if item is None:
             raise GenericError("User isn't blacklisted.")
 
-        elif guild and item.is_global:
+        if guild and item.is_global:
             raise GenericError("This user isn't blacklisted in that server.")
 
         if guild is not None:

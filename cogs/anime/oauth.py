@@ -9,12 +9,11 @@ from aiohttp import ContentTypeError
 from config import ANILIST_ID, ANILIST_REDIRECT, ANILIST_SECRET
 from utils import GenericError, try_get_ani_id
 
-from .types import FavouriteType, MediaListOptions
-
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
     from . import AniListClient
+    from .types import FavouriteType, MediaListOptions
 
 
 class ApiExecption(GenericError):
@@ -267,13 +266,11 @@ class OAuth:
 
     @staticmethod
     def get_headers(token: str) -> dict[str, str]:
-        headers = {
+        return {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
-
-        return headers
 
     async def get_access_token(self, auth_code: str) -> Optional[AccessToken]:
         """Converts an Authorisation Code to an Access Token"""
@@ -306,7 +303,7 @@ class OAuth:
 
     async def get_current_user(self, token: str) -> User:
         """Gets the current user with the Access Token."""
-        id_ = cast(int, await try_get_ani_id(self.client.bot.pool, token))
+        id_ = cast("int", await try_get_ani_id(self.client.bot.pool, token))
         if u := self.client.user_cache.get(id_):
             return u
 
@@ -324,15 +321,10 @@ class OAuth:
 
     async def get_user(self, user: str | int, *, use_cache: bool = True) -> Optional[User]:
         """Gets a user by their username or AniList ID."""
-        if use_cache is True:
-            if u := self.client.user_cache.get(user):
-                return u
+        if use_cache is True and (u := self.client.user_cache.get(user)):
+            return u
 
-        if isinstance(user, str):
-            variables = {"name": user}
-
-        else:
-            variables = {"id": user}
+        variables = {"name": user} if isinstance(user, str) else {"id": user}
 
         async with self.session.post(self.URL, json={"query": USER_QUERY, "variables": variables}) as resp:
             try:
