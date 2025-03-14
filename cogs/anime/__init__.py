@@ -17,7 +17,8 @@ from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
 from .oauth import Favourites, User
-from .types import FavouriteType, ListActivity, MediaListEntry, MediaListStatus, MediaTitle, MediaType, Regex, _Media as MediaT
+from .types import FavouriteType, ListActivity, MediaListEntry, MediaListStatus, MediaTitle, MediaType, Regex
+from .types import _Media as MediaT
 from .views import Delete, EmbedRelationView, LoginView, SearchView
 
 if TYPE_CHECKING:
@@ -48,12 +49,10 @@ def get_favourites(favourites: list[Favourites], type: FavouriteType) -> list[tu
     if favs is None:
         return []
 
-    to_return: list[tuple[str, str]] = []
-    for fav in favs["items"]:
-        to_return.append((fav.name, fav.site_url))
-
-    return to_return
-
+    # to_return: list[tuple[str, str]] = []
+    # for fav in favs["items"]:
+    #     to_return.append((fav.name, fav.site_url))
+    return [(fav.name, fav.site_url) for fav in favs["items"]]
 
 def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime]:
     act = activity
@@ -119,7 +118,7 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
             add_item(value, timestamp)
 
         case _:
-            print(status)
+            print(status)  # noqa: T201
             add_item(f"{status.title()} | {linked}", timestamp)
 
     return value, timestamp

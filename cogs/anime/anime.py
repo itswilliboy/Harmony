@@ -103,8 +103,7 @@ class MinifiedMedia:
         """Returns the name of the media."""
         if self.is_adult:
             return f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {self.title['english'] or self.title['romaji']}"
-        else:
-            return self.title["english"] or self.title["romaji"]
+        return self.title["english"] or self.title["romaji"]
 
     @property
     def small_info(self) -> str:
@@ -300,8 +299,7 @@ class Media:
     @property
     def start_date(self) -> Optional[datetime.datetime]:
         """Returns the date when the media started."""
-        a = self._to_datetime(self._start_date)
-        return a
+        return self._to_datetime(self._start_date)
 
     @property
     def end_date(self) -> Optional[datetime.datetime]:

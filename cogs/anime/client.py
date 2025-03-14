@@ -445,8 +445,7 @@ class AniListClient:
         if headers:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
-        media = Media.from_json(data, following_status or {}), user
-        return media
+        return Media.from_json(data, following_status or {}), user
 
     async def search_many(
         self, search: str, user_id: Optional[int] = None, *, include_adult: bool = True
