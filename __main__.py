@@ -28,7 +28,7 @@ bot = Harmony(intents=intents, initial_extensions=initial_extensions)
 
 
 async def run() -> None:
-    print("Starting bot")
+    print("Starting bot")  # noqa: T201
     await bot.start(TOKEN)
 
 

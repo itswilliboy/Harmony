@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Self
+from typing import TYPE_CHECKING, Any, Optional, Self
 
 import discord
-from asyncpg import Record
 from discord.ext import commands
 
 from utils import BaseCog, Context, GenericError, SuccessEmbed
+
+if TYPE_CHECKING:
+    from asyncpg import Record
 
 
 class LoggingConfig:

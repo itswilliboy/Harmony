@@ -40,10 +40,10 @@ class General(BaseCog):
         if member == ctx.guild.owner:
             raise GenericError("I can't kick the server owner.")
 
-        elif member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+        if member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
             raise GenericError(f"Your top role needs to be higher than {member.mention}'s top role to kick them.")
 
-        elif ctx.guild.me.top_role <= member.top_role:
+        if ctx.guild.me.top_role <= member.top_role:
             raise GenericError(f"My top role is not high enough to kick {member.mention}.")
 
         reason = reason or "No reason given."
@@ -72,10 +72,10 @@ class General(BaseCog):
             if member == ctx.guild.owner:
                 raise GenericError("I can't ban the server owner.")
 
-            elif member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+            if member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
                 raise GenericError(f"Your top role needs to be higher than {member.mention}'s top role to ban them.")
 
-            elif ctx.guild.me.top_role <= member.top_role:
+            if ctx.guild.me.top_role <= member.top_role:
                 raise GenericError(f"My top role is not high enough to ban {member.mention}.")
 
             to_ban = member
@@ -100,12 +100,7 @@ class General(BaseCog):
     ):
         """Unbans a banned user."""
         try:
-            to_unban: discord.abc.Snowflake
-            if isinstance(user, discord.BanEntry):
-                to_unban = user.user
-
-            else:
-                to_unban = user
+            to_unban = user.user if isinstance(user, discord.BanEntry) else user
 
             reason = reason or "No reason given."
             await ctx.guild.unban(to_unban, reason=reason)
@@ -204,8 +199,7 @@ class General(BaseCog):
             if has_perms:
                 return is_bot or msg.content.startswith(tuple(prefixes)) and recent
 
-            else:
-                return is_bot and recent
+            return is_bot and recent
 
         if TYPE_CHECKING:
             assert isinstance(ctx.channel, discord.TextChannel)

@@ -16,7 +16,7 @@ class BaseCogMeta(commands.CogMeta):
     hidden: bool
     owner_only: bool
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> BaseCogMeta:
+    def __new__(cls, *args: Any, **kwargs: Any) -> BaseCogMeta:  # noqa: PYI034
         hidden = kwargs.pop("hidden", False)
         owner_only = kwargs.pop("owner_only", False)
 

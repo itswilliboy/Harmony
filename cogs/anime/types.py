@@ -189,7 +189,7 @@ class MediaList(TypedDict):
     user: FollowingStatusUser
 
 
-class _Media(TypedDict):
+class MediaT(TypedDict):
     """A media (anime or manga)."""
 
     id: int
@@ -226,7 +226,7 @@ class MediaListEntry(TypedDict):
     completedat: FuzzyDate
     updatedAt: int  # timestamp
     createdAt: int  # timestamp
-    media: _Media
+    media: MediaT
     user: FollowingStatusUser
 
 
