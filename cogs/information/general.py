@@ -190,6 +190,10 @@ class General(BaseCog):
         embed.set_field_at(1, name="Bot Response Time", value=get_color(resp_time))
         await msg.edit(embed=embed)
 
+    @commands.command()
+    async def uptime(self, ctx: Context):
+        await ctx.send(discord.utils.format_dt(self.bot.started_at, "R"))
+
     def format(self, commit: pygit2.Commit) -> str:
         msg, *_ = commit.message.partition("\n")
         time = datetime.datetime.fromtimestamp(commit.commit_time)
