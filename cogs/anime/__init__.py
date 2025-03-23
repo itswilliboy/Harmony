@@ -569,7 +569,7 @@ class AniList(BaseCog, name="Anime"):
             fmtd = [
                 f"-# {discord.utils.format_dt(act[1], 'R')} "
                 + (f"\N{WHITE HEART SUIT} {act[2]}" if act[2] > 0 else "")
-                + (f" **|** \U0000270e {act[3]}" if act[3] > 0 else "")
+                + (f" **|** \N{LOWER RIGHT PENCIL} {act[3]}" if act[3] > 0 else "")
                 + f"\n{act[0]}"
                 for act in chunk
             ]
