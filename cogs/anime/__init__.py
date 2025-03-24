@@ -55,7 +55,7 @@ def get_favourites(favourites: list[Favourites], type: FavouriteType) -> list[tu
     return to_return
 
 
-def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime]:
+def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime, int, int]:
     act = activity
 
     to_add: list[str] = []
@@ -122,7 +122,7 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
             print(status)
             add_item(f"{status.title()} | {linked}", timestamp)
 
-    return value, timestamp
+    return value, timestamp, activity["likeCount"], activity["replyCount"]
 
 
 class AniUser(commands.UserConverter):
@@ -570,7 +570,19 @@ class AniList(BaseCog, name="Anime"):
             embed = PrimaryEmbed()
             embed.set_author(name=f"{name}'s recent activity", icon_url=activities[0]["user"]["avatar"]["large"])
 
-            fmtd = [f"-# {discord.utils.format_dt(act[1], 'R')}\n{act[0]}" for act in chunk]
+            fmtd = [
+                f"-# {discord.utils.format_dt(act[1], 'R')} "
+                + " **|** ".join(
+                    _
+                    for _ in (
+                        (f"\N{WHITE HEART SUIT} {act[2]}" if act[2] > 0 else None),
+                        (f"\N{LOWER RIGHT PENCIL} {act[3]}" if act[3] > 0 else None),
+                    )
+                    if _ is not None
+                )
+                + f"\n{act[0]}"
+                for act in chunk
+            ]
             embed.description = "\n\n".join(fmtd)
 
             embeds.append(embed)
