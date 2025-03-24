@@ -570,10 +570,10 @@ class AniList(BaseCog, name="Anime"):
                 f"-# {discord.utils.format_dt(act[1], 'R')} "
                 + " **|** ".join(
                     _
-                    for _ in [
+                    for _ in (
                         (f"\N{WHITE HEART SUIT} {act[2]}" if act[2] > 0 else None),
                         (f"\N{LOWER RIGHT PENCIL} {act[3]}" if act[3] > 0 else None),
-                    ]
+                    )
                     if _ is not None
                 )
                 + f"\n{act[0]}"
