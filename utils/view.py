@@ -37,9 +37,8 @@ class BaseView(ui.View):
         return False
 
     async def on_timeout(self) -> None:
+        self.stop()
         if self.message is not None:
-            self.stop()
-
             try:
                 await self.message.edit(view=None)
             except Exception:
