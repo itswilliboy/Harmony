@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 from dataclasses import dataclass
 from enum import Enum
 from textwrap import dedent
@@ -8,13 +7,16 @@ from traceback import format_exception
 from typing import TYPE_CHECKING, Literal, Optional, Self
 
 import discord
-from asyncpg import Record
 from discord import ui
 from discord.ext import commands
 
 from utils import BaseCog, BaseView, Context, GenericError, Paginator
 
 if TYPE_CHECKING:
+    import datetime
+
+    from asyncpg import Record
+
     from bot import Harmony
 
     Interaction = discord.Interaction[Harmony]
@@ -69,11 +71,10 @@ class ErrorReport:
         if self.status == Status.IDLE:
             return discord.Colour.from_str("#FF0000")
 
-        elif self.status == Status.IN_PROGRESS:
+        if self.status == Status.IN_PROGRESS:
             return discord.Colour.yellow()
 
-        else:
-            return discord.Colour.from_str("#1db954")
+        return discord.Colour.from_str("#1db954")
 
     def embed(self) -> discord.Embed:
         bot = self.bot
@@ -149,8 +150,8 @@ class ReportPaginator(Paginator[discord.Embed], StatusView):
         self.reports = reports
         self.author = author
 
-        StatusView.__init__(self, reports[0], author)
-        Paginator[discord.Embed].__init__(self, embeds, author)
+        StatusView.__init__(self, reports[0], author)  # TODO: Fix inheritance.
+        super().__init__(embeds, author)
 
         self.position_items()
 
@@ -199,11 +200,8 @@ class Reporting(BaseCog):
             records = await self.bot.pool.fetch("SELECT * FROM error_reports ORDER BY id ASC")
             return [ErrorReport.from_record(self.bot, record) for record in records]
 
-        else:
-            records = await self.bot.pool.fetch(
-                "SELECT * FROM error_reports WHERE status = $1 ORDER BY id ASC", status.value
-            )
-            return [ErrorReport.from_record(self.bot, record) for record in records]
+        records = await self.bot.pool.fetch("SELECT * FROM error_reports WHERE status = $1 ORDER BY id ASC", status.value)
+        return [ErrorReport.from_record(self.bot, record) for record in records]
 
     async def get_next(self, status: Literal[Status.IDLE, Status.IN_PROGRESS]) -> Optional[ErrorReport]:
         query = f"""
