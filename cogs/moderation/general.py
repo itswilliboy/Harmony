@@ -85,6 +85,7 @@ class General(BaseCog):
         try:
             await ctx.guild.ban(to_ban, reason=reason, delete_message_days=flags.days)
         except discord.HTTPException as exc:
+            self.bot.log.error(format_exception(exc), exc_info=exc)
             raise GenericError("Something went wrong when trying to ban, maybe try again?", True) from exc
 
         embed = SuccessEmbed(description=f"Sucessfully banned <@{to_ban.id}>.\nReason: `{reason}`")
@@ -262,7 +263,7 @@ class General(BaseCog):
         reason = flags.reason
 
         try:
-            await ctx.guild.bulk_ban(to_ban_list, reason=reason, delete_message_seconds=flags.days * 24 * 3600)
+            await ctx.guild.bulk_ban(set(to_ban_list), reason=reason, delete_message_seconds=flags.days * 24 * 3600)
         except discord.HTTPException as exc:
             self.bot.log.error(format_exception(exc), exc_info=exc)
             raise GenericError("Something went wrong when trying to ban, maybe try again?", True) from exc
