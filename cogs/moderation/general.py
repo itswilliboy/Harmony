@@ -229,8 +229,8 @@ class General(BaseCog):
 
         await ctx.send(f"Deleted **{deleted}** {plural(deleted):message}", delete_after=5)
 
-    @commands.has_guild_permissions(ban_members=True)
-    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.has_guild_permissions(ban_members=True, manage_guild=True)
+    @commands.bot_has_guild_permissions(ban_members=True, manage_guild=True)
     @commands.guild_only()
     @commands.command(aliases=["mban", "multiban", "bban"])
     async def bulkban(self, ctx: Context, *users: commands.Greedy[discord.Member | discord.User], flags: BanFlags):
