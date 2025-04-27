@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+from traceback import format_exception
 from typing import TYPE_CHECKING, Annotated, Callable, Optional
 
 import discord
@@ -263,6 +264,7 @@ class General(BaseCog):
         try:
             await ctx.guild.bulk_ban(to_ban_list, reason=reason, delete_message_seconds=flags.days * 24 * 3600)
         except discord.HTTPException as exc:
+            self.bot.log.error(format_exception(exc), exc_info=exc)
             raise GenericError("Something went wrong when trying to ban, maybe try again?", True) from exc
 
         embed = SuccessEmbed(description=f"Sucessfully banned {len(users)} users.\nReason: `{reason}`")
