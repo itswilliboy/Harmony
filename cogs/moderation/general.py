@@ -55,33 +55,37 @@ class General(BaseCog):
 
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
+    @app_commands.default_permissions(ban_members=True)
     @commands.guild_only()
     @commands.hybrid_command()
-    @app_commands.default_permissions(ban_members=True)
-    @app_commands.describe(member="The member to ban", reason="The reason for the ban")
-    async def ban(self, ctx: Context, member: discord.Member | discord.User, *, flags: BanFlags):
+    @app_commands.describe(user="The member to ban", reason="The reason for the ban")
+    async def ban(self, ctx: Context, user: discord.Member | discord.User, *, flags: BanFlags):
         """Bans a user that is either in the server or not."""
 
         to_ban: discord.abc.Snowflake
-        if isinstance(member, discord.User) and ctx.guild.get_member(member.id) is None:
-            to_ban = discord.Object(member.id)
+        if isinstance(user, discord.User) and ctx.guild.get_member(user.id) is None:
+            to_ban = discord.Object(user.id)
 
         else:
-            assert isinstance(ctx.author, discord.Member) and isinstance(member, discord.Member)
+            assert isinstance(ctx.author, discord.Member) and isinstance(user, discord.Member)
 
-            if member == ctx.guild.owner:
+            if user == ctx.guild.owner:
                 raise GenericError("I can't ban the server owner.")
 
-            elif member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
-                raise GenericError(f"Your top role needs to be higher than {member.mention}'s top role to ban them.")
+            elif user.top_role >= ctx.author.top_role and ctx.author.id != ctx.guild.owner_id:
+                raise GenericError(f"Your top role needs to be higher than {user.mention}'s top role to ban them.")
 
-            elif ctx.guild.me.top_role <= member.top_role:
-                raise GenericError(f"My top role is not high enough to ban {member.mention}.")
+            elif ctx.guild.me.top_role <= user.top_role:
+                raise GenericError(f"My top role is not high enough to ban {user.mention}.")
 
-            to_ban = member
+            to_ban = user
 
         reason = flags.reason
-        await ctx.guild.ban(to_ban, reason=reason, delete_message_days=flags.days)
+        try:
+            await ctx.guild.ban(to_ban, reason=reason, delete_message_days=flags.days)
+        except discord.HTTPException as exc:
+            raise GenericError("Something went wrong when trying to ban, maybe try again?", True) from exc
+
         embed = SuccessEmbed(description=f"Sucessfully banned <@{to_ban.id}>.\nReason: `{reason}`")
         embed.set_footer(text=f"ID: {to_ban.id}").timestamp = discord.utils.utcnow()
 
@@ -222,3 +226,47 @@ class General(BaseCog):
                 deleted += 1
 
         await ctx.send(f"Deleted **{deleted}** {plural(deleted):message}", delete_after=5)
+
+    @commands.has_guild_permissions(ban_members=True)
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.guild_only()
+    @commands.command(aliases=["mban", "multiban", "bban"])
+    async def bulkban(self, ctx: Context, *users: commands.Greedy[discord.Member | discord.User], flags: BanFlags):
+        """Bans up to 200 users at the same time, that are either in the server or not."""
+
+        if len(users) > 200:
+            raise GenericError("Can only ban up to 200 users at a time.")
+
+        to_ban_list: list[discord.abc.Snowflake] = []
+        for user in users:
+            if isinstance(user, discord.User) and ctx.guild.get_member(user.id) is None:
+                to_ban = discord.Object(user.id)
+
+            else:
+                assert isinstance(ctx.author, discord.Member) and isinstance(user, discord.Member)
+
+                if user == ctx.guild.owner:
+                    raise GenericError("I can't ban the server owner.")
+
+                elif user.top_role >= ctx.author.top_role and ctx.author.id != ctx.guild.owner_id:
+                    raise GenericError(f"Your top role needs to be higher than {user.mention}'s top role to ban them.")
+
+                elif ctx.guild.me.top_role <= user.top_role:
+                    raise GenericError(f"My top role is not high enough to ban {user.mention}.")
+
+                to_ban = user
+
+            to_ban_list.append(to_ban)
+
+        reason = flags.reason
+
+        try:
+            await ctx.guild.bulk_ban(to_ban_list, reason=reason, delete_message_seconds=flags.days * 24 * 3600)
+        except discord.HTTPException as exc:
+            raise GenericError("Something went wrong when trying to ban, maybe try again?", True) from exc
+
+        embed = SuccessEmbed(description=f"Sucessfully banned {len(users)} users.\nReason: `{reason}`")
+        embed.timestamp = discord.utils.utcnow()
+
+        await ctx.send(embed=embed)
+
