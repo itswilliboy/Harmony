@@ -227,7 +227,7 @@ class General(BaseCog):
                 await message.delete()
                 deleted += 1
 
-        await ctx.send(f"Deleted **{deleted}** {plural(deleted):message}", delete_after=5)
+        await ctx.send(f"Deleted **{deleted}** {plural(deleted):message}", delete_after=5.0)
 
     @commands.has_guild_permissions(ban_members=True, manage_guild=True)
     @commands.bot_has_guild_permissions(ban_members=True, manage_guild=True)
