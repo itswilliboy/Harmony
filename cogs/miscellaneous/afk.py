@@ -91,7 +91,7 @@ class Afk(BaseCog):
 
     @commands.hybrid_command()
     @describe(reason="The reason for going AFK")
-    async def afk(self, ctx: Context, *, reason: Optional[str] = None):
+    async def afk(self, ctx: Context, *, reason: str = "AFK"):
         """Sets you ask AFK, anyone pinging you will get notified that you are afk with the reason."""
         await self.set_afk(ctx.author, reason)
 
