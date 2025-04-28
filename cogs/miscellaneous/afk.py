@@ -34,6 +34,14 @@ class Afk(BaseCog):
 
         self.afk_cache: TTLCache[int, AfkRecord] = TTLCache(maxsize=100, ttl=600)
 
+    async def cog_load(self) -> None:
+        query = "SELECT * FROM afk"
+        records = await self.bot.pool.fetch(query)
+
+        for record in records:
+            afk = AfkRecord.from_record(record)
+            self.afk_cache[afk.user_id] = afk
+
     async def set_afk(self, user: discord.abc.Snowflake, reason: Optional[str] = None) -> None:
         query = """
             INSERT INTO afk (user_id, reason)
