@@ -76,4 +76,10 @@ CREATE TABLE IF NOT EXISTS error_reports(
     status BOOLEAN
 );
 
+CREATE TABLE IF NOT EXISTS afk(
+    user_id BIGINT PRIMARY KEY,
+    timestamp TIMESTAMPTZ DEFAULT current_timestamp,
+    reason TEXT
+);
+
 COMMIT;

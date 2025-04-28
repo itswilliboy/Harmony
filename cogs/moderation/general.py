@@ -274,4 +274,3 @@ class General(BaseCog):
         embed.timestamp = discord.utils.utcnow()
 
         await ctx.send(embed=embed)
-
