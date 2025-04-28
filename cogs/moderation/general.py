@@ -239,6 +239,8 @@ class General(BaseCog):
         if len(users) > 200:
             raise GenericError("Can only ban up to 200 users at a time.")
 
+        await ctx.typing()
+
         to_ban_list: list[discord.abc.Snowflake] = []
         for user in users:
             if isinstance(user, discord.User) and ctx.guild.get_member(user.id) is None:
