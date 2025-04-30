@@ -104,7 +104,7 @@ class Utilities(BaseCog):
                     True,
                 ) from None
 
-    @commands.hybrid_command()
+    @commands.hybrid_command(enabled=False)
     @describe(text="The text to view raw")
     async def raw(
         self,
