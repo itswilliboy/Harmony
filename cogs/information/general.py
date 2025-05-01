@@ -100,6 +100,17 @@ class General(BaseCog):
         """Get someone's avatar."""
         view = AvatarView(user.display_avatar)
         embed = PrimaryEmbed(title=f"{user.name}'s Avatar").set_image(url=user.display_avatar.url)
+        embed.set_footer(text=f"See {ctx.prefix}serveravatar for server-avatar")
+        await ctx.send(embed=embed, view=view)
+
+    @commands.guild_only()
+    @commands.hybrid_command(aliases=["aav", "spfp"])
+    @describe(member="The user whose avatar to view")
+    async def serveravatar(self, ctx: Context, member: discord.Member = commands.Author):
+        """Get someone's avatar."""
+        view = AvatarView(member.guild_avatar or member.display_avatar)
+        embed = PrimaryEmbed(title=f"{member.name}'s Avatar").set_image(url=member.display_avatar.url)
+        embed.set_footer(text=f"See {ctx.prefix}avatar for global-avatar")
         await ctx.send(embed=embed, view=view)
 
     @commands.hybrid_command()
