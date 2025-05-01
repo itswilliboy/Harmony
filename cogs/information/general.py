@@ -98,8 +98,8 @@ class General(BaseCog):
     @describe(user="The user whose avatar to view")
     async def avatar(self, ctx: Context, user: discord.User = commands.Author):
         """Get someone's avatar."""
-        view = AvatarView(user.display_avatar)
-        embed = PrimaryEmbed(title=f"{user.name}'s Avatar").set_image(url=user.display_avatar.url)
+        view = AvatarView(user.avatar or user.default_avatar)
+        embed = PrimaryEmbed(title=f"{user.name}'s Avatar").set_image(url=(user.avatar or user.default_avatar).url)
         embed.set_footer(text=f"See {ctx.prefix}serveravatar for server-avatar")
         await ctx.send(embed=embed, view=view)
 
@@ -109,7 +109,9 @@ class General(BaseCog):
     async def serveravatar(self, ctx: Context, member: discord.Member = commands.Author):
         """Get someone's avatar."""
         view = AvatarView(member.guild_avatar or member.display_avatar)
-        embed = PrimaryEmbed(title=f"{member.name}'s Avatar").set_image(url=member.display_avatar.url)
+        embed = PrimaryEmbed(title=f"{member.name}'s Avatar").set_image(
+            url=(member.guild_avatar or member.display_avatar).url
+        )
         embed.set_footer(text=f"See {ctx.prefix}avatar for global-avatar")
         await ctx.send(embed=embed, view=view)
 
