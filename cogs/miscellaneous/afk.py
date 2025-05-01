@@ -85,7 +85,9 @@ class Afk(BaseCog):
                     timestamp = discord.utils.format_dt(afk.timestamp, "R")
                     embed = PrimaryEmbed(description=f"{user.mention} went afk {timestamp} with reason: `{afk.reason}`")
 
-                    await message.reply(embed=embed, delete_after=30.0, allowed_mentions=discord.AllowedMentions(replied_user=True))
+                    await message.reply(
+                        embed=embed, delete_after=30.0, allowed_mentions=discord.AllowedMentions(replied_user=True)
+                    )
 
     @commands.hybrid_command()
     @describe(reason="The reason for going AFK")
