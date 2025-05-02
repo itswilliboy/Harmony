@@ -68,6 +68,10 @@ class Afk(BaseCog):
     async def afk_listener(self, message: discord.Message):
         author = message.author
 
+        ctx = await self.bot.get_context(message)
+        if ctx.command:
+            return
+
         if afk := await self.get_afk(author):
             await self.unset_afk(author)
 
