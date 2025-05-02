@@ -69,7 +69,7 @@ class Afk(BaseCog):
         author = message.author
 
         ctx = await self.bot.get_context(message)
-        if ctx.command:
+        if ctx.command or ctx.is_blacklisted():
             return
 
         if afk := await self.get_afk(author):
