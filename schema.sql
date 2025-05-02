@@ -79,7 +79,8 @@ CREATE TABLE IF NOT EXISTS error_reports(
 CREATE TABLE IF NOT EXISTS afk(
     user_id BIGINT PRIMARY KEY,
     timestamp TIMESTAMPTZ DEFAULT current_timestamp,
-    reason TEXT
+    reason TEXT,
+    mentions INTEGER DEFAULT 0
 );
 
 COMMIT;

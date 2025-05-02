@@ -22,10 +22,20 @@ class AfkRecord:
     user_id: int
     timestamp: datetime.datetime
     reason: Optional[str]
+    mentions: int
 
     @classmethod
     def from_record(cls, record: Record) -> Self:
-        return cls(record["user_id"], record["timestamp"], record.get("reason"))
+        return cls(record["user_id"], record["timestamp"], record.get("reason"), record["mentions"])
+
+    async def add_mention(self, bot: Harmony) -> None:
+        query = """
+            UPDATE afk
+            SET mentions = mentions + 1
+                WHERE user_id = $1
+        """
+        await bot.pool.execute(query, self.user_id)
+        self.mentions += 1
 
 
 class Afk(BaseCog):
@@ -76,7 +86,11 @@ class Afk(BaseCog):
             await self.unset_afk(author)
 
             timestamp = discord.utils.format_dt(afk.timestamp, "R")
-            embed = PrimaryEmbed(description=f"Welcome back, {author.mention}. You were afk since {timestamp}")
+            embed = PrimaryEmbed()
+            embed.description=f"Welcome back, {author.mention}. You were afk since {timestamp}"
+
+            if afk.mentions:
+                embed.description += f"\nYou got pinged {afk.mentions} times while you were afk"
 
             await message.channel.send(embed=embed)
 
@@ -86,6 +100,8 @@ class Afk(BaseCog):
                     continue
 
                 if afk := await self.get_afk(user):
+                    await afk.add_mention(self.bot)
+
                     timestamp = discord.utils.format_dt(afk.timestamp, "R")
                     embed = PrimaryEmbed(description=f"{user.mention} went afk {timestamp} with reason: `{afk.reason}`")
 
