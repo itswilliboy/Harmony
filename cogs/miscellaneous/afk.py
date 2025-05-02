@@ -11,7 +11,7 @@ from cachetools import TTLCache
 from discord.app_commands import describe
 from discord.ext import commands
 
-from utils import BaseCog, Context, PrimaryEmbed, SuccessEmbed
+from utils import BaseCog, Context, PrimaryEmbed, SuccessEmbed, plural
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -90,7 +90,7 @@ class Afk(BaseCog):
             embed.description=f"Welcome back, {author.mention}. You were afk since {timestamp}"
 
             if afk.mentions:
-                embed.description += f"\nYou got pinged {afk.mentions} times while you were afk"
+                embed.description += f"\nYou got pinged {afk.mentions} {plural(afk.mentions):time} while you were afk"
 
             await message.channel.send(embed=embed)
 
