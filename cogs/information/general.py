@@ -362,3 +362,8 @@ class General(BaseCog):
         embed = discord.Embed(colour=colour)
         embed.set_image(url="attachment://spotify.png")
         await ctx.send(embed=embed, file=file)
+
+    @commands.command()
+    async def hello(self, ctx: Context):
+        """Says hello!"""
+        await ctx.send("Hello!")
