@@ -273,7 +273,7 @@ class General(BaseCog):
             name="Privacy Policy & Terms of Service",
             value=(
                 "**[Privacy Policy](https://itswilli.dev/bot/privacy)**\n"
-                "**[Terms of Service](https://old.itswilli.dev/harmony/terms)**"
+                "**[Terms of Service](https://itswilli.dev/bot/terms)**"
             ),
         )
 
