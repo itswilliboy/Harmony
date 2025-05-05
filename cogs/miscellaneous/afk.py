@@ -131,7 +131,7 @@ class MentionView(BaseView):
     @discord.ui.button(label="View Mentions", style=discord.ButtonStyle.green)
     async def view_mentions(self, interaction: Interaction, _):
         mentions = await self.cog.get_mentions(interaction.user)
-        await MentionPaginator(self.cog, mentions, interaction.user).start_interaction(interaction)
+        await MentionPaginator(self.cog, mentions, interaction.user).start_interaction(interaction, ephemeral=True)
 
 
 class Afk(BaseCog):
@@ -200,7 +200,9 @@ class Afk(BaseCog):
                 embed.description += "\nYou were mentioned while you were afk, check below."
                 view = MentionView(self)
 
-            await message.channel.send(embed=embed, view=view or discord.utils.MISSING)
+            msg = await message.channel.send(embed=embed, view=view or discord.utils.MISSING)
+            if view:
+                view.message = msg
 
         if mentions := message.mentions:
             for user in mentions:

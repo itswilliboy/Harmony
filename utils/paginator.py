@@ -130,7 +130,7 @@ class Paginator(BaseView, Generic[T]):
         self.message = msg
         return msg
 
-    async def start_interaction(self, interaction: Interaction) -> Optional[discord.Message]:
+    async def start_interaction(self, interaction: Interaction, *, ephemeral: bool = False) -> Optional[discord.Message]:
         """Starts the paginator from an interaction."""
 
         if isinstance(self.current, Page):
@@ -139,13 +139,14 @@ class Paginator(BaseView, Generic[T]):
                 embed=self.current.embed or MISSING,
                 file=self.current.file or MISSING,
                 view=self,
+                ephemeral=ephemeral,
             )
 
         elif isinstance(self.current, discord.Embed):
-            msg = await interaction.response.send_message(embed=self.current, view=self)
+            msg = await interaction.response.send_message(embed=self.current, view=self, ephemeral=ephemeral)
 
         else:
-            msg = await interaction.response.send_message(self.current, view=self)
+            msg = await interaction.response.send_message(self.current, view=self, ephemeral=ephemeral)
 
         msg = interaction.message
         return msg
