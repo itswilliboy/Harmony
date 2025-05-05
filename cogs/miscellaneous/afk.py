@@ -227,7 +227,7 @@ class Afk(BaseCog):
                         embed=embed, delete_after=30.0, allowed_mentions=discord.AllowedMentions(replied_user=True)
                     )
 
-    @commands.hybrid_group()
+    @commands.group()
     @describe(reason="The reason for going AFK")
     async def afk(self, ctx: Context, *, reason: str = "AFK"):
         """Sets you ask AFK, anyone pinging you will get notified that you are afk with the reason."""
