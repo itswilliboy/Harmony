@@ -43,3 +43,9 @@ class BaseView(ui.View):
                 await self.message.edit(view=None)
             except Exception:
                 pass
+
+    def disable(self) -> None:
+        """Stops the view and disables all items. Does not update the message."""
+        self.stop()
+        for item in self.children:
+            item.disabled = True  # type: ignore

@@ -2,20 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from math import ceil
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, Self, TypeVar
+from typing import Any, ClassVar, Generic, Optional, Self, TypeVar
 
 import discord
 from asyncpg import Pool, Record
 from discord import ui
 from discord.utils import MISSING
 
+from .utils import Interaction
 from .view import BaseView
-
-if TYPE_CHECKING:
-    from bot import Harmony
-
-    Interaction = discord.Interaction[Harmony]
-
 
 __all__ = ("Page", "Paginator", "DynamicPaginator")
 
@@ -133,6 +128,26 @@ class Paginator(BaseView, Generic[T]):
             msg = await destination.send(self.current, view=self)
 
         self.message = msg
+        return msg
+
+    async def start_interaction(self, interaction: Interaction) -> Optional[discord.Message]:
+        """Starts the paginator from an interaction."""
+
+        if isinstance(self.current, Page):
+            msg = await interaction.response.send_message(
+                content=self.current.content,
+                embed=self.current.embed or MISSING,
+                file=self.current.file or MISSING,
+                view=self,
+            )
+
+        elif isinstance(self.current, discord.Embed):
+            msg = await interaction.response.send_message(embed=self.current, view=self)
+
+        else:
+            msg = await interaction.response.send_message(self.current, view=self)
+
+        msg = interaction.message
         return msg
 
     async def update(self, interaction: Interaction) -> None:

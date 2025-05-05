@@ -11,13 +11,25 @@ from discord.ext import commands
 from jwt import decode
 
 if TYPE_CHECKING:
+    from bot import Harmony  # noqa: F401
     from cogs.anime.types import ScoreFormat
 
 from . import Context
 
-__all__ = ("argument_or_reference", "progress_bar", "try_get_ani_id", "plural", "encrypt", "decrypt", "get_score")
+__all__ = (
+    "argument_or_reference",
+    "progress_bar",
+    "try_get_ani_id",
+    "plural",
+    "encrypt",
+    "decrypt",
+    "get_score",
+    "Interaction",
+)
 
 logger = logging.Logger(__name__)
+
+Interaction = discord.Interaction["Harmony"]
 
 
 def _check(ctx: Context) -> str:

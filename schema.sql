@@ -80,7 +80,17 @@ CREATE TABLE IF NOT EXISTS afk(
     user_id BIGINT PRIMARY KEY,
     timestamp TIMESTAMPTZ DEFAULT current_timestamp,
     reason TEXT,
-    mentions INTEGER DEFAULT 0
+    mentioned BOOLEAN DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS afk_mentions(
+    user_id BIGINT NOT NULL,
+    mentioner_id BIGINT NOT NULL,
+    timestamp TIMESTAMPTZ DEFAULT current_timestamp,
+    guild_id BIGINT,
+    channel_id BIGINT NOT NULL,
+    message_id BIGINT NOT NULL,
+    is_reply BOOLEAN NOT NULL
 );
 
 COMMIT;
