@@ -265,12 +265,17 @@ class General(BaseCog):
         reason = flags.reason
 
         try:
-            await ctx.guild.bulk_ban(set(to_ban_list), reason=reason, delete_message_seconds=flags.days * 24 * 3600)
+            result = await ctx.guild.bulk_ban(set(to_ban_list), reason=reason, delete_message_seconds=flags.days * 24 * 3600)
+
+            banned = result.banned
+            failed = result.failed
+            failed_ids = [str(user.id) for user in failed]
+
+            embed = SuccessEmbed(description=f"Sucessfully banned {len(banned)} users.\nReason: `{reason}`\nFailed to ban users: `{', '.join(failed_ids)}`")
+            embed.timestamp = discord.utils.utcnow()
+
+            await ctx.send(embed=embed)
+
         except discord.HTTPException as exc:
-            self.bot.log.error(format_exception(exc), exc_info=exc)
-            raise GenericError("Something went wrong when trying to ban, maybe try again?", True) from exc
+            raise GenericError("Something went wrong while banning.", True) from exc
 
-        embed = SuccessEmbed(description=f"Sucessfully banned {len(users)} users.\nReason: `{reason}`")
-        embed.timestamp = discord.utils.utcnow()
-
-        await ctx.send(embed=embed)
