@@ -88,22 +88,16 @@ class Statistics(BaseCog):
         )
 
         embeds: list[discord.Embed] = []
-        for chunk in discord.utils.as_chunks(res, 10):
+        for i, chunk in enumerate(discord.utils.as_chunks(res, 10)):
             embed = PrimaryEmbed(title="Message Leaderboard")
             embed.set_author(name=ctx.guild.name)
 
-            for chnk in chunk:
-                member = ctx.guild.get_member(chnk["user_id"])
-                name = None
-
-                if member:
-                    name = (member.global_name or member.name) if member.global_name != member.display_name else None
+            for j, chnk in enumerate(chunk, start=1):
+                count = chnk["count"]
 
                 embed.add_field(
-                    name=member
-                    and f"{member.display_name} {f'({name})' if name else ''}"
-                    or f"Unknown User ({chnk['user_id']})",
-                    value=f"**{chnk['count']}** message{'s' if chnk['count'] != 1 else ''}",
+                    name=f"#{i*10 + j}",
+                    value=f"<@{chnk["user_id"]}> **{count}** {plural(count):message}",
                     inline=False,
                 )
 
