@@ -96,8 +96,8 @@ class Statistics(BaseCog):
                 count = chnk["count"]
 
                 embed.add_field(
-                    name=f"#{i*10 + j}",
-                    value=f"<@{chnk["user_id"]}> **{count}** {plural(count):message}",
+                    name=f"#{i * 10 + j}",
+                    value=f"<@{chnk['user_id']}> **{count}** {plural(count):message}",
                     inline=False,
                 )
 

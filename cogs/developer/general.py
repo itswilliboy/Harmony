@@ -4,6 +4,7 @@ import importlib
 from contextlib import redirect_stdout
 from inspect import getsource
 from io import BytesIO, StringIO
+from subprocess import check_output
 from traceback import format_exception
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, Self, cast
 
@@ -15,7 +16,7 @@ from discord.ext import commands
 
 from cogs.anime import AniList
 from config import ANILIST_ID, DBL, TOP_GG
-from utils import BaseCog, BaseView, GenericError, encrypt
+from utils import BaseCog, BaseView, GenericError, Page, PrimaryEmbed, SecretView, SuccessEmbed, encrypt
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -217,3 +218,14 @@ class General(BaseCog):
         """
         await self.bot.pool.execute(query, user_id, crypted, token.refresh, token.expiry)
         await ctx.send("Successful.")
+
+    @commands.command(aliases=["u"])
+    async def update(self, ctx: Context):
+        output = check_output(["git", "pull"])
+        await ctx.invoke(self.bot.get_command("reload"))  # type: ignore
+
+        embed = SuccessEmbed(description="Tried pulling and reloading, view results:")
+        secret_embed = PrimaryEmbed(description=f"```\n{output.decode()}\n```")
+
+        view = SecretView(Page(embed=secret_embed), text="results", author=ctx.author)
+        view.message = await ctx.send(embed=embed, view=view)

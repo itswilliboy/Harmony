@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from math import ceil
-from typing import Any, ClassVar, Generic, Optional, Self, TypeVar
+from typing import Any, ClassVar, Generic, Optional, Self, TypeVar, overload
 
 import discord
 from asyncpg import Pool, Record
@@ -34,6 +34,29 @@ class Page:
         self.embed = embed
         self.embeds = embeds
         self.file = file
+
+    @overload
+    async def send(self, destination: discord.abc.Messageable) -> discord.Message: ...
+
+    @overload
+    async def send(self, destination: Interaction, ephemeral: bool = True) -> Optional[discord.Message]: ...
+
+    async def send(
+        self, destination: discord.abc.Messageable | Interaction, ephemeral: bool = True
+    ) -> Optional[discord.Message]:
+        if isinstance(destination, discord.abc.Messageable):
+            return await destination.send(
+                content=self.content, embed=self.embed or discord.utils.MISSING, file=self.file or discord.utils.MISSING
+            )
+
+        else:
+            await destination.response.send_message(
+                content=self.content,
+                embed=self.embed or discord.utils.MISSING,
+                file=self.file or discord.utils.MISSING,
+                ephemeral=ephemeral,
+            )
+            return destination.message
 
 
 T = TypeVar("T", str, discord.Embed, Page)

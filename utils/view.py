@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord import ui
 
+from .utils import Interaction
+
 if TYPE_CHECKING:
-    from bot import Harmony
+    from .paginator import Page
 
-    Interaction = discord.Interaction[Harmony]
-
-
-__all__ = ("BaseView",)
+__all__ = ("BaseView", "SecretView")
 
 
 class BaseView(ui.View):
@@ -49,3 +48,16 @@ class BaseView(ui.View):
         self.stop()
         for item in self.children:
             item.disabled = True  # type: ignore
+
+
+class SecretView(BaseView):
+    def __init__(self, page: Page, *, text: Optional[str] = None, author: Optional[discord.abc.Snowflake] = None) -> None:
+        super().__init__(author=author)
+        self.page = page
+        self.author = author
+
+        self.view.label = f"View {text or ''}"
+
+    @ui.button(style=discord.ButtonStyle.green)
+    async def view(self, interaction: Interaction, _):
+        await self.page.send(interaction)
