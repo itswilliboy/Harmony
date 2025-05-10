@@ -225,7 +225,6 @@ class General(BaseCog):
         proc = await asyncio.create_subprocess_exec(
             *["git", "pull"], stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
-        await ctx.invoke(self.bot.get_command("reload"))  # type: ignore
         out_data, err_data = await proc.communicate()
 
         result = f"""
@@ -238,8 +237,11 @@ class General(BaseCog):
             ```
         """
 
-        embed = SuccessEmbed(description="Tried pulling and reloading, view results:")
+        embed = SuccessEmbed(description="Tried pulling, waiting 3 seconds to reload; view pull results:")
         secret_embed = PrimaryEmbed(description=dedent(result))
 
         view = SecretView(Page(embed=secret_embed), text="results", author=ctx.author)
+
         view.message = await ctx.send(embed=embed, view=view)
+        await asyncio.sleep(3.0)
+        await ctx.invoke(self.bot.get_command("reload"))  # type: ignore
