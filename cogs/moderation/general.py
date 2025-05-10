@@ -271,11 +271,15 @@ class General(BaseCog):
             failed = result.failed
             failed_ids = [str(user.id) for user in failed]
 
-            embed = SuccessEmbed(description=f"Sucessfully banned {len(banned)} users.\nReason: `{reason}`\nFailed to ban users: `{', '.join(failed_ids)}`")
+            embed = SuccessEmbed(
+                description=f"Sucessfully banned {len(banned)} users.\nReason: `{reason}`"
+                + f"\nFailed to ban users: `{', '.join(failed_ids)}`"
+                if failed_ids
+                else ""
+            )
             embed.timestamp = discord.utils.utcnow()
 
             await ctx.send(embed=embed)
 
         except discord.HTTPException as exc:
             raise GenericError("Something went wrong while banning.", True) from exc
-
