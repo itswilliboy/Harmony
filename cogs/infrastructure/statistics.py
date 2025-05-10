@@ -54,12 +54,8 @@ class Statistics(BaseCog):
         )
 
     @commands.hybrid_group(aliases=["msgs"], invoke_without_command=True)
-    async def messages(self, ctx: Context):
-        await ctx.send_help(ctx.command)
-
-    @messages.command()
     @describe(member="The member to view the messages for")
-    async def amount(self, ctx: Context, member: discord.Member = commands.Author):
+    async def messages(self, ctx: Context, member: discord.Member = commands.Author):
         """See the amount of messages someone has sent in the server."""
         res: int = await ctx.pool.fetchval(
             "SELECT count FROM message_statistics WHERE user_id = $1 AND guild_id = $2", member.id, ctx.guild.id
@@ -67,7 +63,7 @@ class Statistics(BaseCog):
 
         is_author = ctx.author == member
         apos = "'"  # :^)
-        await ctx.send(
+        await ctx.reply(
             embed=PrimaryEmbed(
                 description=f"{f'{member.mention} has' if not is_author else f'You{apos}ve'} sent **{res or 0}** {plural(res or 0):message} in *{ctx.guild.name}*"
             )
