@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import importlib
 from contextlib import redirect_stdout
 from inspect import getsource
 from io import BytesIO, StringIO
-from subprocess import check_output
+from textwrap import dedent
 from traceback import format_exception
 from typing import TYPE_CHECKING, Annotated, Literal, Optional, Self, cast
 
@@ -221,11 +222,24 @@ class General(BaseCog):
 
     @commands.command(aliases=["u"])
     async def update(self, ctx: Context):
-        output = check_output(["git", "pull"])
+        proc = await asyncio.create_subprocess_exec(
+            *["git", "pull"], stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
         await ctx.invoke(self.bot.get_command("reload"))  # type: ignore
+        out_data, err_data = await proc.communicate()
+
+        result = f"""
+            Stdout: ```
+                {out_data.decode()}
+            ```
+
+            Stderr: ```
+                {err_data.decode()}
+            ```
+        """
 
         embed = SuccessEmbed(description="Tried pulling and reloading, view results:")
-        secret_embed = PrimaryEmbed(description=f"```\n{output.decode()}\n```")
+        secret_embed = PrimaryEmbed(description=dedent(result))
 
         view = SecretView(Page(embed=secret_embed), text="results", author=ctx.author)
         view.message = await ctx.send(embed=embed, view=view)
