@@ -137,12 +137,7 @@ class Paginator(BaseView, Generic[T]):
         """Starts the paginator."""
 
         if isinstance(self.current, Page):
-            msg = await destination.send(
-                content=self.current.content,
-                embed=self.current.embed or MISSING,
-                file=self.current.file or MISSING,
-                view=self,
-            )
+            msg = await self.current.send(destination)
 
         elif isinstance(self.current, discord.Embed):
             msg = await destination.send(embed=self.current, view=self)
