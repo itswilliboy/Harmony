@@ -38,10 +38,10 @@ class General(BaseCog):
 
         assert isinstance(ctx.author, discord.Member)
 
-        if member == ctx.guild.owner:
+        if member.id == ctx.guild.owner_id:
             raise GenericError("I can't kick the server owner.")
 
-        elif member.top_role >= ctx.author.top_role and ctx.author != ctx.guild.owner:
+        elif member.top_role >= ctx.author.top_role and ctx.author.id != ctx.guild.owner_id:
             raise GenericError(f"Your top role needs to be higher than {member.mention}'s top role to kick them.")
 
         elif ctx.guild.me.top_role <= member.top_role:
@@ -56,9 +56,9 @@ class General(BaseCog):
 
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
-    @app_commands.default_permissions(ban_members=True)
     @commands.guild_only()
     @commands.hybrid_command()
+    @app_commands.default_permissions(ban_members=True)
     @app_commands.describe(user="The member to ban", reason="The reason for the ban")
     async def ban(self, ctx: Context, user: discord.Member | discord.User, *, flags: BanFlags):
         """Bans a user that is either in the server or not."""
