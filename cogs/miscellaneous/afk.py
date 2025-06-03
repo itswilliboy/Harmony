@@ -124,8 +124,8 @@ class MentionPaginator(Paginator[discord.Embed]):
 
 
 class MentionView(BaseView):
-    def __init__(self, cog: Afk) -> None:
-        super().__init__()
+    def __init__(self, cog: Afk, author: Optional[discord.abc.Snowflake] = None) -> None:
+        super().__init__(author=author)
         self.cog = cog
 
     @discord.ui.button(label="View Mentions", style=discord.ButtonStyle.green)
@@ -198,7 +198,7 @@ class Afk(BaseCog):
             view: Optional[BaseView] = None
             if afk.mentioned:
                 embed.description += "\nYou were mentioned while you were afk, check below."
-                view = MentionView(self)
+                view = MentionView(self, discord.Object(afk.user_id))
 
             msg = await message.channel.send(embed=embed, view=view or discord.utils.MISSING)
             if view:
