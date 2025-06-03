@@ -23,7 +23,7 @@ class BanFlags(commands.FlagConverter):
 class ClearFlags(commands.FlagConverter):
     after: Optional[int] = commands.flag(description="The ID of the message to delete messages after", default=None)
     before: Optional[int] = commands.flag(description="The ID of the message to delete messages before", default=None)
-    user: Optional[int] = commands.flag(description="The user to delete messages from", default=None)
+    user: Optional[int] = commands.flag(description="The ID of the user to delete messages from", default=None)
 
 
 class General(BaseCog):
