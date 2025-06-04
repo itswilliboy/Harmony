@@ -21,9 +21,10 @@ class BanFlags(commands.FlagConverter):
 
 
 class ClearFlags(commands.FlagConverter):
-    after: Optional[int] = commands.flag(description="The ID of the message to delete messages after", default=None)
-    before: Optional[int] = commands.flag(description="The ID of the message to delete messages before", default=None)
-    user: Optional[int] = commands.flag(description="The ID of the user to delete messages from", default=None)
+    # Needs to be string due to Discord's slash-command int parsing
+    after: Optional[str] = commands.flag(description="The ID of the message to delete messages after", default=None)
+    before: Optional[str] = commands.flag(description="The ID of the message to delete messages before", default=None)
+    user: Optional[str] = commands.flag(description="The ID of the user to delete messages from", default=None)
 
 
 class General(BaseCog):
@@ -158,19 +159,31 @@ class General(BaseCog):
     @app_commands.describe(amount="Amount of messages to clear")
     async def clear(self, ctx: Context, amount: commands.Range[int, 1, 500], *, flags: ClearFlags):
         """Clears up to 500 messages from the current channel."""
+        await ctx.defer(ephemeral=True)
+
         before = None
         after = None
         if flags.before:
-            before = discord.Object(flags.before)
+            try:
+                before = discord.Object(int(flags.before))
+            except ValueError:
+                raise GenericError("Invalid integer as before ID") from None
 
         if flags.after:
-            after = discord.Object(flags.after)
+            try:
+                after = discord.Object(int(flags.after))
+            except ValueError:
+                raise GenericError("Invalid integer as after ID") from None
 
         check: Optional[Callable[[discord.Message], bool]] = None
         if flags.user:
+            try:
+                user_id = int(flags.user)
+            except ValueError:
+                raise GenericError("Invalid integer as user ID") from None
 
             def actual_check(message: discord.Message) -> bool:
-                return bool(message.author.id == flags.user)
+                return bool(message.author.id == user_id)
 
             check = actual_check
 
@@ -178,6 +191,10 @@ class General(BaseCog):
         await ctx.channel.purge(
             limit=amount, before=before or ctx.message, after=after, check=check or discord.utils.MISSING
         )
+
+        if ctx.interaction:
+            await ctx.send("\N{OK HAND SIGN}", ephemeral=True)
+            return
 
         try:
             await ctx.message.add_reaction("\N{OK HAND SIGN}")
