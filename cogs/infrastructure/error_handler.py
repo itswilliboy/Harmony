@@ -41,7 +41,7 @@ class ErrorHandler(BaseCog):
         error = getattr(error, "original", error)
 
         if isinstance(error, commands.CommandNotFound):
-            return await ctx.message.add_reaction("\N{BLACK QUESTION MARK ORNAMENT}")
+            return
 
         elif isinstance(error, commands.MissingPermissions):
             missing = error.missing_permissions
