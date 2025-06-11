@@ -599,7 +599,11 @@ class AniList(BaseCog, name="Anime"):
         for medialist in collection["lists"]:
             media_list_entries.extend(medialist["entries"])
 
-        random_media = random.choice([entry for entry in media_list_entries if entry["status"] == query_type.status])
+        try:
+            random_media = random.choice([entry for entry in media_list_entries if entry["status"] == query_type.status])
+
+        except IndexError:
+            raise GenericError("No media that meet that criteria.") from None
 
         following_status = (
             await self.client.fetch_following_status(
