@@ -138,5 +138,5 @@ def snowflake_key(snowflake: discord.abc.Snowflake) -> int:
     return snowflake.id
 
 
-def meth_snowflake_key(self: Any, snowflake: discord.abc.Snowflake) -> int:
+def meth_snowflake_key(_: Any, snowflake: discord.abc.Snowflake) -> int:
     return snowflake.id
