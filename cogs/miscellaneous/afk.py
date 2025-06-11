@@ -11,7 +11,17 @@ from cachetools import TTLCache
 from discord.app_commands import describe
 from discord.ext import commands
 
-from utils import BaseCog, BaseView, Context, GenericError, Interaction, Paginator, PrimaryEmbed, SuccessEmbed
+from utils import (
+    BaseCog,
+    BaseView,
+    Context,
+    GenericError,
+    Interaction,
+    Paginator,
+    PrimaryEmbed,
+    SuccessEmbed,
+    meth_snowflake_key,
+)
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -158,10 +168,7 @@ class Afk(BaseCog):
         await self.bot.pool.execute(query, user.id)
         self.afk_cache.pop(user.id)
 
-    def _key(self, snowflake: discord.abc.Snowflake) -> int:
-        return snowflake.id
-
-    @cachedmethod(lambda self: self.afk_cache, key=_key)
+    @cachedmethod(lambda self: self.afk_cache, key=meth_snowflake_key)
     async def get_afk(self, user: discord.abc.Snowflake) -> Optional[AfkRecord]:
         query = "SELECT * FROM afk WHERE user_id = $1"
         record = await self.bot.pool.fetchrow(query, user.id)
@@ -227,9 +234,10 @@ class Afk(BaseCog):
                         embed=embed, delete_after=30.0, allowed_mentions=discord.AllowedMentions(replied_user=True)
                     )
 
-    @commands.group()
+    @commands.group(invoke_without_command=True)
     @describe(reason="The reason for going AFK")
     async def afk(self, ctx: Context, *, reason: str = "AFK"):
+        print(ctx.subcommand_passed)
         """Sets you ask AFK, anyone pinging you will get notified that you are afk with the reason."""
         await self.set_afk(ctx.author, reason)
 
@@ -243,3 +251,19 @@ class Afk(BaseCog):
             raise GenericError("No mentions found")
 
         await MentionPaginator(self, mentions, ctx.author).start(ctx)
+
+    @afk.command(aliases=["lb"])
+    async def leaderboard(self, ctx: Context):
+        embeds: list[discord.Embed] = []
+        records = await ctx.pool.fetch("SELECT user_id, timestamp FROM afk ORDER BY timestamp ASC")
+
+        for i, chunk in enumerate(discord.utils.as_chunks(records, 10)):
+            embed = PrimaryEmbed(title="AFK Leaderboard")
+
+            for j, record in enumerate(chunk, start=1):
+                timestamp = discord.utils.format_dt(record["timestamp"])
+                embed.add_field(name=f"#{i * 10 + j}", value=f"<@{record['user_id']}> {timestamp}", inline=False)
+
+            embeds.append(embed)
+
+        await Paginator(embeds, ctx.author).start(ctx)

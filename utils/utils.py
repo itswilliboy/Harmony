@@ -25,6 +25,8 @@ __all__ = (
     "decrypt",
     "get_score",
     "Interaction",
+    "snowflake_key",
+    "meth_snowflake_key",
 )
 
 logger = logging.Logger(__name__)
@@ -130,3 +132,11 @@ def get_score(score: float, format: ScoreFormat) -> str:
 
         case _:
             return "N/A"  # Should never trigger
+
+
+def snowflake_key(snowflake: discord.abc.Snowflake) -> int:
+    return snowflake.id
+
+
+def meth_snowflake_key(self: Any, snowflake: discord.abc.Snowflake) -> int:
+    return snowflake.id
