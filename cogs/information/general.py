@@ -107,9 +107,9 @@ class General(BaseCog):
     @commands.hybrid_command(aliases=["aav", "spfp"])
     @describe(member="The user whose avatar to view")
     async def serveravatar(self, ctx: Context, member: discord.Member = commands.Author):
-        """Get someone's avatar."""
+        """Get someone's server-avatar."""
         view = AvatarView(member.guild_avatar or member.display_avatar)
-        embed = PrimaryEmbed(title=f"{member.name}'s Avatar").set_image(
+        embed = PrimaryEmbed(title=f"{member.name}'s Server Avatar").set_image(
             url=(member.guild_avatar or member.display_avatar).url
         )
         embed.set_footer(text=f"See {ctx.prefix}avatar for global-avatar")
@@ -130,6 +130,25 @@ class General(BaseCog):
 
         view = AvatarView(fetched.banner)
         embed = PrimaryEmbed(title=f"{user.name}'s Banner").set_image(url=fetched.banner.url)
+        embed.set_footer(text=f"See {ctx.prefix}serverbanner for server-banner")
+        await ctx.send(embed=embed, view=view)
+
+    @commands.hybrid_command(aliases=["sbanner"])
+    @describe(user="The user whose banner to view")
+    async def serverbanner(self, ctx: Context, user: discord.User = commands.Author):
+        """Get someone's server-banner"""
+        try:
+            fetched = await ctx.guild.fetch_member(user.id)
+
+        except discord.NotFound:
+            raise commands.BadArgument("Couldn't find that user") from None
+
+        if fetched.banner is None:
+            raise GenericError(f"{user.mention} doesn't have a banner.")
+
+        view = AvatarView(fetched.banner)
+        embed = PrimaryEmbed(title=f"{user.name}'s Server Banner").set_image(url=fetched.banner.url)
+        embed.set_footer(text=f"See {ctx.prefix}banner for global-banner")
         await ctx.send(embed=embed, view=view)
 
     @commands.hybrid_command()
