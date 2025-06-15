@@ -143,11 +143,13 @@ class General(BaseCog):
         except discord.NotFound:
             raise commands.BadArgument("Couldn't find that user") from None
 
-        if fetched.banner is None:
+        if not any((fetched.banner, fetched.guild_banner)):
             raise GenericError(f"{user.mention} doesn't have a banner.")
 
-        view = AvatarView(fetched.banner)
-        embed = PrimaryEmbed(title=f"{user.name}'s Server Banner").set_image(url=fetched.banner.url)
+        banner = fetched.guild_banner or fetched.display_banner
+        assert banner
+        view = AvatarView(banner)
+        embed = PrimaryEmbed(title=f"{user.name}'s Server Banner").set_image(url=banner.url)
         embed.set_footer(text=f"See {ctx.prefix}banner for global-banner")
         await ctx.send(embed=embed, view=view)
 
