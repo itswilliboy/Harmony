@@ -101,10 +101,11 @@ class MinifiedMedia:
     @property
     def name(self) -> str:
         """Returns the name of the media."""
+        name = self.title["english"] or self.title["romaji"]
         if self.is_adult:
-            return f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {self.title['english'] or self.title['romaji']}"
+            return f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {name}"
         else:
-            return self.title["english"] or self.title["romaji"]
+            return name
 
     @property
     def small_info(self) -> str:
