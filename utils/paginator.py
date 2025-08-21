@@ -1,16 +1,24 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from math import ceil
-from typing import Any, ClassVar, Generic, Optional, Self, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, Self, TypeVar, overload
 
 import discord
-from asyncpg import Pool, Record
 from discord import ui
 from discord.utils import MISSING
 
 from .utils import Interaction
 from .view import BaseView
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from asyncpg import Pool, Record
+
+    from bot import Harmony
+
+    Interaction = discord.Interaction[Harmony]
+
 
 __all__ = ("Page", "Paginator", "DynamicPaginator")
 
@@ -48,15 +56,13 @@ class Page:
             return await destination.send(
                 content=self.content, embed=self.embed or discord.utils.MISSING, file=self.file or discord.utils.MISSING
             )
-
-        else:
-            await destination.response.send_message(
-                content=self.content,
-                embed=self.embed or discord.utils.MISSING,
-                file=self.file or discord.utils.MISSING,
-                ephemeral=ephemeral,
-            )
-            return destination.message
+        await destination.response.send_message(
+            content=self.content,
+            embed=self.embed or discord.utils.MISSING,
+            file=self.file or discord.utils.MISSING,
+            ephemeral=ephemeral,
+        )
+        return destination.message
 
 
 T = TypeVar("T", str, discord.Embed, Page)
@@ -115,7 +121,7 @@ class Paginator(BaseView, Generic[T]):
 
     async def on_page_switch(self) -> None:
         """Called on every page switch before the message is updated."""
-        return None
+        return
 
     async def go_to(self, interaction: Interaction, page: int) -> None:
         """Goes to a specific page."""
@@ -264,9 +270,7 @@ class DynamicPaginator(BaseView, Generic[T]):
         return len(self.items)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        if self.user == interaction.user:
-            return True
-        return False
+        return self.user == interaction.user
 
     async def on_timeout(self) -> None:
         self.stop()

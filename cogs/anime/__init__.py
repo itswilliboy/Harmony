@@ -10,119 +10,20 @@ import discord
 from discord.app_commands import allowed_contexts, allowed_installs, describe
 from discord.ext import commands
 
+from config import DEFAULT_PREFIX
 from utils import BaseCog, Context, GenericError, Page, Paginator, PrimaryEmbed, SuccessEmbed
 from utils.utils import try_get_ani_id
 
 from .anime import Media, MinifiedMedia
 from .client import AniListClient
 from .media_list import MediaList
-from .oauth import Favourites, User
-from .types import FavouriteType, ListActivity, MediaListEntry, MediaListStatus, MediaTitle, MediaType, Regex, _Media
-from .views import Delete, EmbedRelationView, LoginView, ProfileManagementView, SearchView
+from .oauth import User
+from .types import FavouriteType, MediaListEntry, MediaListStatus, MediaT, MediaType, Regex
+from .utils import get_activity_message, get_favourites, get_title
+from .views import Delete, EmbedRelationView, LoginView, SearchView
 
 if TYPE_CHECKING:
     from bot import Harmony
-
-
-def add_favourite(embed: discord.Embed, *, user: User, type: FavouriteType, maxlen: int = 1024, empty: bool = False) -> None:
-    favourites = discord.utils.find(lambda f: f["_type"] == type.lower(), user.favourites)
-
-    if favourites and favourites["items"]:
-        value = ""
-        for favourite in favourites["items"][:5]:
-            fmt = f"\n- **[{favourite.name}]({favourite.site_url})**"
-            if len(value + fmt) > maxlen:
-                break
-            value += fmt
-    elif empty:
-        value = "No Favourites Found..."
-    else:
-        return
-
-    embed.add_field(name=f"Favourite {type.title()}", value=value, inline=False)
-
-
-def get_favourites(favourites: list[Favourites], type: FavouriteType) -> list[tuple[str, str]]:
-    favs = discord.utils.find(lambda f: f["_type"] == type.lower(), favourites)
-
-    if favs is None:
-        return []
-
-    to_return: list[tuple[str, str]] = []
-    for fav in favs["items"]:
-        to_return.append((fav.name, fav.site_url))
-
-    return to_return
-
-
-def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime, int, int]:
-    act = activity
-
-    to_add: list[str] = []
-
-    def add_item(item: str, timestamp: datetime.datetime) -> None:
-        w_timestamp = discord.utils.format_dt(timestamp, "R") + f"\n{item}"
-        to_add.append(w_timestamp)
-
-    media = act["media"]
-    timestamp = datetime.datetime.fromtimestamp(act["createdAt"])
-
-    t = media["title"]
-    title = t["english"] or t["romaji"] or t["native"]
-    linked = f"**[{title}]({media['siteUrl']})**"
-
-    status = act["status"]
-
-    value = f"{status} | {linked}"
-    match status:
-        case "watched episode":
-            ep = act["progress"]
-            value = f"Watched episode **{ep}** of {linked}"
-            add_item(value, timestamp)
-
-        case "rewatched episode":
-            ep = act["progress"]
-            value = f"Rewatched episode **{ep}** of {linked}"
-            add_item(value, timestamp)
-
-        case "read chapter":
-            ch = act["progress"]
-            value = f"Read chapter **{ch}** of {linked}"
-            add_item(value, timestamp)
-
-        case "plans to watch":
-            value = f"Plans to watch {linked}"
-            add_item(value, timestamp)
-
-        case "plans to read":
-            value = f"Plans to read {linked}"
-            add_item(value, timestamp)
-
-        case "completed":
-            value = f"Completed {linked}"
-            add_item(value, timestamp)
-
-        case "paused watching":
-            value = f"Paused watching of {linked}"
-            add_item(value, timestamp)
-
-        case "paused reading":
-            value = f"Paused reading of {linked}"
-            add_item(value, timestamp)
-
-        case "dropped":
-            value = f"Dropped {linked}"
-            add_item(value, timestamp)
-
-        case "rewatched":
-            value = f"Rewatched {linked}"
-            add_item(value, timestamp)
-
-        case _:
-            print(status)
-            add_item(f"{status.title()} | {linked}", timestamp)
-
-    return value, timestamp, activity["likeCount"], activity["replyCount"]
 
 
 class AniUser(commands.UserConverter):
@@ -136,7 +37,7 @@ class AniUser(commands.UserConverter):
         except commands.BadArgument:
             pass
 
-        cog = cast(AniList, ctx.bot.cogs["anime"])
+        cog = cast("AniList", ctx.bot.cogs["anime"])
         if u := cog.user_cache.get(arg or argument):
             return u
 
@@ -180,6 +81,7 @@ class AniList(BaseCog, name="Anime"):
             await ctx.typing()
         return True
 
+    # TODO: Implement guild-wide optout
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         ctx = await self.bot.get_context(message)
@@ -241,7 +143,7 @@ class AniList(BaseCog, name="Anime"):
             return
 
         prefixes = await self.bot.get_prefix(message)
-        prefix = next(iter(sorted(prefixes, key=len)), "ht;")
+        prefix = next(iter(sorted(prefixes, key=len)), DEFAULT_PREFIX)
 
         embed.set_footer(text=f'{{{{anime}}}} \N{EM DASH} [[manga]] \N{EM DASH} Run "{prefix}optout" to disable this.')
 
@@ -317,27 +219,27 @@ class AniList(BaseCog, name="Anime"):
                     message=f"You need to pass an AniList username or log in with {cp}anilist login to view yourself."
                 )
 
-            elif token.expiry < datetime.datetime.now():
+            if token.expiry < datetime.datetime.now():
                 raise GenericError(
                     f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login.",
                 )
 
             return await self.client.oauth.get_current_user(token.token)
 
-        else:
-            if isinstance(user, str) and user.isnumeric():
-                user = int(user)
+        if isinstance(user, str) and user.isnumeric():
+            user = int(user)
 
-            user_ = await self.client.oauth.get_user(user)
+        user_ = await self.client.oauth.get_user(user)
 
-            if user_ is None:
-                raise GenericError("Couldn't find any user with that name.")
+        if user_ is None:
+            raise GenericError("Couldn't find any user with that name.")
 
-            return user_
+        return user_
 
     @commands.hybrid_command(hidden=True)
     async def optout(self, ctx: Context):
         """Opts you out (or back in) of inline search."""
+        # TODO: fix query
         if await ctx.pool.fetchval("SELECT EXISTS(SELECT 1 FROM inline_search_optout WHERE user_id = $1)", ctx.author.id):
             await ctx.pool.execute("DELETE FROM inline_search_optout WHERE user_id = $1", ctx.author.id)
             await ctx.send("Opted back into inline search.")
@@ -419,9 +321,9 @@ class AniList(BaseCog, name="Anime"):
             embed.add_field(name="Recent Activity", value="\n".join(fmtd), inline=False)
 
         view: Optional[discord.ui.View] = None
-        id = await try_get_ani_id(ctx.pool, ctx.author.id)
-        if id and id == user.id and False:  # TODO: Implement.
-            view = ProfileManagementView(self, user)
+        # id = await try_get_ani_id(ctx.pool, ctx.author.id)
+        # if id and id == user.id and False:  # TODO: Implement.
+        #     view = ProfileManagementView(self, user)
 
         await ctx.send(embed=embed, view=view or discord.utils.MISSING)
 
@@ -459,25 +361,21 @@ class AniList(BaseCog, name="Anime"):
                 embed=embed,
                 view=LoginView(ctx.bot, ctx.author, self.client),
             )
-            await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
         except discord.Forbidden:
-            await ctx.send("Couldn't send a DM, are they open?")
+            return await ctx.send("Couldn't send a DM, are they open?")
 
-        except discord.NotFound:
+        finally:
             await ctx.send("\N{WHITE HEAVY CHECK MARK}", ephemeral=True)
 
     @anilist.command()
     async def logout(self, ctx: Context):
         """Logs you out."""
-        query = "SELECT EXISTS(SELECT 1 FROM anilist_tokens_new WHERE user_id = $1)"
-        exists = await self.bot.pool.fetchval(query, ctx.author.id)
-
-        if not exists:
-            raise GenericError("You are not logged in.")
-
         query = "DELETE FROM anilist_tokens_new WHERE user_id = $1"
-        await self.bot.pool.execute(query, ctx.author.id)
+        res = await self.bot.pool.execute(query, ctx.author.id)
+
+        if res != "DELETE 1":
+            raise GenericError("You are not logged in.")
 
         await ctx.send(
             embed=SuccessEmbed(description="Successlly logged you out."),
@@ -504,21 +402,18 @@ class AniList(BaseCog, name="Anime"):
     ) -> None:
         """Compares up to five different peoples' anime lists with a specific status."""
         users: list[AniUserConv] = [user1, user2]
-        for u in (user3, user4, user5):
-            if u:
-                users.append(u)
+        users.extend([u for u in (user3, user4, user5) if u])
 
         cols = await self.client.fetch_media_collections(
-            *[u.id for u in users],
+            *(u.id for u in users),
             type=MediaType.ANIME,
             status=MediaListStatus[status.upper()],
             user_id=ctx.author.id,
         )
 
-        entries: list[dict[int, _Media]] = []
-
-        for item in cols.values():
-            entries.append({i["media"]["id"]: i["media"] for i in item["lists"][0]["entries"]})
+        entries: list[dict[int, MediaT]] = [
+            {i["media"]["id"]: i["media"] for i in item["lists"][0]["entries"]} for item in cols.values()
+        ]
 
         total = ChainMap(*entries)
         shared = set(total).intersection(*entries)
@@ -537,9 +432,6 @@ class AniList(BaseCog, name="Anime"):
                 embeds.append(emb)
 
             pages.append(Page(embeds=embeds))
-
-        def get_title(title: MediaTitle) -> str:
-            return title["english"] or title["romaji"] or title["native"] or "<No title>"
 
         pages.insert(
             0,

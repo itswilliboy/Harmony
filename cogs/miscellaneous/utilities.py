@@ -48,7 +48,7 @@ class Utilities(BaseCog):
         if not author.guild_permissions.is_superset(perm):  # type: ignore
             raise commands.MissingPermissions(missing_permissions=["Manage Expressions"])
 
-        elif not guild.me.guild_permissions.is_superset(perm):
+        if not guild.me.guild_permissions.is_superset(perm):
             raise commands.BotMissingPermissions(missing_permissions=["Manage Expressions"])
 
         if isinstance(emoji, discord.PartialEmoji):
@@ -59,50 +59,47 @@ class Utilities(BaseCog):
             embed.set_footer(text=f"Server: {guild}")
             return await ctx.send(str(created), embed=embed)
 
-        else:
-            try:
-                async with ctx.session.get(emoji) as resp:
-                    if not resp.ok:
-                        raise GenericError(
-                            "Something went wrong when trying to download the image, make sure it exists.", True
-                        )
+        try:
+            async with ctx.session.get(emoji) as resp:
+                if not resp.ok:
+                    raise GenericError("Something went wrong when trying to download the image, make sure it exists.", True)
 
-                    if resp.content_type not in ("image/png", "image/jpeg", "image/webp", "image/gif"):
-                        raise GenericError("Unsupported format, must be: `PNG`, `JPEG`, `WEBP`, or `GIF`.")
+                if resp.content_type not in ("image/png", "image/jpeg", "image/webp", "image/gif"):
+                    raise GenericError("Unsupported format, must be: `PNG`, `JPEG`, `WEBP`, or `GIF`.")
 
-                    image = await resp.read()
+                image = await resp.read()
 
-            except InvalidURL:
-                raise GenericError("The URL is invalid, make sure it's valid.") from None
+        except InvalidURL:
+            raise GenericError("The URL is invalid, make sure it's valid.") from None
 
-            except ClientConnectionError:
-                raise GenericError(
-                    "Something went wrong when to trying to resolve the URL, make sure it exists.", True
-                ) from None
+        except ClientConnectionError:
+            raise GenericError(
+                "Something went wrong when to trying to resolve the URL, make sure it exists.", True
+            ) from None
 
-            parsed = urljoin(emoji, urlparse(emoji).path)
-            try:
-                name_ = name or parsed.split("/")[-1]
-                name_ = Path(name_).stem
+        parsed = urljoin(emoji, urlparse(emoji).path)
+        try:
+            name_ = name or parsed.split("/")[-1]
+            name_ = Path(name_).stem
 
-            except IndexError:
-                raise GenericError(
-                    "Needs to be a valid file URL (eg. `https://cdn.discordapp.com/emojis/744346239075877518.gif`)",
-                    True,
-                ) from None
+        except IndexError:
+            raise GenericError(
+                "Needs to be a valid file URL (eg. `https://cdn.discordapp.com/emojis/744346239075877518.gif`)",
+                True,
+            ) from None
 
-            try:
-                created = await guild.create_custom_emoji(name=name_, image=image, reason=reason)
+        try:
+            created = await guild.create_custom_emoji(name=name_, image=image, reason=reason)
 
-                embed = SuccessEmbed(description=f"Successfully added {created} as `{created.name}`")
-                embed.set_footer(text=f"Server: {guild}")
-                return await ctx.send(str(created), embed=embed)
+            embed = SuccessEmbed(description=f"Successfully added {created} as `{created.name}`")
+            embed.set_footer(text=f"Server: {guild}")
+            return await ctx.send(str(created), embed=embed)
 
-            except discord.HTTPException:
-                raise GenericError(
-                    "Something went wrong when trying to create the emoji. Make sure the file is less than 256 kB in size.",
-                    True,
-                ) from None
+        except discord.HTTPException:
+            raise GenericError(
+                "Something went wrong when trying to create the emoji. Make sure the file is less than 256 kB in size.",
+                True,
+            ) from None
 
     @commands.hybrid_command(enabled=False)
     @describe(text="The text to view raw")
@@ -136,7 +133,7 @@ class Utilities(BaseCog):
             source = type(self.bot.help_command)
             module = source.__module__
             file = getsourcefile(source)
-            file = cast(str, file)
+            file = cast("str", file)
 
         else:
             cmd = self.bot.get_command(command)

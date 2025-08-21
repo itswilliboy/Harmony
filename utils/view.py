@@ -5,10 +5,9 @@ from typing import TYPE_CHECKING, Optional
 import discord
 from discord import ui
 
-from .utils import Interaction
-
 if TYPE_CHECKING:
     from .paginator import Page
+    from .utils import Interaction
 
 __all__ = ("BaseView", "SecretView")
 
@@ -42,6 +41,10 @@ class BaseView(ui.View):
                 await self.message.edit(view=None)
             except Exception:
                 pass
+
+    async def remove(self) -> None:
+        """Stops the views and updates the message (if it has been set) to remove it."""
+        await self.on_timeout()
 
     def disable(self) -> None:
         """Stops the view and disables all items. Does not update the message."""
