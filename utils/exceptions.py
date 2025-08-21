@@ -1,6 +1,6 @@
 from typing import Optional
 
-from discord.ext.commands import CommandInvokeError  # type: ignore
+from discord.ext.commands import CommandInvokeError
 
 __all__ = ("GenericError",)
 

@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Any, Optional
 
 import discord
 from aiohttp import ClientSession
-from asyncache import cachedmethod  # pyright: ignore[reportMissingTypeStubs]
+from asyncache import cachedmethod
 from asyncpg import Pool, Record, create_pool
 from discord.ext import commands
-from discord.ext.commands.core import (  # pyright: ignore[reportMissingTypeStubs]
+from discord.ext.commands.core import (
     _CaseInsensitiveDict,
 )
 

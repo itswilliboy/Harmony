@@ -53,7 +53,7 @@ class Statistics(BaseCog):
             message.author.bot,
         )
 
-    @commands.hybrid_group(aliases=["msgs"], invoke_without_command=True)
+    @commands.hybrid_group(aliases=["msgs"])
     @describe(member="The member to view the messages for")
     async def messages(self, ctx: Context, member: discord.Member = commands.Author):
         """See the amount of messages someone has sent in the server."""

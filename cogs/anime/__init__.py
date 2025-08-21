@@ -270,7 +270,7 @@ class AniList(BaseCog, name="Anime"):
         """Searches and returns the first 10 results on a media."""
         await self.search_many(ctx, search)
 
-    @commands.hybrid_group(invoke_without_command=True, aliases=["al"])
+    @commands.hybrid_group(aliases=["al"])
     @allowed_installs(guilds=True, users=True)
     @allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def anilist(self, ctx: Context):

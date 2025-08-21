@@ -1,6 +1,9 @@
 from os import getenv
 from warnings import warn
 
+from dotenv import load_dotenv
+load_dotenv()
+
 POSTGRES_CONNECTION_URI: str = getenv("POSTGRES_CONNECTION_URI")
 
 TOKEN: str = getenv("TOKEN")

@@ -1,5 +1,5 @@
 import discord
-from asyncache import cached  # pyright: ignore[reportMissingTypeStubs]
+from asyncache import cached
 from cachetools import TTLCache
 from discord import app_commands
 

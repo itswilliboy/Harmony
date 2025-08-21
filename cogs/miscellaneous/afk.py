@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional, Self
 
 import discord
-from asyncache import cachedmethod  # pyright: ignore[reportMissingTypeStubs]
-from asyncpg import Record
+from asyncache import cachedmethod
 from cachetools import TTLCache
 from discord.app_commands import describe
 from discord.ext import commands
@@ -24,6 +22,10 @@ from utils import (
 )
 
 if TYPE_CHECKING:
+    import datetime
+
+    from asyncpg import Record
+
     from bot import Harmony
 
 
@@ -237,7 +239,6 @@ class Afk(BaseCog):
     @commands.group(invoke_without_command=True)
     @describe(reason="The reason for going AFK")
     async def afk(self, ctx: Context, *, reason: str = "AFK"):
-        print(ctx.subcommand_passed)
         """Sets you ask AFK, anyone pinging you will get notified that you are afk with the reason."""
         await self.set_afk(ctx.author, reason)
 
