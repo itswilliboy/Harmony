@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Self
 
 import discord
 from discord import ui
 
 if TYPE_CHECKING:
     from .paginator import Page
-    from .utils import Interaction
+    from .utils import ButtonT, Interaction
 
 __all__ = ("BaseView", "SecretView")
 
@@ -62,5 +62,5 @@ class SecretView(BaseView):
         self.view.label = f"View {text or ''}"
 
     @ui.button(style=discord.ButtonStyle.green)
-    async def view(self, interaction: Interaction, _):
+    async def view(self, interaction: Interaction, _: ButtonT[Self]):
         await self.page.send(interaction)
