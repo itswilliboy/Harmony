@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from os import environ
 from types import NoneType
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, TypeVar
 
 import discord
 from cryptography.fernet import Fernet
@@ -27,11 +27,15 @@ __all__ = (
     "Interaction",
     "snowflake_key",
     "meth_snowflake_key",
+    "ButtonT"
 )
 
 logger = logging.Logger(__name__)
 
 Interaction = discord.Interaction["Harmony"]
+
+T = TypeVar("T", bound=discord.ui.View)
+ButtonT = discord.ui.Button[T]
 
 
 def _check(ctx: Context) -> str:

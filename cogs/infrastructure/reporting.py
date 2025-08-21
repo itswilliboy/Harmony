@@ -10,7 +10,7 @@ import discord
 from discord import ui
 from discord.ext import commands
 
-from utils import BaseCog, BaseView, Context, GenericError, Paginator
+from utils import BaseCog, BaseView, ButtonT, Context, GenericError, Paginator
 
 if TYPE_CHECKING:
     import datetime
@@ -133,15 +133,15 @@ class StatusView(BaseView):
         await interaction.response.edit_message(embed=self.report.embed(), view=self)
 
     @ui.button(label="Idle", style=discord.ButtonStyle.red)
-    async def idle(self, interaction: Interaction, _):
+    async def idle(self, interaction: Interaction, _: ButtonT[Self]):
         await self.set_status(Status.IDLE, interaction)
 
     @ui.button(label="In Progress", style=discord.ButtonStyle.blurple)
-    async def in_progress(self, interaction: Interaction, _):
+    async def in_progress(self, interaction: Interaction, _: ButtonT[Self]):
         await self.set_status(Status.IN_PROGRESS, interaction)
 
     @ui.button(label="Done", style=discord.ButtonStyle.green)
-    async def done(self, interaction: Interaction, _):
+    async def done(self, interaction: Interaction, _: ButtonT[Self]):
         await self.set_status(Status.DONE, interaction)
 
 

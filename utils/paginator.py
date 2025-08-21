@@ -7,7 +7,7 @@ import discord
 from discord import ui
 from discord.utils import MISSING
 
-from .utils import Interaction
+from .utils import ButtonT, Interaction
 from .view import BaseView
 
 if TYPE_CHECKING:
@@ -230,23 +230,23 @@ class Paginator(BaseView, Generic[T]):
             self.last.disabled = True
 
     @ui.button(label="...", style=discord.ButtonStyle.gray)
-    async def first(self, interaction: Interaction, _):
+    async def first(self, interaction: Interaction, _: ButtonT[Self]):
         await self.go_to(interaction, 0)
 
     @ui.button(label="...", style=discord.ButtonStyle.blurple)
-    async def prev(self, interaction: Interaction, _):
+    async def prev(self, interaction: Interaction, _: ButtonT[Self]):
         await self.go_to(interaction, self.page - 1)
 
     @ui.button(label="1", style=discord.ButtonStyle.green)
-    async def curr(self, interaction: Interaction, _):
+    async def curr(self, interaction: Interaction, _: ButtonT[Self]):
         await interaction.response.send_modal(PageModal(self, 1, self.count))
 
     @ui.button(label="2", style=discord.ButtonStyle.blurple)
-    async def next(self, interaction: Interaction, _):
+    async def next(self, interaction: Interaction, _: ButtonT[Self]):
         await self.go_to(interaction, self.page + 1)
 
     @ui.button(label="...", style=discord.ButtonStyle.gray)
-    async def last(self, interaction: Interaction, _):
+    async def last(self, interaction: Interaction, _: ButtonT[Self]):
         await self.go_to(interaction, self.count - 1)
 
 
@@ -393,21 +393,21 @@ class DynamicPaginator(BaseView, Generic[T]):
             self.last.disabled = True
 
     @ui.button(label="...", style=discord.ButtonStyle.gray)
-    async def first(self, interaction: Interaction, _):
+    async def first(self, interaction: Interaction, _: ButtonT[Self]):
         await self.go_to(interaction, 0)
 
     @ui.button(label="...", style=discord.ButtonStyle.blurple)
-    async def prev(self, interaction: Interaction, _):
+    async def prev(self, interaction: Interaction, _: ButtonT[Self]):
         await self.go_to(interaction, self.page - 1)
 
     @ui.button(label="1", style=discord.ButtonStyle.green)
-    async def curr(self, interaction: Interaction, _):
+    async def curr(self, interaction: Interaction, _: ButtonT[Self]):
         await interaction.response.send_modal(PageModal(self, 1, self.count))
 
     @ui.button(label="2", style=discord.ButtonStyle.blurple)
-    async def next(self, interaction: Interaction, _):
+    async def next(self, interaction: Interaction, _: ButtonT[Self]):
         await self.go_to(interaction, self.page + 1)
 
     @ui.button(label="...", style=discord.ButtonStyle.gray)
-    async def last(self, interaction: Interaction, _):
+    async def last(self, interaction: Interaction, _: ButtonT[Self]):
         await self.go_to(interaction, self.count - 1)
