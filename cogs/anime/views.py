@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from os import urandom
 from typing import TYPE_CHECKING, Any, Optional, Self
 
@@ -9,26 +8,22 @@ from discord import ui
 
 from utils import BaseView
 
-from .anime import Media
-from .oauth import User
 from .types import Edge, MediaRelation, SearchMedia
 
 if TYPE_CHECKING:
+    import re
+
     from bot import Harmony
 
     from . import AniList, AniListClient
+    from .anime import Media
+    from .oauth import User
 
     Interaction = discord.Interaction[Harmony]
 
 
 async def callback(cog: AniList, id: int, interaction: discord.Interaction, user: Optional[User] = None):
     media = await cog.client.fetch_media(id, user_id=interaction.user.id)
-
-    if media is None:
-        return await interaction.response.send_message(
-            "Something went wrong when trying to fetch that media", ephemeral=True
-        )
-
     view = EmbedRelationView(cog, media, user, author=interaction.user)
 
     await interaction.response.edit_message(embed=media.embed, view=view)
@@ -138,17 +133,7 @@ class RelationView(BaseView):
                     )
                 )
 
-            elif edge.type == MediaRelation.SIDE_STORY:
-                relation_options.append(
-                    discord.SelectOption(
-                        emoji="\N{TWISTED RIGHTWARDS ARROWS}",
-                        label=edge.title[:100],
-                        value=value,
-                        description=self.get_edge_data(edge),
-                    )
-                )
-
-            elif edge.type == MediaRelation.ALTERNATIVE:
+            elif edge.type in (MediaRelation.SIDE_STORY, MediaRelation.ALTERNATIVE):
                 relation_options.append(
                     discord.SelectOption(
                         emoji="\N{TWISTED RIGHTWARDS ARROWS}",
@@ -248,9 +233,7 @@ class Delete(discord.ui.DynamicItem[discord.ui.Button[discord.ui.View]], templat
         return True
 
     @classmethod
-    async def from_custom_id(
-        cls, interaction: discord.Interaction[Harmony], item: discord.ui.Item[Any], match: re.Match[str]
-    ) -> Self:
+    async def from_custom_id(cls, _: discord.Interaction[Harmony], __: discord.ui.Item[Any], match: re.Match[str]) -> Self:
         return cls(int(match.group("USER_ID")))
 
     @classmethod

@@ -4,6 +4,7 @@ import datetime
 from typing import TYPE_CHECKING, Any, Optional, Self
 
 import discord
+from cachetools import cached
 
 from utils import get_score, plural, progress_bar
 
@@ -22,6 +23,7 @@ from .types import (
     Object,
     Regex,
 )
+from .utils import get_title
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -101,11 +103,12 @@ class MinifiedMedia:
     @property
     def name(self) -> str:
         """Returns the name of the media."""
-        name = self.title["english"] or self.title["romaji"]
+        title = get_title(self.title)
+
         if self.is_adult:
-            return f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {name}"
-        else:
-            return name
+            title = f"\N{NO ONE UNDER EIGHTEEN SYMBOL} {title}"
+
+        return title
 
     @property
     def small_info(self) -> str:
@@ -201,11 +204,10 @@ class Media:
         self._data: dict[str, Any]  # Raw json data
 
     def __repr__(self) -> str:
-        title = self.title["english"] or self.title["romaji"]
-        return f"<Media id={self.id} name={title} type={self.type}>"
+        return f"<Media id={self.id} name='{self!s}' type={self.type}>"
 
     def __str__(self) -> str:
-        return self.title["english"] or self.title["romaji"] or self.title["native"] or "<No Title>"
+        return get_title(self.title)
 
     @classmethod
     def from_json(cls, data: dict[str, Any], following_status: dict[str, Any]) -> Self:
@@ -281,8 +283,7 @@ class Media:
     def parse_following_statuses(data: dict[str, Any]) -> list[FollowingStatus]:
         following_statuses: list[FollowingStatus] = []
         following_users = data.get("data", {}).get("Page", {}).get("mediaList", [])
-        for user in following_users:
-            following_statuses.append(FollowingStatus(user))
+        following_statuses.extend([FollowingStatus(user) for user in following_users])
 
         return following_statuses
 
@@ -302,8 +303,7 @@ class Media:
     @property
     def start_date(self) -> Optional[datetime.datetime]:
         """Returns the date when the media started."""
-        a = self._to_datetime(self._start_date)
-        return a
+        return self._to_datetime(self._start_date)
 
     @property
     def end_date(self) -> Optional[datetime.datetime]:
@@ -431,6 +431,7 @@ class Media:
             return "watching" if self.type == MediaType.ANIME else "reading"
         return str(status)
 
+    @cached(cache={})
     def status_embed(self, user: Optional[User] = None) -> Optional[discord.Embed]:
         """Returns the embed giving information about watching/reading status."""
         status = self.following_statuses
@@ -495,9 +496,8 @@ class Media:
             for st in status:
                 user_: Any = st["user"]
 
-                if user is not None:
-                    if user_["id"] == user.id:
-                        continue
+                if user is not None and user_["id"] == user.id:
+                    continue
 
                 total_progress = st["media"]["episodes"] or st["media"]["chapters"]
 

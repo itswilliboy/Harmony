@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from os import environ
 from types import NoneType
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, TypeVar
 
 import discord
 from cryptography.fernet import Fernet
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from bot import Harmony  # noqa: F401
     from cogs.anime.types import ScoreFormat
 
-from . import Context
+    from . import Context
 
 __all__ = (
     "argument_or_reference",
@@ -27,17 +27,20 @@ __all__ = (
     "Interaction",
     "snowflake_key",
     "meth_snowflake_key",
+    "ButtonT"
 )
 
 logger = logging.Logger(__name__)
 
 Interaction = discord.Interaction["Harmony"]
 
+T = TypeVar("T", bound=discord.ui.View)
+ButtonT = discord.ui.Button[T]
+
 
 def _check(ctx: Context) -> str:
-    if ref := ctx.message.reference:
-        if not isinstance(ref.resolved, (discord.DeletedReferencedMessage, NoneType)):
-            return ref.resolved.content
+    if (ref := ctx.message.reference) and not isinstance(ref.resolved, (discord.DeletedReferencedMessage, NoneType)):
+        return ref.resolved.content
 
     return ""
 
@@ -74,7 +77,7 @@ async def try_get_ani_id(pool: Any, value: str | int) -> Optional[int]:
     return int(uid)
 
 
-class plural:
+class plural:  # noqa: N801
     def __init__(self, value: int) -> None:
         self.value = value
 
@@ -124,11 +127,10 @@ def get_score(score: float, format: ScoreFormat) -> str:
             if score <= 35:
                 return "\N{WHITE FROWNING FACE}\N{VARIATION SELECTOR-16}"
 
-            elif score <= 60:
+            if score <= 60:
                 return "\N{NEUTRAL FACE}"
 
-            else:
-                return "\N{SLIGHTLY SMILING FACE}"
+            return "\N{SLIGHTLY SMILING FACE}"
 
         case _:
             return "N/A"  # Should never trigger

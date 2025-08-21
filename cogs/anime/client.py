@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from json import JSONDecodeError
-from typing import TYPE_CHECKING, Any, ClassVar, Optional
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Optional, Self
 
 from aiohttp import ContentTypeError
 from cachetools import TTLCache
@@ -17,6 +17,9 @@ if TYPE_CHECKING:
 
 
 class InvalidToken(Exception): ...
+
+
+class NotFound(Exception): ...
 
 
 MINIFIED_SEARCH_QUERY = """
@@ -393,6 +396,15 @@ ACTIVITY_QUERY = """
 """
 
 
+class MediaReturn[T](NamedTuple):
+    media: Optional[T]
+    user: Optional[User]
+
+    @classmethod
+    def none(cls) -> Self:
+        return cls(None, None)
+
+
 class AniListClient:
     URL: ClassVar[str] = "https://graphql.anilist.co"
 
@@ -402,9 +414,7 @@ class AniListClient:
         self.user_cache: TTLCache[str | int, User] = TTLCache(maxsize=100, ttl=600)
         self.random_store: TTLCache[int, str] = TTLCache(maxsize=100, ttl=300)
 
-    async def search_media(
-        self, search: str, *, type: MediaType, user_id: Optional[int] = None
-    ) -> tuple[Media, Optional[User]] | tuple[None, None]:
+    async def search_media(self, search: str, *, type: MediaType, user_id: Optional[int] = None) -> MediaReturn[Media]:
         """Searches and returns a media via a search query."""
 
         variables = {"search": search, "type": type}
@@ -428,10 +438,10 @@ class AniListClient:
                 data_ = json["data"]
                 data = data_["Media"]
             except (KeyError, TypeError):
-                return (None, None)
+                return MediaReturn[Any].none()
 
             if data is None:
-                return (None, None)
+                return MediaReturn[Any].none()
 
         following_status = {}
         if user_id:
@@ -446,11 +456,11 @@ class AniListClient:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
         media = Media.from_json(data, following_status or {}), user
-        return media
+        return MediaReturn(*media)
 
     async def search_many(
         self, search: str, user_id: Optional[int] = None, *, include_adult: bool = True
-    ) -> tuple[list[SearchMedia], Optional[User]]:
+    ) -> MediaReturn[list[SearchMedia]]:
         """Searches for media and returns the first 25 results."""
 
         variables = {"search": search}
@@ -466,7 +476,7 @@ class AniListClient:
                 raise ApiExecption() from exc
 
             if not json:
-                return [], None
+                return MediaReturn[Any].none()
 
             data_ = json["data"]
             media: list[SearchMedia] = data_["Page"]["media"]
@@ -476,8 +486,8 @@ class AniListClient:
             user = await self.oauth.get_current_user(headers["Authorization"].split()[1])
 
         if include_adult is True:
-            return media, user
-        return [m for m in media if not m["isAdult"]], user
+            return MediaReturn(media, user)
+        return MediaReturn([m for m in media if not m["isAdult"]], user)
 
     async def search_minified_media(self, search: str, *, type: MediaType) -> Optional[MinifiedMedia]:
         """Searchs and returns a "minified" media via a search query."""
@@ -508,7 +518,7 @@ class AniListClient:
 
         return MinifiedMedia.from_json(data)
 
-    async def fetch_media(self, id: int, *, user_id: Optional[int] = None) -> Optional[Media]:
+    async def fetch_media(self, id: int, *, user_id: Optional[int] = None) -> Media:
         """Fetches and returns a media via an ID."""
 
         variables = {"id": id}
@@ -525,10 +535,10 @@ class AniListClient:
                 data_ = json["data"]
                 data = data_["Media"]
             except (KeyError, TypeError):
-                return None
+                raise NotFound from None
 
             if data is None:
-                return None
+                raise NotFound from None
 
         following_status = {}
         if user_id:
@@ -548,7 +558,7 @@ class AniListClient:
         headers: Optional[dict[str, str]] = None,
         page: int = 1,
         per_page: int = 15,
-    ) -> Optional[dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:  # TODO: fix type
         """Fetches all the ratings of the followed users."""
 
         variables = {"id": media_id, "page": page, "perPage": per_page}
@@ -628,9 +638,7 @@ class AniListClient:
                 except (ContentTypeError, JSONDecodeError) as exc:
                     raise ApiExecption() from exc
 
-                data = json["data"]
-
-                return data
+                return json["data"]
             return {}
 
     async def fetch_user_activity(self, user_id: int, *, type: ActivityType = ActivityType.MEDIA_LIST) -> list[ListActivity]:
