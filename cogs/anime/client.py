@@ -370,6 +370,7 @@ ACTIVITY_QUERY = """
                     user {
                         id
                         name
+                        siteUrl
                         avatar {
                             large
                         }

@@ -460,7 +460,11 @@ class AniList(BaseCog, name="Anime"):
         embeds: list[discord.Embed] = []
         for chunk in discord.utils.as_chunks(messages, 5):
             embed = PrimaryEmbed()
-            embed.set_author(name=f"{name}'s recent activity", icon_url=activities[0]["user"]["avatar"]["large"])
+            embed.set_author(
+                name=f"{name}'s recent activity",
+                icon_url=activities[0]["user"]["avatar"]["large"],
+                url=activities[0]["user"]["siteUrl"],
+            )
 
             fmtd = [
                 f"-# {discord.utils.format_dt(act[1], 'R')} "

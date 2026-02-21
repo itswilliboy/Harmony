@@ -61,3 +61,6 @@ stubPath = "./typings"
 
 [tool.uv.sources]
 jishaku = { git = "https://github.com/scarletcafe/jishaku", rev = "49374cf" }
+
+[tool.setuptools]
+packages = ["cogs", "utils"]

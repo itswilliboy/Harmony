@@ -1,8 +1,12 @@
 from os import getenv
 from warnings import warn
 
-from dotenv import load_dotenv
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    warn("python-dotenv not found, .env file may not be loaded correctly.", stacklevel=1)
 
 POSTGRES_CONNECTION_URI: str = getenv("POSTGRES_CONNECTION_URI")
 

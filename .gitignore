@@ -12,3 +12,7 @@ cogs/infrastructure/ipc.py
 .venv
 **/__pycache__
 .ruff_cache
+
+# Build
+build
+*.egg-info
