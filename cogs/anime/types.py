@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
-from typing import Any, NamedTuple, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, NamedTuple, Optional, TypedDict
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class MediaType(StrEnum):
@@ -279,6 +282,14 @@ class MediaListOptions(TypedDict):
     """The user's options for their media list."""
 
     scoreFormat: ScoreFormat
+
+
+class ListActivityMessage(NamedTuple):
+    message: str
+    timestamp: datetime
+    likes: int
+    replies: int
+    link: str
 
 
 class Regex:

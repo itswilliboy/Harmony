@@ -467,16 +467,16 @@ class AniList(BaseCog, name="Anime"):
             )
 
             fmtd = [
-                f"-# {discord.utils.format_dt(act[1], 'R')} "
+                f"-# [{discord.utils.format_dt(act.timestamp, 'R')}]({act.link}) "
                 + " **|** ".join(
                     _
                     for _ in (
-                        (f"\N{WHITE HEART SUIT} {act[2]}" if act[2] > 0 else None),
-                        (f"\N{LOWER RIGHT PENCIL} {act[3]}" if act[3] > 0 else None),
+                        (f"\N{WHITE HEART SUIT} {act.likes}" if act.likes else None),
+                        (f"\N{LOWER RIGHT PENCIL} {act.replies}" if act.replies else None),
                     )
                     if _ is not None
                 )
-                + f"\n{act[0]}"
+                + f"\n{act.message}"
                 for act in chunk
             ]
             embed.description = "\n\n".join(fmtd)

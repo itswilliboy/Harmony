@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 
 import discord
 
+from .types import ListActivityMessage
+
 if TYPE_CHECKING:
     from .oauth import Favourites, User
     from .types import FavouriteType, ListActivity, MediaTitle
@@ -37,8 +39,8 @@ def get_favourites(favourites: list[Favourites], type: FavouriteType) -> list[tu
     return [(fav.name, fav.site_url) for fav in favs["items"]]
 
 
-# TODO: Maybe alter like- and comment counts
-def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime, int, int]:
+# def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime, int, int]:
+def get_activity_message(activity: ListActivity) -> ListActivityMessage:
     act = activity
 
     to_add: list[str] = []
@@ -104,7 +106,13 @@ def get_activity_message(activity: ListActivity) -> tuple[str, datetime.datetime
             print(status)  # noqa: T201
             add_item(f"{status.title()} | {linked}", timestamp)
 
-    return value, timestamp, activity["likeCount"], activity["replyCount"]
+    return ListActivityMessage(
+        message=value,
+        timestamp=timestamp,
+        likes=activity["likeCount"],
+        replies=activity["replyCount"],
+        link=activity["siteUrl"],
+    )
 
 
 def get_title(title: MediaTitle) -> str:
