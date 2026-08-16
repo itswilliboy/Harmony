@@ -3,7 +3,7 @@ services:
     build:
       context: .
     ports:
-      - 8013:8013
+      - ${IPC_PORT:-3001}:8013
     restart: unless-stopped
     env_file:
       - .env
