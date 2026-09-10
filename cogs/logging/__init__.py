@@ -4,8 +4,6 @@ from functools import wraps
 from typing import (
     TYPE_CHECKING,
     Any,
-    Awaitable,
-    Callable,
     Concatenate,
     ParamSpec,
     Self,
@@ -21,6 +19,8 @@ from utils import ErrorEmbed
 from .logging import Logging
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
     from bot import Harmony
 
 

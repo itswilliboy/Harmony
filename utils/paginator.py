@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from math import ceil
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, Self, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Self, overload
 
 import discord
 from discord import ui
 from discord.utils import MISSING
 
-from .utils import ButtonT, Interaction
+from .utils import Interaction
 from .view import BaseView
 
 if TYPE_CHECKING:
@@ -17,10 +17,12 @@ if TYPE_CHECKING:
 
     from bot import Harmony
 
+    from .utils import ButtonT
+
     Interaction = discord.Interaction[Harmony]
 
 
-__all__ = ("Page", "Paginator", "DynamicPaginator")
+__all__ = ("DynamicPaginator", "Page", "Paginator")
 
 
 class Page:
@@ -65,8 +67,7 @@ class Page:
         return destination.message
 
 
-T = TypeVar("T", str, discord.Embed, Page)
-PT = TypeVar("PT", "Paginator[Any]", "DynamicPaginator[Any]")
+type PT = Paginator[Any] | DynamicPaginator[Any]
 
 
 class PageModal(ui.Modal, title="Hop to page"):
@@ -93,7 +94,7 @@ class PageModal(ui.Modal, title="Hop to page"):
         await self.paginator.go_to(interaction, int(self.page.value) - 1)
 
 
-class Paginator(BaseView, Generic[T]):
+class Paginator[T: (str, discord.Embed, Page)](BaseView):
     items: list[T]
     count: int
     page: int
@@ -158,7 +159,7 @@ class Paginator(BaseView, Generic[T]):
         """Starts the paginator from an interaction."""
 
         if isinstance(self.current, Page):
-            msg = await interaction.response.send_message(
+            await interaction.response.send_message(
                 content=self.current.content,
                 embed=self.current.embed or MISSING,
                 file=self.current.file or MISSING,
@@ -167,13 +168,12 @@ class Paginator(BaseView, Generic[T]):
             )
 
         elif isinstance(self.current, discord.Embed):
-            msg = await interaction.response.send_message(embed=self.current, view=self, ephemeral=ephemeral)
+            await interaction.response.send_message(embed=self.current, view=self, ephemeral=ephemeral)
 
         else:
-            msg = await interaction.response.send_message(self.current, view=self, ephemeral=ephemeral)
+            await interaction.response.send_message(self.current, view=self, ephemeral=ephemeral)
 
-        msg = interaction.message
-        return msg
+        return interaction.message
 
     async def update(self, interaction: Interaction) -> None:
         if isinstance(self.current, Page):
@@ -250,7 +250,7 @@ class Paginator(BaseView, Generic[T]):
         await self.go_to(interaction, self.count - 1)
 
 
-class DynamicPaginator(BaseView, Generic[T]):
+class DynamicPaginator[T: (str, discord.Embed, Page)](BaseView):
     PER_CHUNK: ClassVar[int] = 20
 
     pool: Pool[Record]

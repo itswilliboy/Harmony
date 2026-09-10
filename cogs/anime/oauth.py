@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, Optional, Self, TypedDict, cast
 
 from aiohttp import ContentTypeError
 
 from config import ANILIST_ID, ANILIST_REDIRECT, ANILIST_SECRET
-from utils import GenericError, try_get_ani_id
+from utils import GenericError, datetime_now, try_get_ani_id
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -92,25 +92,25 @@ USER_FRAGMENT = """
     }
 """
 
-VIEWER_QUERY = """
+VIEWER_QUERY = f"""
     query {{
         Viewer {{
             ...userFragment
         }}
     }}
 
-    {}
-""".format(USER_FRAGMENT)
+    {USER_FRAGMENT}
+"""
 
-USER_QUERY = """
+USER_QUERY = f"""
     query ($name: String, $id: Int) {{
         User (name: $name, id: $id) {{
             ...userFragment
         }}
     }}
 
-    {}
-""".format(USER_FRAGMENT)
+    {USER_FRAGMENT}
+"""
 
 
 def parse_dict_or_str(
@@ -254,7 +254,7 @@ class User:
 
     @property
     def created_at(self) -> datetime:
-        return datetime.fromtimestamp(self._created_at)
+        return datetime.fromtimestamp(self._created_at, tz=UTC)
 
 
 class OAuth:
@@ -297,7 +297,7 @@ class OAuth:
             if token is None:
                 return None
 
-            expires = datetime.now() + timedelta(seconds=json["expires_in"])
+            expires = datetime_now() + timedelta(seconds=json["expires_in"])
 
         return AccessToken(token, json["refresh_token"], expires)
 

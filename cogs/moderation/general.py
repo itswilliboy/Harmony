@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import datetime
 from traceback import format_exception
-from typing import TYPE_CHECKING, Annotated, Callable, Optional
+from typing import TYPE_CHECKING, Annotated, Optional
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from utils import BannedMember, BaseCog, ErrorEmbed, GenericError, SuccessEmbed, plural
+from utils import BannedMember, BaseCog, ErrorEmbed, GenericError, SuccessEmbed, datetime_now, plural
 from utils.autocomplete import ban_entry_autocomplete
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from utils import Context
 
 
@@ -42,7 +44,7 @@ class General(BaseCog):
         if member.id == ctx.guild.owner_id:
             raise GenericError("I can't kick the server owner.")
 
-        elif member.top_role >= ctx.author.top_role and ctx.author.id != ctx.guild.owner_id:
+        if member.top_role >= ctx.author.top_role and ctx.author.id != ctx.guild.owner_id:
             raise GenericError(f"Your top role needs to be higher than {member.mention}'s top role to kick them.")
 
         if ctx.guild.me.top_role <= member.top_role:
@@ -74,10 +76,10 @@ class General(BaseCog):
             if user == ctx.guild.owner:
                 raise GenericError("I can't ban the server owner.")
 
-            elif user.top_role >= ctx.author.top_role and ctx.author.id != ctx.guild.owner_id:
+            if user.top_role >= ctx.author.top_role and ctx.author.id != ctx.guild.owner_id:
                 raise GenericError(f"Your top role needs to be higher than {user.mention}'s top role to ban them.")
 
-            elif ctx.guild.me.top_role <= user.top_role:
+            if ctx.guild.me.top_role <= user.top_role:
                 raise GenericError(f"My top role is not high enough to ban {user.mention}.")
 
             to_ban = user
@@ -216,7 +218,7 @@ class General(BaseCog):
         has_perms = ctx.channel.permissions_for(ctx.me).is_superset(discord.Permissions(manage_messages=True))
 
         def check(msg: discord.Message) -> bool:
-            recent = msg.created_at.replace(tzinfo=None) > datetime.datetime.now() - datetime.timedelta(weeks=2)
+            recent = msg.created_at.replace(tzinfo=datetime.UTC) > datetime_now() - datetime.timedelta(weeks=2)
             is_bot = msg.author == ctx.bot.user
 
             if has_perms:

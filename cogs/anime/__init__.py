@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import datetime
 import random
 from collections import ChainMap
 from typing import TYPE_CHECKING, Annotated, Any, Literal, Optional, cast
@@ -11,8 +10,7 @@ from discord.app_commands import allowed_contexts, allowed_installs, describe
 from discord.ext import commands
 
 from config import DEFAULT_PREFIX
-from utils import BaseCog, Context, GenericError, Page, Paginator, PrimaryEmbed, SuccessEmbed
-from utils.utils import try_get_ani_id
+from utils import BaseCog, Context, GenericError, Page, Paginator, PrimaryEmbed, SuccessEmbed, datetime_now, try_get_ani_id
 
 from .anime import Media, MinifiedMedia
 from .client import AniListClient
@@ -23,6 +21,8 @@ from .utils import get_activity_message, get_favourites, get_title
 from .views import Delete, EmbedRelationView, LoginView, SearchView
 
 if TYPE_CHECKING:
+    import datetime
+
     from bot import Harmony
 
 
@@ -185,10 +185,8 @@ class AniList(BaseCog, name="Anime"):
             )
         ):
             raise GenericError(
-                (
-                    f"This {search_type.value.lower()} was flagged as NSFW. "
-                    "Please try searching in an NSFW channel or in my DMs."
-                )
+                f"This {search_type.value.lower()} was flagged as NSFW. "
+                "Please try searching in an NSFW channel or in my DMs."
             )
 
         view = EmbedRelationView(self, media, user, author=ctx.author)
@@ -219,7 +217,7 @@ class AniList(BaseCog, name="Anime"):
                     message=f"You need to pass an AniList username or log in with {cp}anilist login to view yourself."
                 )
 
-            if token.expiry < datetime.datetime.now():
+            if token.expiry < datetime_now():
                 raise GenericError(
                     f"Your token has expired, create a new one with {ctx.clean_prefix}anilist login.",
                 )
@@ -346,7 +344,7 @@ class AniList(BaseCog, name="Anime"):
             ctx.author.id,
         )
 
-        if expiry and expiry > datetime.datetime.now():
+        if expiry and expiry > datetime_now():
             embed = SuccessEmbed(description="You are already logged in. Log out and back in to renew the session.")
             embed.set_footer(text=f"Run `{ctx.clean_prefix}anilist logout` to log out.")
             return await ctx.send(embed=embed)

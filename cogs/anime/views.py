@@ -247,7 +247,7 @@ class EmbedSelect(discord.ui.Select["EmbedRelationView"]):
     def __init__(self, media: Media, user: Optional[User] = None) -> None:
         self.media = media
         self.user = user
-        self.children: list[discord.ui.Item["EmbedRelationView"]]
+        self.children: list[discord.ui.Item[EmbedRelationView]]
 
         options = [
             discord.SelectOption(

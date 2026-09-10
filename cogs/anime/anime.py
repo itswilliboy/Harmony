@@ -296,7 +296,7 @@ class Media:
         try:
             # We could use a datetime.date instead, but since this will be used for Discord-timestamps later,
             # it will be more convenient to be able to call the .timestamp() on datetime.datetime object.
-            return datetime.datetime(year=date["year"], month=date["month"], day=date["day"])  # type: ignore
+            return datetime.datetime(year=date["year"], month=date["month"], day=date["day"], tzinfo=datetime.UTC)  # type: ignore
         except (ValueError, TypeError):
             return None
 
@@ -361,7 +361,7 @@ class Media:
     @property
     def url(self) -> str:
         """Returns the site url of the media."""
-        return f"https://anilist.co/{str(self.type.lower())}/{self.id}"
+        return f"https://anilist.co/{self.type.lower()!s}/{self.id}"
 
     @property
     def embed(self) -> discord.Embed:

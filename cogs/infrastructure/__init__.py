@@ -9,7 +9,7 @@ from .reporting import Reporting
 from .statistics import Statistics
 
 try:
-    from .ipc import IPC
+    from .ipc import IPC  # type: ignore
 
     has_ipc = True
 

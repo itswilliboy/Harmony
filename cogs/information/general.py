@@ -229,7 +229,7 @@ class General(BaseCog):
 
     def format(self, commit: pygit2.Commit) -> str:
         msg, *_ = commit.message.partition("\n")
-        time = datetime.datetime.fromtimestamp(commit.commit_time)
+        time = datetime.datetime.fromtimestamp(commit.commit_time, tz=datetime.UTC)
 
         timestamp = discord.utils.format_dt(time, "R")
         partial, full = commit.short_id, commit.id
@@ -317,7 +317,7 @@ class General(BaseCog):
         query_ = {"client": "dict-chrome-ex", "sl": "auto", "tl": "en", "q": text}
 
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"  # noqa: E501
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
 
         async with ctx.session.get("https://clients5.google.com/translate_a/t", params=query_, headers=headers) as resp:

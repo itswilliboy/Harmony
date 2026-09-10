@@ -6,7 +6,7 @@ from .blacklist import Blacklist
 from .general import General
 
 try:
-    from .test import Test
+    from .test import Test  # type: ignore
 
     has_test = True
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 if has_test is True:
 
-    class Developer(Test, General, Blacklist, hidden=True, owner_only=True):  # type: ignore
+    class Developer(General, Blacklist, Test, hidden=True, owner_only=True):  # type: ignore
         def __init__(self, bot: Harmony) -> None:
             super().__init__(bot)
 

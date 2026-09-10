@@ -10,7 +10,14 @@ from utils import decrypt
 
 from .anime import Media, MinifiedMedia
 from .oauth import AccessToken, ApiExecption, OAuth, User
-from .types import ActivityType, ListActivity, MediaListCollection, MediaListStatus, MediaType, SearchMedia
+from .types import (
+    ActivityType,
+    ListActivity,
+    MediaListCollection,
+    MediaListStatus,
+    MediaType,
+    SearchMedia,
+)
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -295,8 +302,7 @@ MEDIA_LIST_FRAGMENT = """
     }
 """
 
-# TODO:
-MEDIA_LIST_QUERY = """
+MEDIA_LIST_QUERY = f"""
     query ($userName: String, $userId: Int $type: MediaType) {{
         MediaListCollection(userName: $userName, userId: $userId, type: $type, sort: SCORE_DESC) {{
             ...mediaListFragment
@@ -308,8 +314,8 @@ MEDIA_LIST_QUERY = """
         }}
     }}
 
-    {}
-""".format(MEDIA_LIST_FRAGMENT)
+    {MEDIA_LIST_FRAGMENT}
+"""
 
 COMPARISON_LIST_SUBQUERY = """
     q{n}: MediaListCollection (userName: $u{n}, userId: $i{n}, type: $type, status: $status) {{

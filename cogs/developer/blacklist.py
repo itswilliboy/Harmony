@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING, Optional, Self
 
 import discord
 from discord.ext import commands
 
-from utils import BaseCog, GenericError, PrimaryEmbed, SuccessEmbed
+from utils import BaseCog, GenericError, PrimaryEmbed, SuccessEmbed, datetime_now
 
 if TYPE_CHECKING:
+    import datetime
+
     from asyncpg import Record
 
     from bot import Harmony
@@ -181,7 +182,7 @@ class Blacklist(BaseCog):
             INSERT INTO guild_blacklist VALUES ($1, $2, $3)
             RETURNING *
         """
-        record = await self.bot.pool.fetchrow(query, guild.id, reason, datetime.datetime.now())
+        record = await self.bot.pool.fetchrow(query, guild.id, reason, datetime_now())
 
         assert record
         item = GuildBlacklistItem(record)
@@ -261,7 +262,7 @@ class Blacklist(BaseCog):
             """,
             )
             .set_thumbnail(url=user.display_avatar.url)
-            .set_footer(text=f"{str(user)} | {user.id}")
+            .set_footer(text=f"{user!s} | {user.id}")
         )
 
         await ctx.send(embed=embed)

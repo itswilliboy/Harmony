@@ -2,7 +2,7 @@ from typing import Any
 
 from discord import Colour, Embed
 
-__all__ = ("PrimaryEmbed", "SuccessEmbed", "ErrorEmbed")
+__all__ = ("ErrorEmbed", "PrimaryEmbed", "SuccessEmbed")
 
 
 class PrimaryEmbed(Embed):

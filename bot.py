@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Optional
 
 import discord
@@ -14,7 +14,7 @@ from discord.ext.commands.core import (
 )
 
 from config import DEFAULT_PREFIX, OWNER_IDS, POSTGRES_CONNECTION_URI
-from utils import Context
+from utils import Context, datetime_now
 
 if TYPE_CHECKING:
     from cogs.developer.blacklist import BlacklistItem, GuildBlacklistItem
@@ -51,7 +51,7 @@ class Harmony(commands.Bot):
         self._BotBase__cogs = _CaseInsensitiveDict()  # Hacky way to allow lowercase cog arguments in help command
 
         self.initial_extensions = initial_extensions
-        self.started_at = datetime.now()
+        self.started_at = datetime_now()
 
         self.prefix_cache: dict[int, list[str]] = {}
 
@@ -86,7 +86,7 @@ class Harmony(commands.Bot):
         self.pool = pool
 
         # Run schema
-        with open("schema.sql", "r", encoding="utf-8") as f:
+        with open("schema.sql", "r", encoding="utf-8") as f:  # noqa: ASYNC230
             schema = f.read()
             await pool.execute(schema)
 

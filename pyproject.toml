@@ -27,7 +27,7 @@ line-length = 125
 target-version = "py312"
 
 [tool.ruff.lint]
-ignore = ["E731", "RET503", "SIM105"]
+ignore = ["E731", "RET503", "RET502", "SIM105", "UP045", "S110", "BLE001", "TRY002"]
 extend-select = [
     "I",
     "B",
@@ -64,3 +64,8 @@ jishaku = { git = "https://github.com/scarletcafe/jishaku", rev = "49374cf" }
 
 [tool.setuptools]
 packages = ["cogs", "utils"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.6",
+]

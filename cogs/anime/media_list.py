@@ -93,7 +93,7 @@ class MediaList(Paginator[discord.Embed]):
         score_format = cast("ScoreFormat", self.collection["user"]["mediaListOptions"]["scoreFormat"])  # type: ignore
 
         try:
-            list_ = [i for i in self.collection["lists"] if i["status"] == type][0]
+            list_ = next(i for i in self.collection["lists"] if i["status"] == type)
 
         except IndexError:
             return [PrimaryEmbed(description="Pretty empty here...")]

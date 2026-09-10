@@ -50,7 +50,7 @@ def get_activity_message(activity: ListActivity) -> ListActivityMessage:
         to_add.append(w_timestamp)
 
     media = act["media"]
-    timestamp = datetime.datetime.fromtimestamp(act["createdAt"])
+    timestamp = datetime.datetime.fromtimestamp(act["createdAt"], tz=datetime.UTC)
 
     title = get_title(media["title"])
     linked = f"**[{title}]({media['siteUrl']})**"

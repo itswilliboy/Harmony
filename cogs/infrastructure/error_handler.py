@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from cogs.anime.client import InvalidToken
-from utils import BaseCog, ErrorEmbed, GenericError, get_command_signature
+from utils import BaseCog, ErrorEmbed, GenericError, datetime_now, get_command_signature
 
 if TYPE_CHECKING:
     from bot import Harmony
@@ -85,7 +85,7 @@ class ErrorHandler(BaseCog):
         elif isinstance(error, commands.BadUnionArgument):
             usage = get_command_signature(ctx)
             embed = ErrorEmbed(
-                title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```\n`{str(error.errors[-1])}`"
+                title="Bad Argument", description=f"Correct usage:\n```\n{usage}\n```\n`{error.errors[-1]!s}`"
             )
             embed.set_footer(text="< > = required | [ ] = optional")
 
@@ -131,7 +131,7 @@ class ErrorHandler(BaseCog):
             embed.set_footer(text="< > = required | [ ] = optional")
 
         elif isinstance(error, commands.CommandOnCooldown):
-            avail = datetime.datetime.now() + datetime.timedelta(seconds=error.retry_after)
+            avail = datetime_now() + datetime.timedelta(seconds=error.retry_after)
             formatted = discord.utils.format_dt(avail, "R")
             embed = ErrorEmbed(description=f"This command is on cooldown, please try again in {formatted}.")
 

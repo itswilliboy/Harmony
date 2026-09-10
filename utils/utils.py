@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 from os import environ
 from types import NoneType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar
@@ -17,20 +18,21 @@ if TYPE_CHECKING:
     from . import Context
 
 __all__ = (
-    "argument_or_reference",
-    "progress_bar",
-    "try_get_ani_id",
-    "plural",
-    "encrypt",
-    "decrypt",
-    "get_score",
+    "ButtonT",
     "Interaction",
-    "snowflake_key",
+    "argument_or_reference",
+    "datetime_now",
+    "decrypt",
+    "encrypt",
+    "get_score",
     "meth_snowflake_key",
-    "ButtonT"
+    "plural",
+    "progress_bar",
+    "snowflake_key",
+    "try_get_ani_id"
 )
 
-logger = logging.Logger(__name__)
+logger = logging.getLogger(__name__)
 
 Interaction = discord.Interaction["Harmony"]
 
@@ -77,7 +79,7 @@ async def try_get_ani_id(pool: Any, value: str | int) -> Optional[int]:
     return int(uid)
 
 
-class plural:  # noqa: N801
+class plural:
     def __init__(self, value: int) -> None:
         self.value = value
 
@@ -142,3 +144,6 @@ def snowflake_key(snowflake: discord.abc.Snowflake) -> int:
 
 def meth_snowflake_key(_: Any, snowflake: discord.abc.Snowflake) -> int:
     return snowflake.id
+
+def datetime_now() -> datetime:
+    return datetime.now(tz=UTC)
