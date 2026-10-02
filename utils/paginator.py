@@ -33,7 +33,7 @@ class Page:
         embed: Optional[discord.Embed] = None,
         embeds: Optional[list[discord.Embed]] = None,
         file: Optional[discord.File] = None,
-        view: discord.ui.View = discord.utils.MISSING
+        view: discord.ui.View = discord.utils.MISSING,
     ) -> None:
         if not any((content, embed, embeds, file)):
             raise ValueError("at least one argument has to be supplied")
@@ -58,7 +58,10 @@ class Page:
     ) -> Optional[discord.Message]:
         if isinstance(destination, discord.abc.Messageable):
             return await destination.send(
-                content=self.content, embed=self.embed or discord.utils.MISSING, file=self.file or discord.utils.MISSING, view=self.view
+                content=self.content,
+                embed=self.embed or discord.utils.MISSING,
+                file=self.file or discord.utils.MISSING,
+                view=self.view,
             )
         await destination.response.send_message(
             content=self.content,

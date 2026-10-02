@@ -29,7 +29,7 @@ __all__ = (
     "plural",
     "progress_bar",
     "snowflake_key",
-    "try_get_ani_id"
+    "try_get_ani_id",
 )
 
 logger = logging.getLogger(__name__)
@@ -144,6 +144,7 @@ def snowflake_key(snowflake: discord.abc.Snowflake) -> int:
 
 def meth_snowflake_key(_: Any, snowflake: discord.abc.Snowflake) -> int:
     return snowflake.id
+
 
 def datetime_now() -> datetime:
     return datetime.now(tz=UTC)
