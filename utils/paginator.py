@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from .utils import ButtonT
 
-    Interaction = discord.Interaction[Harmony]
+    type Interaction = discord.Interaction[Harmony]
 
 
 __all__ = ("DynamicPaginator", "Page", "Paginator")
@@ -33,6 +33,7 @@ class Page:
         embed: Optional[discord.Embed] = None,
         embeds: Optional[list[discord.Embed]] = None,
         file: Optional[discord.File] = None,
+        view: discord.ui.View = discord.utils.MISSING
     ) -> None:
         if not any((content, embed, embeds, file)):
             raise ValueError("at least one argument has to be supplied")
@@ -44,6 +45,7 @@ class Page:
         self.embed = embed
         self.embeds = embeds
         self.file = file
+        self.view = view
 
     @overload
     async def send(self, destination: discord.abc.Messageable) -> discord.Message: ...
@@ -56,12 +58,13 @@ class Page:
     ) -> Optional[discord.Message]:
         if isinstance(destination, discord.abc.Messageable):
             return await destination.send(
-                content=self.content, embed=self.embed or discord.utils.MISSING, file=self.file or discord.utils.MISSING
+                content=self.content, embed=self.embed or discord.utils.MISSING, file=self.file or discord.utils.MISSING, view=self.view
             )
         await destination.response.send_message(
             content=self.content,
             embed=self.embed or discord.utils.MISSING,
             file=self.file or discord.utils.MISSING,
+            view=self.view,
             ephemeral=ephemeral,
         )
         return destination.message
@@ -144,6 +147,7 @@ class Paginator[T: (str, discord.Embed, Page)](BaseView):
         """Starts the paginator."""
 
         if isinstance(self.current, Page):
+            self.current.view = self
             msg = await self.current.send(destination)
 
         elif isinstance(self.current, discord.Embed):
